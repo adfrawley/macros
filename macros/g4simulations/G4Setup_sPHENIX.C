@@ -26,7 +26,8 @@ void G4Init(bool do_svtx = true,
       //gROOT->LoadMacro("G4_Svtx_maps+strips.C");   // testing
       //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
       //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // testing
-      gROOT->LoadMacro("G4_Svtx_maps_5layers.C");  // testing
+      //gROOT->LoadMacro("G4_Svtx_maps_5layers.C");  // testing
+      gROOT->LoadMacro("G4_Svtx_1pixel+1maps+4mapsouter.C");  // testing
       //gROOT->LoadMacro("G4_Svtx_ladders.C");       // testing (new geometries)
       SvtxInit();
     }

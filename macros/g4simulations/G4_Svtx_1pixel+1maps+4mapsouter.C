@@ -43,7 +43,7 @@ double Svtx(PHG4Reco* g4Reco,
   //=======================================================================================================
 
   double svxrad[6] = {svtx_inner_radius, 3.9, 19.6, 24.5, 34.4, 64.0}; // 2nd layer is layer three of ITS inner barrel
-  double si_thickness[6] = {{0.0200, 0.005, 0.005, 0.005, 0.005, 0.005};  // ALICE ITS upgrade Si thickness is 50 microns
+  double si_thickness[6] = {0.0200, 0.005, 0.005, 0.005, 0.005, 0.005};  // ALICE ITS upgrade Si thickness is 50 microns
   double length[6] = {20.0, 27.0, 88.0, 88.0, 148.0, 148.0}; // ALICE ladder lengths (stave - 2cm)
 
   // ALICE ITS total thickness (% of X_0 of 0.3, 0.3, 0.3, 0.8, 0.8, 0.8, 0.8
@@ -51,7 +51,7 @@ double Svtx(PHG4Reco* g4Reco,
   // so inner 3 layers support thickness = 0.3 - 0.053 = 0.25%, outer 4 layers = 0.8 - 0.053 = 0.75%
   // Support thickness equivalent for Cu in inner layer = 0.25%/6.96% x 1 mm = 0.036 mm = 0.0036 cm
   // Support thickness equivalent for Cu in outer layer = 0.75%/6.96% x 1 mm = 0.108 mm = 0.0108 cm
-  double support_thickness[6] = {{0.0154, 0.0036, 0.0108, 0.0108, 0.0108, 0.0108};
+  double support_thickness[6] = {0.0154, 0.0036, 0.0108, 0.0108, 0.0108, 0.0108};
 
   // here is our silicon:
   double inner_radius = radius;
@@ -100,8 +100,7 @@ double Svtx(PHG4Reco* g4Reco,
     }
   radius += support_thickness[Max_si_layer] + no_overlapp;
 
-  //if (verbosity > 0) {
-    cout << "========================== G4_Svtx_ITS.C::Svtx() ==========================" << endl;
+    cout << "========================== G4_Svtx_1pixel+1maps+4mapsouter.C::Svtx() ==========================" << endl;
     cout << " SVTX Material Description: " << endl;
     for (int ilayer = Min_si_layer; ilayer <= Max_si_layer; ilayer++) {
       cout << "  layer " << ilayer
@@ -112,7 +111,6 @@ double Svtx(PHG4Reco* g4Reco,
 	   << endl;
     }
     cout << "===========================================================================" << endl;
-    //}
   
   return radius;
 }
@@ -142,7 +140,7 @@ void Svtx_Cells(int verbosity = 0)
   // updated for ITS layers
 
   // 28 um / sqrt(2) from typical cluster size (not yet simulated for MAPS)
-  double svxcellsizex[6] = {{0.0050, 0.0020, 0.0020, 0.0020, 0.0020, 0.0020};
+  double svxcellsizex[6] = {0.0050, 0.0020, 0.0020, 0.0020, 0.0020, 0.0020};
   double svxcellsizey[6] = {0.0425, 0.0020, 0.0020, 0.0020, 0.0020, 0.0020};
   
   PHG4CylinderCellReco *svtx_cells = new PHG4CylinderCellReco();

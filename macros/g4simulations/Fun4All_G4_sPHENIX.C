@@ -6,8 +6,23 @@ int Fun4All_G4_sPHENIX(
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
 {
+  // Tracking configuration options are defined by which G4_Svtx_*.C macro is loaded in G4Setup_sPHENIX.C
+
   //===============
-  // Input options
+  // Generator input options:
+  //
+  // for single upsilons: 
+  //     upsilons = true  (choose state with istate)
+  //     embed_upsilons = false
+  //     hijing = false
+  // for embedded upsilons"
+  //     upsilons = true
+  //     embed_upsilons = true
+  //     hijing = false
+  // for just hijing
+  //     upsilons = false
+  //     embed_upsilons = false
+  //     hijing = true
   //===============
 
   bool upsilons = true;           // throw single Upsilons
@@ -21,7 +36,6 @@ int Fun4All_G4_sPHENIX(
        << " upsilons = " << upsilons
        << " embed_upsilons (in Hijing events) = " << embed_upsilons
        << endl; 
-
 
   if(hijing_events || embed_upsilons)
     {
@@ -321,9 +335,8 @@ int Fun4All_G4_sPHENIX(
   //----------------------
 
   char outfile[500];
-  //sprintf(outfile,"eval_output/g4svx_eval_%i.root",process);
-  sprintf(outfile,"maps_5layer_eval_output/g4svx_eval_%i.root",process);
-
+  sprintf(outfile,"eval_output/g4svx_eval_%i.root",process);
+  
   if (do_svtx_eval) Svtx_Eval(outfile);
 
   if (do_cemc_eval) CEMC_Eval("g4cemc_eval.root");

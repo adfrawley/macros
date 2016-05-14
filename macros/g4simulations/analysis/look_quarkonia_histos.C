@@ -30,7 +30,9 @@ void look_quarkonia_histos()
   //TFile *fin = new TFile("ups1s_qual3.00_dca2d0.10.root");
   //TFile *fin = new TFile("maps_7layer_hijing_ups1s_qual3.00_dca2d0.10.root");
   //TFile *fin = new TFile("maps_7layer_single_ups1s_qual3.00_dca2d0.10.root");
-  TFile *fin = new TFile("maps_5layer_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_5layer_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixels_strips_7layers_embed_ups1s_qual3.00_dca2d0.10.root");
+  TFile *fin = new TFile("pixel_maps_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
 
   TH1D *recomass_primary;
   fin->GetObject("recomass_primary",recomass_primary);
