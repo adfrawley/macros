@@ -1,13 +1,36 @@
 
 int Fun4All_G4_sPHENIX(
-		       const int nEvents = 10,
-		       const char * inputFile = "/gpfs02/phenix/prod/sPHENIX/preCDR/pro.1-beta.5/single_particle/spacal1d/fieldmap/G4Hits_sPHENIX_e-_eta0_16GeV.root",
+		       const int process = 0,
+		       const int nEvents = 1,
+		       const char * inputFile = "/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
 {
   //===============
   // Input options
   //===============
+
+  bool upsilons = true;           // throw single Upsilons
+  int istate = 1;  // Upsilon state = 1,2,3
+  bool embed_upsilons = true;           // throw single Upsilons inside a Hijing event
+  //bool embed_upsilons = false;           // throw single Upsilons NOT inside a Hijing event
+  bool hijing_events = false;  // throw hijing events
+
+  cout << "Switches: " 
+       << " hijing_events (only) = " << hijing_events
+       << " upsilons = " << upsilons
+       << " embed_upsilons (in Hijing events) = " << embed_upsilons
+       << endl; 
+
+
+  if(hijing_events || embed_upsilons)
+    {
+      // get the Hijing input file name
+      char hfile[500];
+      sprintf(inputFile,"/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/in/hijing_%.5i.txt.bz2",process);
+
+      cout << "Reading Hijing events from file: " << endl << inputFile << endl; 
+    }
 
   // Either:
   // read previously generated g4-hits files, in this case it opens a DST and skips
@@ -16,7 +39,9 @@ int Fun4All_G4_sPHENIX(
   const bool readhits = false;
   // Or:
   // read files in HepMC format (typically output from event generators like hijing or pythia)
-  const bool readhepmc = false; // read HepMC files
+  bool readhepmc = false; // read HepMC files
+  if(hijing_events || embed_upsilons)
+    readhepmc = true;
   // Or:
   // Use particle generator
   const bool runpythia8 = false;
@@ -37,31 +62,31 @@ int Fun4All_G4_sPHENIX(
 
   bool do_preshower = false;
   
-  bool do_cemc = true;
-  bool do_cemc_cell = true;
-  bool do_cemc_twr = true;
-  bool do_cemc_cluster = true;
-  bool do_cemc_eval = true;
+  bool do_cemc = false;
+  bool do_cemc_cell = false;
+  bool do_cemc_twr = false;
+  bool do_cemc_cluster = false;
+  bool do_cemc_eval = false;
 
-  bool do_hcalin = true;
-  bool do_hcalin_cell = true;
-  bool do_hcalin_twr = true;
-  bool do_hcalin_cluster = true;
-  bool do_hcalin_eval = true;
+  bool do_hcalin = false;
+  bool do_hcalin_cell = false;
+  bool do_hcalin_twr = false;
+  bool do_hcalin_cluster = false;
+  bool do_hcalin_eval = false;
 
-  bool do_magnet = true;
+  bool do_magnet = false;
   
-  bool do_hcalout = true;
-  bool do_hcalout_cell = true;
-  bool do_hcalout_twr = true;
-  bool do_hcalout_cluster = true;
-  bool do_hcalout_eval = true;
+  bool do_hcalout = false;
+  bool do_hcalout_cell = false;
+  bool do_hcalout_twr = false;
+  bool do_hcalout_cluster = false;
+  bool do_hcalout_eval = false;
   
-  bool do_global = true;
+  bool do_global = false;
   bool do_global_fastsim = false;
   
-  bool do_jet_reco = true;
-  bool do_jet_eval = true;
+  bool do_jet_reco = false;
+  bool do_jet_eval = false;
 
   bool do_dst_compress = false;
 
@@ -145,19 +170,19 @@ int Fun4All_G4_sPHENIX(
       HepMCNodeReader *hr = new HepMCNodeReader();
       se->registerSubsystem(hr);
     }
-  else
+  else if (!upsilons)
     {
       // toss low multiplicity dummy events
       PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
-      gen->add_particles("e-",1); // mu+,e+,proton,pi+,Upsilon
-      // gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
+      gen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
+      
       if (readhepmc) {
 	gen->set_reuse_existing_vertex(true);
 	gen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
       } else {
 	gen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
-					       PHG4SimpleEventGenerator::Uniform,
-					       PHG4SimpleEventGenerator::Uniform);
+					      PHG4SimpleEventGenerator::Uniform,
+					      PHG4SimpleEventGenerator::Uniform);
 	gen->set_vertex_distribution_mean(0.0,0.0,0.0);
 	gen->set_vertex_distribution_width(0.0,0.0,5.0);
       }
@@ -166,10 +191,48 @@ int Fun4All_G4_sPHENIX(
       gen->set_eta_range(-0.5, 0.5);
       gen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
       gen->set_pt_range(0.1, 10.0);
+      
       gen->Embed(1);
       gen->Verbosity(0);
       se->registerSubsystem(gen);
     }
+  
+  if(upsilons || embed_upsilons)
+    {
+      PHG4ParticleGeneratorVectorMeson *gen = new PHG4ParticleGeneratorVectorMeson();
+      gen->set_decay_types("e+","e-");    // dielectron decay
+      //gen->set_vtx_zrange(-10.0, +10.0);
+      gen->set_vtx_zrange(0.0, 0.0);
+      // Note: this rapidity range completely fills the acceptance of eta = +/- 1 unit
+      gen->set_rapidity_range(-1.0, +1.0);
+      gen->set_pt_range(0.0, 10.0);
+      
+      if(istate == 1)
+	{
+	  // Upsilon(1S)
+	  gen->set_mass(9.46);
+	  gen->set_width(54.02e-6);
+	}
+      else if (istate == 2)
+	{
+	  // Upsilon(2S)
+	  gen->set_mass(10.0233);
+	  gen->set_width(31.98e-6);
+	}
+      else
+	{
+	  // Upsilon(3S)
+	  gen->set_mass(10.3552);
+	  gen->set_width(20.32e-6);
+	}
+      
+      gen->Verbosity(0);
+      se->registerSubsystem(gen);
+      
+      cout << "Upsilon generator for istate = " << istate << " created and registered " << endl;	  
+      
+    }
+  
 
   if (!readhits)
     {
@@ -257,7 +320,11 @@ int Fun4All_G4_sPHENIX(
   // Simulation evaluation
   //----------------------
 
-  if (do_svtx_eval) Svtx_Eval("g4svtx_eval.root");
+  char outfile[500];
+  //sprintf(outfile,"eval_output/g4svx_eval_%i.root",process);
+  sprintf(outfile,"maps_5layer_eval_output/g4svx_eval_%i.root",process);
+
+  if (do_svtx_eval) Svtx_Eval(outfile);
 
   if (do_cemc_eval) CEMC_Eval("g4cemc_eval.root");
 
@@ -341,4 +408,4 @@ int Fun4All_G4_sPHENIX(
   std::cout << "All done" << std::endl;
   delete se;
   gSystem->Exit(0);
-}
+    }

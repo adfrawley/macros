@@ -1,0 +1,9 @@
+#!/bin/sh
+printenv
+echo "runit"
+echo "nargs"
+echo $#
+echo "process"
+echo $1
+echo $2
+root -b -q Fun4All_G4_sPHENIX.C\($1,$2\)
