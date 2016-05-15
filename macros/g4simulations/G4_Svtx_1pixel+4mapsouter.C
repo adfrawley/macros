@@ -250,7 +250,7 @@ void Svtx_Reco(int verbosity = 0)
   //---------------------
   // Ghost rejection
   //---------------------
-  PHG4TrackGhostRejection* rejection = new PHG4TrackGhostRejection(6);
+  PHG4TrackGhostRejection* rejection = new PHG4TrackGhostRejection(5);
   rejection->Verbosity(verbosity);
   rejection->set_max_shared_hits(3);
   se->registerSubsystem( rejection );
