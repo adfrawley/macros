@@ -491,6 +491,8 @@ void quarkonia_reconstruction_embedded()
   g4mass->Write();
   g4mass_primary->Write();
   hrpt->Write();
+  hrquality->Write();
+  hrdca2d->Write();
   fout1->Close();
 
   cout << "Finished write to file " << fname << endl;
