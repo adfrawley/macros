@@ -1,12 +1,12 @@
 // development macro for a mix of 1 pixel layer and selected ITS style silicon layers
 
 int Min_si_layer = 0;
-int Max_si_layer = 5;
+int Max_si_layer = 4;
 
 void SvtxInit()
 {
   Min_si_layer = 0;
-  Max_si_layer = 5;
+  Max_si_layer = 4;
 }
 
 double Svtx(PHG4Reco* g4Reco,
@@ -42,16 +42,16 @@ double Svtx(PHG4Reco* g4Reco,
   // Outer strips:   2%   X_0 (conservative)  (0.34% sensor + 1.66% support) sensor = 320 mc Si, support = 238 mc Cu
   //=======================================================================================================
 
-  double svxrad[6] = {svtx_inner_radius, 3.9, 19.6, 24.5, 34.4, 64.0}; // 2nd layer is layer three of ITS inner barrel
-  double si_thickness[6] = {0.0200, 0.005, 0.005, 0.005, 0.005, 0.005};  // ALICE ITS upgrade Si thickness is 50 microns
-  double length[6] = {20.0, 27.0, 88.0, 88.0, 148.0, 148.0}; // ALICE ladder lengths (stave - 2cm)
+  double svxrad[5] = {svtx_inner_radius, 19.6, 24.5, 34.4, 64.0}; // 2nd layer is layer three of ITS inner barrel
+  double si_thickness[5] = {0.0200, 0.005, 0.005, 0.005, 0.005};  // ALICE ITS upgrade Si thickness is 50 microns
+  double length[5] = {20.0, 88.0, 88.0, 148.0, 148.0}; // ALICE ladder lengths (stave - 2cm)
 
   // ALICE ITS total thickness (% of X_0 of 0.3, 0.3, 0.3, 0.8, 0.8, 0.8, 0.8
   // Pixel chip thickness of 50 um (% of X_0 of 0.05 x 1.07 = 0.053%) in all layers
   // so inner 3 layers support thickness = 0.3 - 0.053 = 0.25%, outer 4 layers = 0.8 - 0.053 = 0.75%
   // Support thickness equivalent for Cu in inner layer = 0.25%/6.96% x 1 mm = 0.036 mm = 0.0036 cm
   // Support thickness equivalent for Cu in outer layer = 0.75%/6.96% x 1 mm = 0.108 mm = 0.0108 cm
-  double support_thickness[6] = {0.0154, 0.0036, 0.0108, 0.0108, 0.0108, 0.0108};
+  double support_thickness[5] = {0.0154, 0.0108, 0.0108, 0.0108, 0.0108};
 
   // here is our silicon:
   double inner_radius = radius;
@@ -100,7 +100,7 @@ double Svtx(PHG4Reco* g4Reco,
     }
   radius += support_thickness[Max_si_layer] + no_overlapp;
 
-    cout << "========================== G4_Svtx_1pixel+1maps+4mapsouter.C::Svtx() ==========================" << endl;
+    cout << "========================== G4_Svtx_1pixel+4mapsouter.C::Svtx() ==========================" << endl;
     cout << " SVTX Material Description: " << endl;
     for (int ilayer = Min_si_layer; ilayer <= Max_si_layer; ilayer++) {
       cout << "  layer " << ilayer
@@ -140,8 +140,8 @@ void Svtx_Cells(int verbosity = 0)
   // updated for ITS layers
 
   // 28 um / sqrt(2) from typical cluster size (not yet simulated for MAPS)
-  double svxcellsizex[6] = {0.0050, 0.0020, 0.0020, 0.0020, 0.0020, 0.0020};
-  double svxcellsizey[6] = {0.0425, 0.0020, 0.0020, 0.0020, 0.0020, 0.0020};
+  double svxcellsizex[5] = {0.0050, 0.0020, 0.0020, 0.0020, 0.0020};
+  double svxcellsizey[5] = {0.0425, 0.0020, 0.0020, 0.0020, 0.0020};
   
   PHG4CylinderCellReco *svtx_cells = new PHG4CylinderCellReco();
   svtx_cells->Detector("SVTX");
@@ -183,11 +183,10 @@ void Svtx_Reco(int verbosity = 0)
   PHG4SvtxDigitizer* digi = new PHG4SvtxDigitizer();
   digi->Verbosity(verbosity);
   digi->set_adc_scale(0, 255, 1.0e-6); // 1.0 keV / bit
-  digi->set_adc_scale(1, 255, 1.0e-6); // 1.0 keV / bit
+  digi->set_adc_scale(1, 255, 1.6e-6); // 1.6 keV / bit
   digi->set_adc_scale(2, 255, 1.6e-6); // 1.6 keV / bit
   digi->set_adc_scale(3, 255, 1.6e-6); // 1.6 keV / bit
   digi->set_adc_scale(4, 255, 1.6e-6); // 1.6 keV / bit
-  digi->set_adc_scale(5, 255, 1.6e-6); // 1.6 keV / bit
   se->registerSubsystem( digi );
   
   //------------------------------------------
@@ -196,12 +195,11 @@ void Svtx_Reco(int verbosity = 0)
   // defaults to 1.0 (fully active)
   PHG4SvtxDeadArea* deadarea = new PHG4SvtxDeadArea();
   deadarea->Verbosity(verbosity);
-  deadarea->set_hit_efficiency(0,0.80);  // Assumes 0.914 average live pixels, about 0.87 average pixel area
+  deadarea->set_hit_efficiency(0,0.80);  // Assumes 0.914 average live pixels for 13 ladders, about 0.87 average pixel area
   deadarea->set_hit_efficiency(1,0.99); // Leo says use 1% inefficiency
   deadarea->set_hit_efficiency(2,0.99);
   deadarea->set_hit_efficiency(3,0.99);
   deadarea->set_hit_efficiency(4,0.99);
-  deadarea->set_hit_efficiency(5,0.99);
   se->registerSubsystem( deadarea );
   
   //----------------------------------
@@ -214,7 +212,6 @@ void Svtx_Reco(int verbosity = 0)
   thresholds->set_threshold(2,0.25);
   thresholds->set_threshold(3,0.25);
   thresholds->set_threshold(4,0.25);
-  thresholds->set_threshold(5,0.25);
   //thresholds->set_use_thickness_mip(0, true);
   se->registerSubsystem( thresholds );
 
@@ -229,16 +226,15 @@ void Svtx_Reco(int verbosity = 0)
   //---------------------
   // Track reconstruction
   //---------------------
-  PHG4HoughTransform* hough = new PHG4HoughTransform(6,6);
+  PHG4HoughTransform* hough = new PHG4HoughTransform(5,5);
   hough->set_mag_field(1.4);
   hough->Verbosity(verbosity);
   // ALICE ITS upgrade values for total thickness in X_0
   hough->set_material(0, 0.013);  // phenix pixel layer thickness
-  hough->set_material(1, 0.003);
+  hough->set_material(1, 0.008);
   hough->set_material(2, 0.008);
   hough->set_material(3, 0.008);
   hough->set_material(4, 0.008);
-  hough->set_material(5, 0.008);
   hough->setPtRescaleFactor(0.9972);
   hough->set_chi2_cut_init(5.0);
   //hough->set_chi2_cut_fast(60.0,0.0,100.0); // 10.0, 50.0, 75.0

@@ -32,7 +32,42 @@ void look_quarkonia_histos()
   //TFile *fin = new TFile("maps_7layer_single_ups1s_qual3.00_dca2d0.10.root");
   //TFile *fin = new TFile("maps_5layer_single_ups1s_qual3.00_dca2d0.10.root");
   //TFile *fin = new TFile("pixels_strips_7layers_embed_ups1s_qual3.00_dca2d0.10.root");
-  TFile *fin = new TFile("pixel_maps_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixel_maps_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixel_maps_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_pixel_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
+  TFile *fin = new TFile("maps_pixel_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+
+  if(!fin)
+    {
+      cout << " failed to open input file " << endl;
+      exit(1);
+    }
+
+
+  TH1F *hrquality;
+  fin->GetObject("hrquality",hrquality);
+  TH1F *hrdca2d;
+  fin->GetObject("hrdca2d",hrdca2d);
+  if(!hrquality)
+    {
+      cout << "Did not find hrquality" << endl;
+      exit(1);
+    }
+  if(!hrdca2d)
+    {
+      cout << "Did not find hrdca2d" << endl;
+     exit(1);
+    }
+
+  TCanvas *cq = new TCanvas("cq","cq",5,5,600,600 );
+  cq->Divide(1,2);
+  cq->cd(1);
+  hrquality->Draw();
+  cq->cd(2);
+  gPad->SetLogy(1);
+  hrdca2d->Draw();
+
+  // Mass histos
 
   TH1D *recomass_primary;
   fin->GetObject("recomass_primary",recomass_primary);
@@ -42,8 +77,6 @@ void look_quarkonia_histos()
   fin->GetObject("g4mass_primary",g4mass_primary);
   TH1D *g4mass;
   fin->GetObject("g4mass",g4mass);
-
-  // Mass histos
   
   TCanvas *cmass = new TCanvas("cmass","cmass",10,10,800,600);
   gPad->SetLogy(1);

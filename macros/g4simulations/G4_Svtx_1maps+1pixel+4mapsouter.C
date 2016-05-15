@@ -100,7 +100,7 @@ double Svtx(PHG4Reco* g4Reco,
     }
   radius += support_thickness[Max_si_layer] + no_overlapp;
 
-    cout << "========================== G4_Svtx_1pixel+1maps+4mapsouter.C::Svtx() ==========================" << endl;
+    cout << "========================== G4_Svtx_1maps+1pixel+4mapsouter.C::Svtx() ==========================" << endl;
     cout << " SVTX Material Description: " << endl;
     for (int ilayer = Min_si_layer; ilayer <= Max_si_layer; ilayer++) {
       cout << "  layer " << ilayer
