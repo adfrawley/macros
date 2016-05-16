@@ -1,6 +1,6 @@
 
 int Fun4All_G4_sPHENIX(
-		       const int nEvents = 10,
+		       const int nEvents = 1,
 		       const char * inputFile = "/gpfs02/phenix/prod/sPHENIX/preCDR/pro.1-beta.5/single_particle/spacal1d/fieldmap/G4Hits_sPHENIX_e-_eta0_16GeV.root",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
@@ -26,42 +26,47 @@ int Fun4All_G4_sPHENIX(
   // What to run
   //======================
 
-  bool do_bbc = true;
+  bool do_bbc = false;
   
   bool do_pipe = true;
   
-  bool do_svtx = true;
-  bool do_svtx_cell = true;
-  bool do_svtx_track = true;
-  bool do_svtx_eval = true;
+  bool do_svtx = false;
+  bool do_svtx_cell = false;
+  bool do_svtx_track = false;
+  bool do_svtx_eval = false;
+
+  bool do_maps = true;
+  bool do_maps_cell = true;
+  bool do_maps_track = false;
+  bool do_maps_eval = false;
 
   bool do_preshower = false;
   
-  bool do_cemc = true;
-  bool do_cemc_cell = true;
-  bool do_cemc_twr = true;
-  bool do_cemc_cluster = true;
-  bool do_cemc_eval = true;
+  bool do_cemc = false;
+  bool do_cemc_cell = false;
+  bool do_cemc_twr = false;
+  bool do_cemc_cluster = false;
+  bool do_cemc_eval = false;
 
-  bool do_hcalin = true;
-  bool do_hcalin_cell = true;
-  bool do_hcalin_twr = true;
-  bool do_hcalin_cluster = true;
-  bool do_hcalin_eval = true;
+  bool do_hcalin = false;
+  bool do_hcalin_cell = false;
+  bool do_hcalin_twr = false;
+  bool do_hcalin_cluster = false;
+  bool do_hcalin_eval = false;
 
   bool do_magnet = true;
   
-  bool do_hcalout = true;
-  bool do_hcalout_cell = true;
-  bool do_hcalout_twr = true;
-  bool do_hcalout_cluster = true;
-  bool do_hcalout_eval = true;
+  bool do_hcalout = false;
+  bool do_hcalout_cell = false;
+  bool do_hcalout_twr = false;
+  bool do_hcalout_cluster = false;
+  bool do_hcalout_eval = false;
   
-  bool do_global = true;
+  bool do_global = false;
   bool do_global_fastsim = false;
   
-  bool do_jet_reco = true;
-  bool do_jet_eval = true;
+  bool do_jet_reco = false;
+  bool do_jet_eval = false;
 
   bool do_dst_compress = false;
 
@@ -81,12 +86,14 @@ int Fun4All_G4_sPHENIX(
 
   // establish the geometry and reconstruction setup
   gROOT->LoadMacro("G4Setup_sPHENIX.C");
-  G4Init(do_svtx,do_preshower,do_cemc,do_hcalin,do_magnet,do_hcalout,do_pipe);
+  G4Init(do_svtx, do_maps, do_preshower,do_cemc,do_hcalin,do_magnet,do_hcalout,do_pipe);
 
   int absorberactive = 1; // set to 1 to make all absorbers active volumes
   //  const string magfield = "1.5"; // if like float -> solenoidal field in T, if string use as fieldmap name (including path)
   const string magfield = "/phenix/upgrades/decadal/fieldmaps/sPHENIX.2d.root"; // if like float -> solenoidal field in T, if string use as fieldmap name (including path)
   const float magfield_rescale = 1.4/1.5; // scale the map to a 1.4 T field
+
+  gROOT->LoadMacro("DisplayOn.C");
 
   //---------------
   // Fun4All server
@@ -150,7 +157,7 @@ int Fun4All_G4_sPHENIX(
       // toss low multiplicity dummy events
       PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
       gen->add_particles("e-",1); // mu+,e+,proton,pi+,Upsilon
-      // gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
+      //gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
       if (readhepmc) {
 	gen->set_reuse_existing_vertex(true);
 	gen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
@@ -178,7 +185,7 @@ int Fun4All_G4_sPHENIX(
       //---------------------
 
       G4Setup(absorberactive, magfield, TPythia6Decayer::kAll,
-	      do_svtx, do_preshower, do_cemc, do_hcalin, do_magnet, do_hcalout, do_pipe, magfield_rescale);
+	      do_svtx, do_maps, do_preshower, do_cemc, do_hcalin, do_magnet, do_hcalout, do_pipe, magfield_rescale);
     }
 
   //---------
@@ -202,6 +209,8 @@ int Fun4All_G4_sPHENIX(
   if (do_hcalin_cell) HCALInner_Cells();
 
   if (do_hcalout_cell) HCALOuter_Cells();
+
+  if (do_maps_cell) Maps_Cells();
 
   //-----------------------------
   // CEMC towering and clustering
@@ -331,14 +340,20 @@ int Fun4All_G4_sPHENIX(
       return;
     }
 
+  /*
+  DisplayOn();
+  */
+
   se->run(nEvents);
 
   //-----
   // Exit
   //-----
 
+
   se->End();
   std::cout << "All done" << std::endl;
   delete se;
   gSystem->Exit(0);
+
 }

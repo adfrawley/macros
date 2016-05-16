@@ -2,7 +2,8 @@
 double no_overlapp = 0.0001; // added to radii to avoid overlapping volumes
 bool overlapcheck = false; // set to true if you want to check for overlaps
 
-void G4Init(bool do_svtx = true,
+void G4Init(bool do_svtx = false,
+	    bool do_maps = true,
 	    bool do_preshower = false,
 	    bool do_cemc = true,
 	    bool do_hcalin = true,
@@ -28,6 +29,12 @@ void G4Init(bool do_svtx = true,
       //gROOT->LoadMacro("G4_Svtx_ladders.C");       // testing
       //gROOT->LoadMacro("G4_Svtx_ITS.C");           // testing
       SvtxInit();
+    }
+
+  if (do_maps)
+    {
+      gROOT->LoadMacro("G4_ITS_MAPS.C");                 // ITS like tracker
+      MapsInit();
     }
 
   if (do_preshower) 
@@ -65,7 +72,8 @@ void G4Init(bool do_svtx = true,
 int G4Setup(const int absorberactive = 0,
 	    const string &field ="1.5",
 	    const EDecayType decayType = TPythia6Decayer::kAll,
-	    const bool do_svtx = true,
+	    const bool do_svtx = false,
+	    const bool do_maps = true,
 	    const bool do_preshower = false,
 	    const bool do_cemc = true,
 	    const bool do_hcalin = true,
@@ -117,6 +125,10 @@ int G4Setup(const int absorberactive = 0,
   //----------------------------------------
   // SVTX
   if (do_svtx) radius = Svtx(g4Reco, radius, absorberactive);
+
+  //----------------------------------------
+  // Maps
+  if (do_maps) radius = Maps(g4Reco, radius, absorberactive);
 
   //----------------------------------------
   // PRESHOWER
