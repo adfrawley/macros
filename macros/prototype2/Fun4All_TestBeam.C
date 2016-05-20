@@ -61,6 +61,11 @@ Fun4All_TestBeam(int nEvents = 100,
 
   se->registerSubsystem(unpack_run);
 
+  // ------------------- Temperature output -------------------
+  TempInfoUnpackPRDF *unpack_temp = new TempInfoUnpackPRDF();
+  unpack_temp->Verbosity(RunInfoUnpackPRDF::VERBOSITY_SOME);
+  se->registerSubsystem(unpack_temp);
+
   // ------------------- HCal and EMcal -------------------
   SubsysReco *unpack = new CaloUnpackPRDF();
 // unpack->Verbosity(1);
@@ -267,6 +272,10 @@ Fun4All_TestBeam(int nEvents = 100,
 
   reader->AddTower("RAW_TILE_MAPPER");
   reader->AddTower("CALIB_TILE_MAPPER");
+
+  reader->AddTowerTemperature("HCALIN");
+  reader->AddTowerTemperature("HCALIN");
+  reader->AddTowerTemperature("HCALOUT");
 
   se->registerSubsystem(reader);
 
