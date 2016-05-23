@@ -35,7 +35,28 @@ void look_quarkonia_histos()
   //TFile *fin = new TFile("pixel_maps_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
   //TFile *fin = new TFile("pixel_maps_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
   //TFile *fin = new TFile("maps_pixel_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
-  TFile *fin = new TFile("maps_pixel_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_pixel_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixel_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_7layer_hijing_ups1s_qual3.00_dca2d0.10.root");
+
+  //TFile *fin = new TFile("maps_7layer_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_7layer_embed_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_pixel_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("maps_pixel_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixel_maps_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixel_maps_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+
+  //TFile *fin = new TFile("pixel_mapsouter_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("pixel_mapsouter_embed_ups1s_qual3.00_dca2d0.10.root");
+
+  //TFile *fin = new TFile("MIE_realistic_single_ups1s_qual3.00_dca2d0.10.root");
+  //TFile *fin = new TFile("MIE_realistic_embed_ups1s_qual3.00_dca2d0.10.root");
+
+  //TFile *fin = new TFile("maps+strips_embed_ups1s_qual3.00_dca2d0.10.root");
+  TFile *fin = new TFile("maps+strips_single_ups1s_qual3.00_dca2d0.10.root");
+
+  //TFile *fin = new TFile("ups1s_qual3.00_dca2d0.10.root");
+
 
   if(!fin)
     {
@@ -43,29 +64,33 @@ void look_quarkonia_histos()
       exit(1);
     }
 
+  bool get_hrquality = false;
 
-  TH1F *hrquality;
-  fin->GetObject("hrquality",hrquality);
-  TH1F *hrdca2d;
-  fin->GetObject("hrdca2d",hrdca2d);
-  if(!hrquality)
+  if(get_hrquality)
     {
-      cout << "Did not find hrquality" << endl;
-      exit(1);
+      TH1F *hrquality;
+      fin->GetObject("hrquality",hrquality);
+      TH1F *hrdca2d;
+      fin->GetObject("hrdca2d",hrdca2d);
+      if(!hrquality)
+	{
+	  cout << "Did not find hrquality" << endl;
+	  exit(1);
+	}
+      if(!hrdca2d)
+	{
+	  cout << "Did not find hrdca2d" << endl;
+	  exit(1);
+	}
+      
+      TCanvas *cq = new TCanvas("cq","cq",5,5,600,600 );
+      cq->Divide(1,2);
+      cq->cd(1);
+      hrquality->Draw();
+      cq->cd(2);
+      gPad->SetLogy(1);
+      hrdca2d->Draw();
     }
-  if(!hrdca2d)
-    {
-      cout << "Did not find hrdca2d" << endl;
-     exit(1);
-    }
-
-  TCanvas *cq = new TCanvas("cq","cq",5,5,600,600 );
-  cq->Divide(1,2);
-  cq->cd(1);
-  hrquality->Draw();
-  cq->cd(2);
-  gPad->SetLogy(1);
-  hrdca2d->Draw();
 
   // Mass histos
 
@@ -78,7 +103,7 @@ void look_quarkonia_histos()
   TH1D *g4mass;
   fin->GetObject("g4mass",g4mass);
   
-  TCanvas *cmass = new TCanvas("cmass","cmass",10,10,800,600);
+  TCanvas *cmass = new TCanvas("cmass","cmass",10,10,600,800);
   gPad->SetLogy(1);
 
   recomass_primary->SetLineColor(kRed);

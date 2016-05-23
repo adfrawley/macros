@@ -27,8 +27,8 @@ int Fun4All_G4_sPHENIX(
 
   bool upsilons = true;           // throw single Upsilons
   int istate = 1;  // Upsilon state = 1,2,3
-  bool embed_upsilons = true;           // throw single Upsilons inside a Hijing event
-  //bool embed_upsilons = false;           // throw single Upsilons NOT inside a Hijing event
+  //bool embed_upsilons = true;           // throw single Upsilons inside a Hijing event
+  bool embed_upsilons = false;           // throw single Upsilons NOT inside a Hijing event
   bool hijing_events = false;  // throw hijing events
 
   cout << "Switches: " 
