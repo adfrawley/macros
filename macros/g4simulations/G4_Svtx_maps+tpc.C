@@ -72,7 +72,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   radius = inner_cage_radius;
   
   double n_rad_length_cage = 1.0e-02;
-  double cage_length = 400.;
+  double cage_length = 160.;
   double cage_thickness = 1.43 * n_rad_length_cage;
   
   cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer);
@@ -150,9 +150,14 @@ void Svtx_Cells(int verbosity = 0)
   // eventually this will be replaced with an actual simulation of timing amplitude.
   double tpc_cell_y = 0.17;
   
+  PHG4TPCSpaceChargeDistortion * tpc_distortion = new PHG4TPCSpaceChargeDistortion(string(getenv("CALIBRATIONROOT")) + "/Tracking/TPC/SpaceChargeDistortion/sPHENIX20.root");
+//  tpc_distortion -> setAccuracy(0); // option to over write default factors
+//  tpc_distortion -> setPrecision(1); // option to over write default factors
+
   PHG4CylinderCellTPCReco *svtx_cells = new PHG4CylinderCellTPCReco(n_svx_layer);
   svtx_cells->setDiffusion(diffusion);
   svtx_cells->setElectronsPerKeV(electrons_per_kev);
+  svtx_cells->setDistortion(tpc_distortion);
   svtx_cells->Detector("SVTX");
   for (int i=0;i<n_svx_layer;++i) {
     svtx_cells->cellsize(i, svxcellsizex[i], svxcellsizey[i]);
@@ -238,7 +243,7 @@ void Svtx_Reco(int verbosity = 0)
   hough->setBinScale(1.0);
   hough->setZBinScale(1.0);
 
-  hough->Verbosity(10);
+  hough->Verbosity(0);
   double mat_scale = 1.0;
   hough->set_material(0, mat_scale*0.003);
   hough->set_material(1, mat_scale*0.003);
@@ -312,16 +317,17 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   // SVTX evaluation
   //----------------
 
-  // SvtxEvaluator* eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str());
-  // eval->do_cluster_eval(false);
-  // eval->do_g4hit_eval(false);
-  // eval->do_hit_eval(false);
-  // eval->do_gpoint_eval(false);
-  // eval->Verbosity(verbosity);
-  // se->registerSubsystem( eval );
+   SvtxEvaluator* eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str());
+   eval->do_cluster_eval(true);
+   eval->do_g4hit_eval(true);
+   eval->do_hit_eval(true);
+   eval->do_gpoint_eval(true);
+   eval->Verbosity(verbosity);
+   se->registerSubsystem( eval );
 
-  MomentumEvaluator* eval = new MomentumEvaluator(outputfile.c_str(),0.2,0.4,Max_si_layer,2,Max_si_layer-4,10.,80.);
-  se->registerSubsystem( eval );
+  MomentumEvaluator* eval1 = new MomentumEvaluator(string("momentum_") + outputfile.c_str(),0.2,0.4,Max_si_layer,2,Max_si_layer-4,10.,80.);
+
+  se->registerSubsystem( eval1 );
   
   return;
 }
