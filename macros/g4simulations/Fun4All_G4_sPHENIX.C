@@ -19,25 +19,37 @@ int Fun4All_G4_sPHENIX(
   //     upsilons = true
   //     embed_upsilons = true
   //     hijing = false
-  // for just hijing
+  // For embedded pions 
+  //      pions = true
+  //      embed_pions = true
+  //      hijing = false
+// for just hijing
   //     upsilons = false
   //     embed_upsilons = false
   //     hijing = true
   //===============
 
-  bool upsilons = true;           // throw single Upsilons
+  // Upsilons
+  bool upsilons = false;           // throw single Upsilons if true
   int istate = 1;  // Upsilon state = 1,2,3
-  //bool embed_upsilons = true;           // throw single Upsilons inside a Hijing event
-  bool embed_upsilons = false;           // throw single Upsilons NOT inside a Hijing event
-  bool hijing_events = false;  // throw hijing events
+  bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
+
+  // pions
+  bool pions = true;      // throw single pions if true
+  bool embed_pions = false;  // throw single pions in a Hijing event if true
+
+  // Hijing events only
+  bool hijing_events = false;  // if true, throw hijing events only
 
   cout << "Switches: " 
        << " hijing_events (only) = " << hijing_events
        << " upsilons = " << upsilons
        << " embed_upsilons (in Hijing events) = " << embed_upsilons
+       << " pions " << pions
+       << " embed_pions " << embed_pions 
        << endl; 
-
-  if(hijing_events || embed_upsilons)
+  
+  if(hijing_events || embed_upsilons || embed_pions)
     {
       // get the Hijing input file name
       char hfile[500];
@@ -54,7 +66,7 @@ int Fun4All_G4_sPHENIX(
   // Or:
   // read files in HepMC format (typically output from event generators like hijing or pythia)
   bool readhepmc = false; // read HepMC files
-  if(hijing_events || embed_upsilons)
+  if(hijing_events || embed_upsilons || embed_pions)
     readhepmc = true;
   // Or:
   // Use particle generator
@@ -184,64 +196,72 @@ int Fun4All_G4_sPHENIX(
       HepMCNodeReader *hr = new HepMCNodeReader();
       se->registerSubsystem(hr);
     }
-  else if (!upsilons)
+
+  if (pions || embed_pions)
     {
-      // toss low multiplicity dummy events
-      PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
-      gen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
-      
-      if (readhepmc) {
-	gen->set_reuse_existing_vertex(true);
-	gen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
-      } else {
-	gen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
-					      PHG4SimpleEventGenerator::Uniform,
-					      PHG4SimpleEventGenerator::Uniform);
-	gen->set_vertex_distribution_mean(0.0,0.0,0.0);
-	gen->set_vertex_distribution_width(0.0,0.0,5.0);
-      }
-      gen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
-      gen->set_vertex_size_parameters(0.0,0.0);
-      gen->set_eta_range(-0.5, 0.5);
-      gen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
-      gen->set_pt_range(0.1, 10.0);
-      
-      gen->Embed(1);
-      gen->Verbosity(0);
-      se->registerSubsystem(gen);
+      for(int i=0; i<80; i++)
+	{
+	  double pt = (double) i * 0.5 + 0.5;
+
+	  // toss low multiplicity dummy events
+	  PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
+	  pgen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
+	  
+	  if (readhepmc) {
+	    pgen->set_reuse_existing_vertex(true);
+	    pgen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
+	  } else {
+	    pgen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
+						  PHG4SimpleEventGenerator::Uniform,
+						  PHG4SimpleEventGenerator::Uniform);
+	    pgen->set_vertex_distribution_mean(0.0,0.0,0.0);
+	    //pgen->set_vertex_distribution_width(0.0,0.0,5.0);
+	    pgen->set_vertex_distribution_width(0.0,0.0,0.0);
+	  }
+	  pgen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
+	  pgen->set_vertex_size_parameters(0.0,0.0);
+	  pgen->set_eta_range(-1.0, 1.0);
+	  pgen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
+	  pgen->set_pt_range(pt, pt);
+	  
+	  pgen->Embed(1);
+	  pgen->Verbosity(0);
+	  se->registerSubsystem(pgen);
+	  
+	}
     }
   
   if(upsilons || embed_upsilons)
     {
-      PHG4ParticleGeneratorVectorMeson *gen = new PHG4ParticleGeneratorVectorMeson();
-      gen->set_decay_types("e+","e-");    // dielectron decay
-      //gen->set_vtx_zrange(-10.0, +10.0);
-      gen->set_vtx_zrange(0.0, 0.0);
+      PHG4ParticleGeneratorVectorMeson *vgen = new PHG4ParticleGeneratorVectorMeson();
+      vgen->set_decay_types("e+","e-");    // dielectron decay
+      //vgen->set_vtx_zrange(-10.0, +10.0);
+      vgen->set_vtx_zrange(0.0, 0.0);
       // Note: this rapidity range completely fills the acceptance of eta = +/- 1 unit
-      gen->set_rapidity_range(-1.0, +1.0);
-      gen->set_pt_range(0.0, 10.0);
+      vgen->set_rapidity_range(-1.0, +1.0);
+      vgen->set_pt_range(0.0, 10.0);
       
       if(istate == 1)
 	{
 	  // Upsilon(1S)
-	  gen->set_mass(9.46);
-	  gen->set_width(54.02e-6);
+	  vgen->set_mass(9.46);
+	  vgen->set_width(54.02e-6);
 	}
       else if (istate == 2)
 	{
 	  // Upsilon(2S)
-	  gen->set_mass(10.0233);
-	  gen->set_width(31.98e-6);
+	  vgen->set_mass(10.0233);
+	  vgen->set_width(31.98e-6);
 	}
       else
 	{
 	  // Upsilon(3S)
-	  gen->set_mass(10.3552);
-	  gen->set_width(20.32e-6);
+	  vgen->set_mass(10.3552);
+	  vgen->set_width(20.32e-6);
 	}
       
-      gen->Verbosity(0);
-      se->registerSubsystem(gen);
+      vgen->Verbosity(0);
+      se->registerSubsystem(vgen);
       
       cout << "Upsilon generator for istate = " << istate << " created and registered " << endl;	  
       
