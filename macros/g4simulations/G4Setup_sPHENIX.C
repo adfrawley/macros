@@ -25,13 +25,16 @@ void G4Init(bool do_svtx = true,
       //gROOT->LoadMacro("G4_Svtx_pixels+strips.C"); // testing
       //gROOT->LoadMacro("G4_Svtx_pixels+tpc.C");    // testing
       //gROOT->LoadMacro("G4_Svtx_maps+strips.C");   // testing
-      gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
       //gROOT->LoadMacro("G4_Svtx_maps_5layers.C");  // testing
-      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // done
       //gROOT->LoadMacro("G4_Svtx_1maps+1pixel+4mapsouter.C");  // done
       //gROOT->LoadMacro("G4_Svtx_1pixel+1maps+4mapsouter.C");  // testing
       //gROOT->LoadMacro("G4_Svtx_1pixel+4mapsouter.C");  // testing
-
+      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // done
+      //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
+      gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // testing
+  
+      //gROOT->LoadMacro("G4_Svtx_2maps+4mapsouter.C");  // done
+      //gROOT->LoadMacro("G4_Svtx_pixels+4mapsouter.C");  // done
 
       SvtxInit();
     }
