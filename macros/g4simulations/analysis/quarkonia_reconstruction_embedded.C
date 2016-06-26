@@ -63,12 +63,29 @@ void quarkonia_reconstruction_embedded()
 
 #ifndef TEST
   cout << "Reading electron ntuples " << endl; 
-  //TChain *ntp_vertex = new TChain("ntp_vertex","events");
-  //TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
-#include "ntuple_files.C"
+  bool ups1s = true;
+  bool ups2s = false;
+  bool ups3s = false;
+  
+  TChain* ntp_track = new TChain("ntp_track","reco tracks");
+  TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
+  TChain* ntp_vertex = new TChain("ntp_vertex","events");
+  TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
+  
+  // The condor jobs make 1000 files
+  for(int i=0;i<1000;i++)
+    {
+      char name[500];
+      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
+      ntp_vertex->Add(name);
+      ntp_track->Add(name);
+      ntp_gtrack->Add(name);
+    }
+
+  // # include "ntuple_files.C"
   //#include "ntuple_files_maps_5layer.C"
-
+    
 #endif
   
   // Ntuple access variables

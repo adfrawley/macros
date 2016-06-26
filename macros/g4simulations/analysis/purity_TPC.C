@@ -49,7 +49,7 @@ void purity_TPC()
   
   double mom_rescale = 1.0;
 
-  static const int nlayers = 48;  // maximum number of tracking layers
+  static const int max_layers = 64;  // maximum number of tracking layers
   
   double ptmax = 12.2;
   
@@ -66,20 +66,24 @@ void purity_TPC()
   // Open the evaluator output file 
   cout << "Reading ntuple " << endl;
 
-  /*  
+
    TChain* ntp_track = new TChain("ntp_track","reco tracks");
   TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
-  
-  ntp_vertex->Add("/gpfs/mnt/gpfs02/phenix/hhj/hhj2/isibf5y/sPHENIX/test/test_v1/macros/macros/g4simulations/500pionsperevt_40GeV/g4svtx_eval_1122.root ");
-  ntp_track->Add("/gpfs/mnt/gpfs02/phenix/hhj/hhj2/isibf5y/sPHENIX/test/test_v1/macros/macros/g4simulations/500pionsperevt_40GeV/g4svtx_eval_1122.root ");
-  ntp_gtrack->Add("/gpfs/mnt/gpfs02/phenix/hhj/hhj2/isibf5y/sPHENIX/test/test_v1/macros/macros/g4simulations/500pionsperevt_40GeV/g4svtx_eval_1122.root");
-  */
 
-  
+ // The condor jobs make 1000 files
+  for(int i=0;i<1000;i++)
+    {
+      char name[500];
+      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
+      ntp_vertex->Add(name);
+      ntp_track->Add(name);
+      ntp_gtrack->Add(name);
+    }
+
   // This include file contains the list of files to chain
- #include "ntuple_files_tpc.C"
+  // #include "ntuple_files_tpc.C"
   
   // This include file contains the definitions of the ntuple variables, and the chain definitions
 #include "ntuple_variables.C"
@@ -200,28 +204,20 @@ void purity_TPC()
 
   for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
     {
-      cout << "Get event " << iev << endl;
+      if(iev%100 == 0)
+	cout << "Get event " << iev << endl;
 
       int recoget = ntp_vertex->GetEntry(iev);
       double evt_vertex_z = evz;
-
-      /*
-      // skip this event if the Z vertex is bad                                                                                               
-      if(fabs(evz) > 0.1)
-       {
-         cout << "Skip this event" << endl;
-         nr += ntracks;
-         continue;
-       }
-      */
 
       for(int ir=nr;ir<nr+ntracks;ir++)
 	{
 	  int recoget = ntp_track->GetEntry(ir);
 
+	  //cout << " rnhits = " << rnhits << " rpurity = " << rpurity << endl;
 	  // want only tracks with hits in all layers
-	  if(nlayers != 48)
-	    continue;
+	  //if(rnhits != max_layers)
+	  //continue;
 
 	  /*
 	  if(rgembed > 0)
@@ -255,7 +251,7 @@ void purity_TPC()
 	  // If so, add to hquality
 	  if(use_dca_sigmas)
 	    {
-	      if(rpurity == nlayers && rgpT > 0.5 && rdca2d/rdca2dsigma < dca_sigma_cut)
+	      if(rpurity == max_layers && rgpT > 0.5 && rdca2d/rdca2dsigma < dca_sigma_cut)
 		if(rgpT > 0.5 && rdca2d/rdca2dsigma < dca_sigma_cut)
 		  {
 		    hquality->Fill(rquality);
@@ -263,7 +259,7 @@ void purity_TPC()
 	    }
 	  else
 	    {
-	      if(rpurity == nlayers && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
+	      if(rpurity == max_layers && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
 		if(rgpT > 0.5 && fabs(rdca2d) < dca_cut)
 		  {
 		    hquality->Fill(rquality);
@@ -272,7 +268,7 @@ void purity_TPC()
 	  
 
 	  // Make a histogram of purity vs quality or dca sigmas with no cuts
-	  int ipurity = 48 - (int) rpurity;
+	  int ipurity = max_layers - (int) rpurity;
 	  if(ipurity > 3)
 	    {
 	      continue;
@@ -605,7 +601,7 @@ void purity_TPC()
   
   for(int i=npurity-1;i>-1;i--)
     {
-      if(i==nlayers-1)
+      if(i==max_layers-1)
         {
 	  hpurity_quality[i]->GetXaxis()->SetTitle("quality");
           hpurity_quality[i]->Draw("p");

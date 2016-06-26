@@ -95,7 +95,7 @@ void look_purity()
 
   for(int i = 0;i<NPT;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.5;
+      double ptlo = (double) i * 0.5 + 0.25;
       double pthi = ptlo + 0.5;
 
       int binlo = hpt_dca2d->GetXaxis()->FindBin(ptlo);
@@ -107,7 +107,7 @@ void look_purity()
       hpt->GetXaxis()->SetTitleOffset(1.0);
       hpt->DrawCopy();
 
-      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << " binhi " << binhi << " integral " << hpt->Integral() << std::endl;
+      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << pthi << " binhi " << binhi << " integral " << hpt->Integral() << std::endl;
 
       TF1 *f = new TF1("f","gaus");
       f->SetParameter(1,hpt->GetMean());
@@ -127,7 +127,7 @@ void look_purity()
 
   TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,40.0);
   hdummy2->SetMinimum(0);
-  hdummy2->SetMaximum(0.12);
+  hdummy2->SetMaximum(0.06);
   hdummy2->GetXaxis()->SetTitle("p_{T}");
   hdummy2->GetYaxis()->SetTitle("#Delta p_{T}/p_{T}");
   hdummy2->GetYaxis()->SetTitleOffset(1.2);
@@ -182,12 +182,17 @@ void look_purity()
   c6->cd(2);
   leg->Draw();
 
-  /*
-  c6->cd(2);
+  TCanvas *c7 = new TCanvas("c7","c7",40,40,1200,600);
   TH1D * hquality;
   fin->GetObject("hquality",hquality);
   hquality->Draw();
-  */
+
+  TCanvas *c8 = new TCanvas("c8","c8",40,40,1200,600);
+  TH1D * hnhits;
+  fin->GetObject("hnhits",hnhits);
+  hnhits->GetXaxis()->SetTitle("hits per track");
+  hnhits->Draw();
+  cout << "hnhits integral = " << hnhits->Integral() << endl;
 
 
 

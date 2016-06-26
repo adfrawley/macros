@@ -30,12 +30,12 @@ int Fun4All_G4_sPHENIX(
   //===============
 
   // Upsilons
-  bool upsilons = false;           // throw single Upsilons if true
+  bool upsilons = true;           // throw single Upsilons if true
   int istate = 1;  // Upsilon state = 1,2,3
   bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
 
   // pions
-  bool pions = true;      // throw single pions if true
+  bool pions = false;      // throw single pions if true
   bool embed_pions = false;  // throw single pions in a Hijing event if true
 
   // Hijing events only
