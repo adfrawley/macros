@@ -85,12 +85,6 @@ void Maps_Cells(int verbosity = 0)
   maps_cells->Verbosity(verbosity);
   se->registerSubsystem(maps_cells);
 
-  /*  
-  PHG4SiliconTrackerCellReco *reco = new PHG4SiliconTrackerCellReco("SILICON_TRACKER");
-  reco->Verbosity(verbosity);
-  se->registerSubsystem(reco);
-  */
-
   return;
 }
 
