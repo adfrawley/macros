@@ -33,7 +33,6 @@ double Maps(PHG4Reco* g4Reco, double radius,
   double max_radius = 0.0;
 
   for (int ilayer = Min_maps_layer; ilayer <= Max_maps_layer; ilayer++)
-    //for (int ilayer = 0; ilayer < 3; ilayer++)
     {
       cout << " ilayer = " << ilayer << endl;
 
@@ -41,7 +40,6 @@ double Maps(PHG4Reco* g4Reco, double radius,
       PHG4MapsSubsystem  *lyr = new PHG4MapsSubsystem("MAPS", ilayer, stave_type[ilayer]);
       lyr->Verbosity(2);
       lyr->set_nominal_layer_radius(maps_layer_radius[ilayer]);
-      //lyr->set_stave_type(stave_type[ilayer]);
       lyr->SetActive();
       lyr->OverlapCheck(overlapcheck);
       
@@ -82,7 +80,8 @@ void Maps_Cells(int verbosity = 0)
   // Later they have to be assigned to Maps pixels.
 
   PHG4MapsCellReco *maps_cells = new PHG4MapsCellReco("MAPS");
-  //maps_cells->Detector("MAPS");
+  maps_cells->set_pixel_x(0.0028);  // 28 microns in cm
+  maps_cells->set_pixel_y(0.0028);  
   maps_cells->Verbosity(verbosity);
   se->registerSubsystem(maps_cells);
 
