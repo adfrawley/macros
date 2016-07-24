@@ -37,8 +37,8 @@ int Fun4All_G4_sPHENIX(
 
   bool do_maps = true;
   bool do_maps_cell = true;
-  bool do_maps_track = false;
-  bool do_maps_eval = false;
+  bool do_maps_track = true;
+  bool do_maps_eval = true;
 
   bool do_preshower = false;
   
@@ -100,7 +100,7 @@ int Fun4All_G4_sPHENIX(
   //---------------
 
   Fun4AllServer *se = Fun4AllServer::instance();
-  se->Verbosity(0); 
+  se->Verbosity(5); 
   // just if we set some flags somewhere in this macro
   recoConsts *rc = recoConsts::instance();
   // By default every random number generator uses
@@ -156,7 +156,7 @@ int Fun4All_G4_sPHENIX(
     {
       // toss low multiplicity dummy events
       PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
-      gen->add_particles("e-",1); // mu+,e+,proton,pi+,Upsilon
+      gen->add_particles("e-",10); // mu+,e+,proton,pi+,Upsilon
       //gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
       if (readhepmc) {
 	gen->set_reuse_existing_vertex(true);
@@ -207,13 +207,15 @@ int Fun4All_G4_sPHENIX(
 
   if (do_svtx_cell) Svtx_Cells();
 
+  if (do_maps_cell) Maps_Cells();
+
   if (do_cemc_cell) CEMC_Cells();
 
   if (do_hcalin_cell) HCALInner_Cells();
 
   if (do_hcalout_cell) HCALOuter_Cells();
 
-  if (do_maps_cell) Maps_Cells();
+
 
   //-----------------------------
   // CEMC towering and clustering
@@ -239,6 +241,8 @@ int Fun4All_G4_sPHENIX(
   //--------------
 
   if (do_svtx_track) Svtx_Reco();
+
+  if (do_maps_track) Maps_Reco();
 
   //-----------------
   // Global Vertexing
@@ -270,6 +274,8 @@ int Fun4All_G4_sPHENIX(
   //----------------------
 
   if (do_svtx_eval) Svtx_Eval("g4svtx_eval.root");
+
+  if (do_maps_eval) Maps_Eval("g4svtx_eval.root");
 
   if (do_cemc_eval) CEMC_Eval("g4cemc_eval.root");
 
