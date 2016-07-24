@@ -199,6 +199,27 @@ int Fun4All_G4_sPHENIX(
 
   if (pions || embed_pions)
     {
+
+      PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
+      //pgen->add_particles("pi+",2); // mu-,e-,anti_proton,pi-
+      pgen->add_particles("Upsilon",10); // mu-,e-,anti_proton,pi-
+      pgen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
+					     PHG4SimpleEventGenerator::Uniform,
+					     PHG4SimpleEventGenerator::Uniform);
+      pgen->set_vertex_distribution_mean(0.0,0.0,0.0);
+      //pgen->set_vertex_distribution_width(0.0,0.0,5.0);
+      pgen->set_vertex_distribution_width(0.0,0.0,0.0);
+      pgen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
+      pgen->set_vertex_size_parameters(0.0,0.0);
+      pgen->set_eta_range(-1.0, 1.0);
+      pgen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
+      pgen->set_pt_range(0.5, 10.0);
+      
+      pgen->Embed(1);
+      pgen->Verbosity(0);
+      se->registerSubsystem(pgen);      
+      
+      /*
       for(int i=0; i<80; i++)
 	{
 	  double pt = (double) i * 0.5 + 0.5;
@@ -229,6 +250,7 @@ int Fun4All_G4_sPHENIX(
 	  se->registerSubsystem(pgen);
 	  
 	}
+      */
     }
   
   if(upsilons || embed_upsilons)

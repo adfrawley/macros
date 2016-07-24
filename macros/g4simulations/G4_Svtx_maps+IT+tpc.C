@@ -6,7 +6,7 @@ double inner_cage_radius = 20.;
 int Min_si_layer = 0;
 int Max_si_layer = n_svx_layer + n_gas_layer;
 
-double multiplier = 2.0; // number of radiation lengths thickness of IT
+double multiplier = 4.0; // number of radiation lengths thickness of IT
 
 void SvtxInit(int verbosity = 0)
 {
@@ -35,26 +35,30 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   // outer strips are from YA at the Santa Fe Tracking Workshop 10/27/2015
   // see: https://indico.bnl.gov/conferenceDisplay.py?confId=1364
 
-  // The updated thicknesses from Yasuyuki are as follows:
   // For Si 1mm = 1.07% X_0
   // For Cu 1mm = 6.96% X_0
-  // The thickness of the tracking layers is:
-  // 0 Pixels: 1.3% X_0  (0.214% sensor + 1.086% support) sensor = 200 mc Si, support = 154 mc Cu
-  // 1 Pixels: 1.3% X_0  (0.214% sensor + 1.086% support) sensor = 200 mc Si, support = 154 mc Cu
   
   double si_thickness[4] = {0.0050, 0.0050, 0.0050, 0.050};
-  double svxrad[4] = {svtx_inner_radius, 3.2, 3.9, 18.0};
+  //double svxrad[4] = {svtx_inner_radius, 3.2, 3.9, 18.0};
+  double svxrad[4] = {svtx_inner_radius, 3.2, 3.9, 10.0};
   double support_thickness[4] = {0.0036, 0.0036, 0.0036, 0.0118*multiplier};
   double length[4] = {27.0, 27.0, 27.0, 50.0};
 
   for (int ilayer=0;ilayer<n_svx_layer;++ilayer) {
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
     radius = svxrad[ilayer];
+    cyl->set_double_param("radius",radius);
+    cyl->set_int_param("lengthviarapidity",0);
+    cyl->set_double_param("length",length[ilayer]);
+    cyl->set_string_param("material","G4_Si");
+    cyl->set_double_param("thickness",si_thickness[ilayer]);
+    /*
     cyl->SetRadius(radius);
     cyl->SetLength( length[ilayer] );
     cyl->SetLengthViaRapidityCoverage(false);
     cyl->SetMaterial("G4_Si");
     cyl->SetThickness( si_thickness[ilayer] );
+    */
     cyl->SetActive();
     cyl->SuperDetector("SVTX");
     g4Reco->registerSubsystem( cyl );
@@ -62,11 +66,18 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     radius += si_thickness[ilayer] + no_overlapp;
     
     cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", ilayer);
+    cyl->set_double_param("radius",radius);
+    cyl->set_int_param("lengthviarapidity",0);
+    cyl->set_double_param("length",length[ilayer]);
+    cyl->set_string_param("material","G4_Cu");
+    cyl->set_double_param("thickness",support_thickness[ilayer]);
+    /*
     cyl->SetRadius(radius);
     cyl->SetLength( length[ilayer] );
     cyl->SetMaterial("G4_Cu");
     cyl->SetThickness( support_thickness[ilayer] );
-    cyl->SuperDetector("SVTXSUPPORT");
+    */ 
+   cyl->SuperDetector("SVTXSUPPORT");
     g4Reco->registerSubsystem( cyl );
   }
 
@@ -79,11 +90,18 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   double cage_thickness = 1.43 * n_rad_length_cage;
   
   cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer);
+  cyl->set_double_param("radius",radius);
+  cyl->set_int_param("lengthviarapidity",0);
+  cyl->set_double_param("length",cage_length);
+  cyl->set_string_param("material","G4_Cu");
+  cyl->set_double_param("thickness",cage_thickness ); // Cu X_0 = 1.43 cm
+  /*
   cyl->SetRadius(radius);
   cyl->SetLength(cage_length);
   cyl->SetLengthViaRapidityCoverage(false);
   cyl->SetMaterial("G4_Cu");
   cyl->SetThickness( cage_thickness ); // Cu X_0 = 1.43 cm
+  */
   cyl->SuperDetector("SVTXSUPPORT");
   g4Reco->registerSubsystem( cyl );
 
@@ -96,11 +114,18 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   if (inner_readout_radius - radius > 0) {
     cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer + 1);
+    cyl->set_double_param("radius",radius);
+    cyl->set_int_param("lengthviarapidity",0);
+    cyl->set_double_param("length",cage_length);
+    cyl->set_string_param("material",tpcgas.c_str());
+    cyl->set_double_param("thickness",  inner_readout_radius  - radius);
+    /*
     cyl->SetRadius(radius);
     cyl->SetLength(cage_length);
     cyl->SetLengthViaRapidityCoverage(false);
     cyl->SetMaterial(tpcgas.c_str());
     cyl->SetThickness( inner_readout_radius  - radius );
+    */
     cyl->SuperDetector("SVTXSUPPORT");
     g4Reco->registerSubsystem( cyl );
   }
@@ -113,11 +138,18 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   
   for(int ilayer=n_svx_layer;ilayer<(n_svx_layer+npoints);++ilayer) {
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
+    cyl->set_double_param("radius",radius);
+    cyl->set_int_param("lengthviarapidity",0);
+    cyl->set_double_param("length",cage_length);
+    cyl->set_string_param("material",tpcgas.c_str());
+    cyl->set_double_param("thickness", delta_radius - 0.01 );
+    /*
     cyl->SetRadius(radius);
     cyl->SetLength( cage_length );
     cyl->SetLengthViaRapidityCoverage(false);
     cyl->SetMaterial(tpcgas.c_str());
     cyl->SetThickness(  delta_radius - 0.01 );
+    */
     cyl->SetActive();
     cyl->SuperDetector("SVTX");
     g4Reco->registerSubsystem( cyl );
@@ -126,11 +158,18 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   }
 
   cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer+npoints);
-  cyl->SetRadius(radius);
-  cyl->SetLength(cage_length);
-  cyl->SetLengthViaRapidityCoverage(false);
-  cyl->SetMaterial("G4_Cu");
-  cyl->SetThickness( cage_thickness ); // Cu X_0 = 1.43 cm
+  cyl->set_double_param("radius",radius);
+  cyl->set_int_param("lengthviarapidity",0);
+  cyl->set_double_param("length",cage_length);
+  cyl->set_string_param("material","G4_Cu");
+  cyl->set_double_param("thickness",cage_thickness ); // Cu X_0 = 1.43 cm
+  /*
+    cyl->SetRadius(radius);
+    cyl->SetLength(cage_length);
+    cyl->SetLengthViaRapidityCoverage(false);
+    cyl->SetMaterial("G4_Cu");
+    cyl->SetThickness( cage_thickness ); // Cu X_0 = 1.43 cm
+  */
   cyl->SuperDetector("SVTXSUPPORT");
   g4Reco->registerSubsystem( cyl );
 
@@ -293,8 +332,8 @@ void Svtx_Reco(int verbosity = 0)
   hough->setBinScale(1.0);
   hough->setZBinScale(1.0);
 
-  //hough->Verbosity(verbosity);
-  hough->Verbosity(5);
+  hough->Verbosity(verbosity);
+  //hough->Verbosity(5);
   double mat_scale = 1.0;
   hough->set_material(0, mat_scale*0.003);
   hough->set_material(1, mat_scale*0.003);
@@ -381,7 +420,8 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   eval->do_g4hit_eval(true);
   eval->do_hit_eval(false);
   eval->do_gpoint_eval(false);
-  eval->scan_for_embedded(true);
+  //eval->scan_for_embedded(true);
+  eval->scan_for_embedded(false);
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
 

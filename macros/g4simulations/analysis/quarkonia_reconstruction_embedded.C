@@ -39,7 +39,8 @@ void quarkonia_reconstruction_embedded()
   cout << "Assuming decay particle mass is " << decaymass << endl;
   
   // Open the g4 evaluator output file
-  
+
+  /*  
 #ifdef TEST
   bool ups1s = true;
   bool ups2s = false;
@@ -62,6 +63,7 @@ void quarkonia_reconstruction_embedded()
 #endif
 
 #ifndef TEST
+  */
   cout << "Reading electron ntuples " << endl; 
 
   bool ups1s = true;
@@ -74,7 +76,7 @@ void quarkonia_reconstruction_embedded()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor jobs make 1000 files
-  for(int i=0;i<1000;i++)
+  for(int i=0;i<500;i++)
     {
       char name[500];
       sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
@@ -86,7 +88,7 @@ void quarkonia_reconstruction_embedded()
   // # include "ntuple_files.C"
   //#include "ntuple_files_maps_5layer.C"
     
-#endif
+  //#endif
   
   // Ntuple access variables
   // This include file contains the definitions of the ntuple variables                                                                        

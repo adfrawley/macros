@@ -48,11 +48,11 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   for (int ilayer=0;ilayer<n_svx_layer;++ilayer) {
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
     radius = svxrad[ilayer];
-      cyl->set_double_param("radius",radius);
-	  cyl->set_int_param("lengthviarapidity",0);
-	  cyl->set_double_param("length",length[ilayer]);
-      cyl->set_string_param("material","G4_Si");
-      cyl->set_double_param("thickness",si_thickness[ilayer]);
+    cyl->set_double_param("radius",radius);
+    cyl->set_int_param("lengthviarapidity",0);
+    cyl->set_double_param("length",length[ilayer]);
+    cyl->set_string_param("material","G4_Si");
+    cyl->set_double_param("thickness",si_thickness[ilayer]);
     cyl->SetActive();
     cyl->SuperDetector("SVTX");
     g4Reco->registerSubsystem( cyl );
@@ -60,11 +60,11 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     radius += si_thickness[ilayer] + no_overlapp;
     
     cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", ilayer);
-      cyl->set_double_param("radius",radius);
-	  cyl->set_int_param("lengthviarapidity",1);
-	  //    cyl->SetLength( length[ilayer] );
-      cyl->set_string_param("material","G4_Cu");
-      cyl->set_double_param("thickness",support_thickness[ilayer]);
+    cyl->set_double_param("radius",radius);
+    cyl->set_int_param("lengthviarapidity",1);
+    //    cyl->SetLength( length[ilayer] );
+    cyl->set_string_param("material","G4_Cu");
+    cyl->set_double_param("thickness",support_thickness[ilayer]);
     cyl->SuperDetector("SVTXSUPPORT");
     g4Reco->registerSubsystem( cyl );
   }
@@ -291,6 +291,7 @@ void Svtx_Reco(int verbosity = 0)
   hough->setZBinScale(1.0);
 
   hough->Verbosity(verbosity);
+  //hough->Verbosity(5);
   double mat_scale = 1.0;
   hough->set_material(0, mat_scale*0.003);
   hough->set_material(1, mat_scale*0.003);
@@ -376,7 +377,8 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   eval->do_g4hit_eval(true);
   eval->do_hit_eval(false);
   eval->do_gpoint_eval(false);
-  eval->scan_for_embedded(true);
+  //eval->scan_for_embedded(true);  // evaluator will only collect embedded tracks - it will ignore decay tracks!
+  eval->scan_for_embedded(false); // evaluator takes all tracks
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
 
