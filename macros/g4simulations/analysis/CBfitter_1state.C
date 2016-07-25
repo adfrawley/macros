@@ -108,8 +108,8 @@ void CBfitter_1state()
 
   //bool do_subtracted = true;
 
-  //file1S = new TFile("ups1s_qual3.00_dca2d0.10.root");
-  file1S = new TFile("maps+IT+tpc_4pc_18cm_ups1s_qr_out.root");
+  file1S = new TFile("ups1s_qual3.00_dca2d0.10.root");
+  //file1S = new TFile("maps+IT+tpc_4pc_18cm_ups1s_qr_out.root");
   //file1S = new TFile("maps+IT+tpc_4pc_10cm_ups1s_qr_out.root");
   //file1S = new TFile("maps+tpc_ups1s_qr_out.root");
 
@@ -206,8 +206,8 @@ void CBfitter_1state()
   f1S->SetParameter(2, 9.46);      // xmean
   f1S->SetParameter(3, 0.2);     // sigma
   f1S->SetParLimits(3,0.05,0.20);
-  //f1S->SetParameter(4, 400.0);    // N
-  f1S->SetParameter(4, 4000.0);    // N
+  f1S->SetParameter(4, 400.0);    // N
+  //f1S->SetParameter(4, 4000.0);    // N
   f1S->SetParNames("alpha1S","n1S","m1S","sigma1S","N1S");
   f1S->SetLineColor(kBlue);
   f1S->SetLineWidth(3);

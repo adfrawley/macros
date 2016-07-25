@@ -74,7 +74,12 @@ void quarkonia_reconstruction_embedded()
   TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
-  
+
+  ntp_vertex->Add("../g4svtx_eval.root");
+  ntp_track->Add("../g4svtx_eval.root");
+  ntp_gtrack->Add("../g4svtx_eval.root");
+
+  /*  
   // The condor jobs make 1000 files
   for(int i=0;i<500;i++)
     {
@@ -84,6 +89,7 @@ void quarkonia_reconstruction_embedded()
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
     }
+  */
 
   // # include "ntuple_files.C"
   //#include "ntuple_files_maps_5layer.C"
@@ -205,7 +211,7 @@ void quarkonia_reconstruction_embedded()
 	  // we want only electrons or positrons
 	  if(tflavor != 11 && tflavor != -11)
 	    continue;
-	  
+
 	  if(tflavor == 11)
 	    {
 	      // electron
@@ -357,18 +363,22 @@ void quarkonia_reconstruction_embedded()
 	  if(rquality > 3 || fabs(rdca2d) > 0.1)
 	    continue;
 
+	  /*
 	  // need to select electrons and positrons - for now we cheat
 	  if(rgflavor != 11 && rgflavor != -11)
 	    continue;
+	  */
 
 	  // make a list of electrons and positrons
-	  if(rgflavor == 11)
+	  //if(rgflavor == 11)
+	  if(rcharge == -1)
 	    {
 	      nr_elec++;
 	      rectrnum_elec[nr_elec] = ir;	      
 	    }
 
-	  if(rgflavor == -11)
+	  //if(rgflavor == -11)
+	  if(rcharge == 1)
 	    {
 	      nr_pos++;
 	      rectrnum_pos[nr_pos] = ir;	      
@@ -460,17 +470,16 @@ void quarkonia_reconstruction_embedded()
 
   //cmass->cd(2);
   recomass_primary->SetLineColor(kRed);
-  recomass_primary->DrawCopy();  
-
   recomass->SetLineColor(kBlack);
-  recomass->DrawCopy("same");  
-
+  recomass->DrawCopy();  
+  recomass_primary->DrawCopy("same");  
 
   TCanvas *cm_comp = new TCanvas("cm_comp","cm_comp",10,10,800,800);
   cm_comp->Divide(2,1);
   cm_comp->cd(1);
-  recomass_primary->Draw();
-  recomass->Draw("same");
+  recomass->Draw();
+  recomass_primary->Draw("same");
+
   // we want from 7 to 11 GeV/c^2 - the whole range
   double yreco = recomass->Integral();
  double yreco_primary = recomass_primary->Integral();
@@ -479,8 +488,9 @@ void quarkonia_reconstruction_embedded()
   cm_comp->cd(2);
   
   g4mass_primary->SetLineColor(kRed);
-  g4mass_primary->Draw();
-  g4mass->Draw("same");
+  g4mass->Draw();
+  g4mass_primary->Draw("same");
+
   double yg4_primary = g4mass_primary->Integral();
   double yg4 = g4mass->Integral();
   cout << "G4 mass spectrum has " << yg4_primary << " entries from primary tracks and  " << yg4 << " entries total" << endl;

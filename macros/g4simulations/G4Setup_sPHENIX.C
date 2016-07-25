@@ -2,7 +2,8 @@
 double no_overlapp = 0.0001; // added to radii to avoid overlapping volumes
 bool overlapcheck = false; // set to true if you want to check for overlaps
 
-void G4Init(bool do_svtx = true,
+void G4Init(bool do_svtx = false,
+	    bool do_maps = true,
 	    bool do_preshower = false,
 	    bool do_cemc = true,
 	    bool do_hcalin = true,
@@ -20,24 +21,21 @@ void G4Init(bool do_svtx = true,
     }  
   if (do_svtx)
     {
-      //gROOT->LoadMacro("G4_Svtx.C");                 // default MIE projections
-      //gROOT->LoadMacro("G4_Svtx_ladders.C");       // testing (new geometries)
+      gROOT->LoadMacro("G4_Svtx.C");                 // default MIE projections
       //gROOT->LoadMacro("G4_Svtx_pixels+strips.C"); // testing
       //gROOT->LoadMacro("G4_Svtx_pixels+tpc.C");    // testing
       //gROOT->LoadMacro("G4_Svtx_maps+strips.C");   // testing
+      //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
+      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // testing
       //gROOT->LoadMacro("G4_Svtx_maps_5layers.C");  // testing
-      //gROOT->LoadMacro("G4_Svtx_1maps+1pixel+4mapsouter.C");  // done
-      //gROOT->LoadMacro("G4_Svtx_1pixel+1maps+4mapsouter.C");  // testing
-      //gROOT->LoadMacro("G4_Svtx_1pixel+4mapsouter.C");  // testing
-      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // done
-
-      gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
-      //gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // testing
-  
-      //gROOT->LoadMacro("G4_Svtx_2maps+4mapsouter.C");  // done
-      //gROOT->LoadMacro("G4_Svtx_pixels+4mapsouter.C");  // done
-
+      //gROOT->LoadMacro("G4_Svtx_ladders.C");       // testing (new geometries)
       SvtxInit();
+    }
+
+  if (do_maps)
+    {
+      gROOT->LoadMacro("G4_ITS_MAPS.C");                 // ITS like tracker
+      MapsInit();
     }
 
   if (do_preshower) 
@@ -75,7 +73,8 @@ void G4Init(bool do_svtx = true,
 int G4Setup(const int absorberactive = 0,
 	    const string &field ="1.5",
 	    const EDecayType decayType = TPythia6Decayer::kAll,
-	    const bool do_svtx = true,
+	    const bool do_svtx = false,
+	    const bool do_maps = true,
 	    const bool do_preshower = false,
 	    const bool do_cemc = true,
 	    const bool do_hcalin = true,
@@ -127,6 +126,10 @@ int G4Setup(const int absorberactive = 0,
   //----------------------------------------
   // SVTX
   if (do_svtx) radius = Svtx(g4Reco, radius, absorberactive);
+
+  //----------------------------------------
+  // Maps
+  if (do_maps) radius = Maps(g4Reco, radius, absorberactive);
 
   //----------------------------------------
   // PRESHOWER
