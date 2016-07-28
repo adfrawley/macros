@@ -22,12 +22,13 @@ double Maps(PHG4Reco* g4Reco, double radius,
   gSystem->Load("libg4testbench.so");
 
   bool overlapcheck = false; // set to true if you want to check for overlaps
-
+  
   //---------------------------------
   // Inner Cylinder layers for pixels
   //--------------------------------- 
  
-  double maps_layer_radius[7] = {23.0, 31.0, 39.0, 194.0, 247.0, 353.0, 405.0};   // mm
+  //double maps_layer_radius[7] = {23.4, 31.5, 39.3, 217.6775, 267.1775, 365.5775, 415.0775};   // mm  - precise numbers from ITS.gdml
+  double maps_layer_radius[7] = {23.635, 31.5, 39.385, 217.6775, 272.07, 363.179, 415.0775};   // mm  - adjusted for closest fit
   // type 1 = inner barrel stave, 2 = middle barrel stave, 3 = outer barrel stave
   int stave_type[7] = {0, 0, 0, 1, 1, 2, 2};
   double max_radius = 0.0;
@@ -40,10 +41,10 @@ double Maps(PHG4Reco* g4Reco, double radius,
       PHG4MapsSubsystem  *lyr = new PHG4MapsSubsystem("MAPS", ilayer, stave_type[ilayer]);
       lyr->Verbosity(2);
       lyr->set_nominal_layer_radius(maps_layer_radius[ilayer]);
-      // The cell size is used only during pixilization of sensor hits, but it is convemient to set it now 
-      lyr->set_pixel_x(0.0020);  // 20 microns in cm
-      lyr->set_pixel_y(0.0020);  // 20 microns in cm
-      lyr->set_pixel_thickness(0.0018);  // 18 microns in cm
+      // The cell size is used only during pixilization of sensor hits, but it is convemient to set it now because the geometry object needs it
+      lyr->set_pixel_x(0.0020);  // pitch in cm
+      lyr->set_pixel_z(0.0020);  // length in cm
+      lyr->set_pixel_thickness(0.0018);  // thickness in cm
       lyr->SetActive();
       lyr->OverlapCheck(overlapcheck);
       
@@ -121,6 +122,7 @@ void Maps_Reco(int verbosity = 0)
   // defaults to 1.0 (fully active)
   PHG4SvtxDeadArea* deadarea = new PHG4SvtxDeadArea();
   deadarea->Verbosity(5);
+  /*
   deadarea->set_hit_efficiency(0,0.99); // Leo says use 1% inefficiency
   deadarea->set_hit_efficiency(1,0.99);
   deadarea->set_hit_efficiency(2,0.99);
@@ -129,7 +131,7 @@ void Maps_Reco(int verbosity = 0)
   deadarea->set_hit_efficiency(5,0.99);
   deadarea->set_hit_efficiency(6,0.99);
   se->registerSubsystem( deadarea );
-
+  */
 
   //----------------------------------
   // Apply MIP thresholds to Hit Cells
@@ -152,8 +154,16 @@ void Maps_Reco(int verbosity = 0)
   // Make SVTX clusters
   //---------------------
   PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer();
-  clusterizer->Verbosity(2);
+  clusterizer->Verbosity(5);
   clusterizer->set_threshold(0.33);
+  clusterizer->set_energy_weighting(0,true);
+  clusterizer->set_energy_weighting(1,true);
+  clusterizer->set_energy_weighting(2,true);
+  clusterizer->set_energy_weighting(3,true);
+  clusterizer->set_energy_weighting(4,true);
+  clusterizer->set_energy_weighting(5,true);
+  clusterizer->set_energy_weighting(6,true);
+
   se->registerSubsystem( clusterizer );
 
   //---------------------

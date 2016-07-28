@@ -156,7 +156,7 @@ int Fun4All_G4_sPHENIX(
     {
       // toss low multiplicity dummy events
       PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
-      gen->add_particles("e-",10); // mu+,e+,proton,pi+,Upsilon
+      gen->add_particles("e-",1); // mu+,e+,proton,pi+,Upsilon
       //gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
       if (readhepmc) {
 	gen->set_reuse_existing_vertex(true);
@@ -171,11 +171,11 @@ int Fun4All_G4_sPHENIX(
       gen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
       gen->set_vertex_size_parameters(0.0,0.0);
       //gen->set_eta_range(0.0, 0.0);
-      gen->set_eta_range(-0.5, 0.5);
+      gen->set_eta_range(-0.2, 0.2);
       gen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
       //gen->set_phi_range(0.78539, 0.78539);
       //gen->set_phi_range(0.0, 0.0);
-      gen->set_pt_range(0.1, 10.0);
+      gen->set_pt_range(0.5, 10.0);
       gen->Embed(1);
       gen->Verbosity(0);
       se->registerSubsystem(gen);
@@ -349,8 +349,11 @@ int Fun4All_G4_sPHENIX(
       return;
     }
 
+
   /*
   DisplayOn();
+  int dummy;
+  cin >> dummy;
   */
 
   se->run(nEvents);

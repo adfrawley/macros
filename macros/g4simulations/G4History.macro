@@ -8,7 +8,7 @@
 /vis/scene/notifyHandlers
 /vis/viewer/set/viewpointThetaPhi 180 0
 /vis/viewer/refresh
-/vis/viewer/zoom 10
+/vis/viewer/zoom 8
 /vis/viewer/refresh
 /vis/viewer/flush
 /vis/viewer/refresh viewer-0
