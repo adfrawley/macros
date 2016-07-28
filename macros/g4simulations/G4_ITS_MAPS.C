@@ -85,7 +85,7 @@ void Maps_Cells(int verbosity = 0)
   // Later they have to be assigned to Maps pixels.
 
   PHG4MapsCellReco *maps_cells = new PHG4MapsCellReco("MAPS");
-  maps_cells->Verbosity(5);
+  maps_cells->Verbosity(verbosity);
   se->registerSubsystem(maps_cells);
 
   return;
@@ -105,7 +105,7 @@ void Maps_Reco(int verbosity = 0)
   //----------------------------------
   // defaults to 8-bit ADC with MIP at 0.25% dynamic range
   PHG4SvtxDigitizer* digi = new PHG4SvtxDigitizer();
-  digi->Verbosity(5);
+  digi->Verbosity(verbosity);
   digi->set_adc_scale(0, 255, 1.0e-6); // 1.0 keV / bit
   digi->set_adc_scale(1, 255, 1.0e-6); // 1.0 keV / bit
   digi->set_adc_scale(2, 255, 1.6e-6); // 1.6 keV / bit
@@ -121,8 +121,7 @@ void Maps_Reco(int verbosity = 0)
   //------------------------------------------
   // defaults to 1.0 (fully active)
   PHG4SvtxDeadArea* deadarea = new PHG4SvtxDeadArea();
-  deadarea->Verbosity(5);
-  /*
+  deadarea->Verbosity(verbosity);
   deadarea->set_hit_efficiency(0,0.99); // Leo says use 1% inefficiency
   deadarea->set_hit_efficiency(1,0.99);
   deadarea->set_hit_efficiency(2,0.99);
@@ -131,13 +130,12 @@ void Maps_Reco(int verbosity = 0)
   deadarea->set_hit_efficiency(5,0.99);
   deadarea->set_hit_efficiency(6,0.99);
   se->registerSubsystem( deadarea );
-  */
 
   //----------------------------------
   // Apply MIP thresholds to Hit Cells
   //----------------------------------
   PHG4SvtxThresholds* thresholds = new PHG4SvtxThresholds();
-  thresholds->Verbosity(5);
+  thresholds->Verbosity(verbosity);
   thresholds->set_threshold(0,0.25);
   thresholds->set_threshold(1,0.25);
   thresholds->set_threshold(2,0.25);
@@ -154,7 +152,7 @@ void Maps_Reco(int verbosity = 0)
   // Make SVTX clusters
   //---------------------
   PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer();
-  clusterizer->Verbosity(5);
+  clusterizer->Verbosity(verbosity);
   clusterizer->set_threshold(0.33);
   clusterizer->set_energy_weighting(0,true);
   clusterizer->set_energy_weighting(1,true);
@@ -171,7 +169,7 @@ void Maps_Reco(int verbosity = 0)
   //---------------------
   PHG4HoughTransform* hough = new PHG4HoughTransform(7,7);
   hough->set_mag_field(1.4);
-  hough->Verbosity(5);
+  hough->Verbosity(verbosity);
   // ALICE ITS upgrade values for total thickness in X_0
   hough->set_material(0, 0.003);
   hough->set_material(1, 0.003);
@@ -196,7 +194,7 @@ void Maps_Reco(int verbosity = 0)
   // Ghost rejection
   //---------------------
   PHG4TrackGhostRejection* rejection = new PHG4TrackGhostRejection(7);
-  rejection->Verbosity(5);
+  rejection->Verbosity(verbosity);
   rejection->set_max_shared_hits(3);
   se->registerSubsystem( rejection );
 
@@ -235,7 +233,7 @@ void Maps_Eval(std::string outputfile, int verbosity = 0)
   Fun4AllServer *se = Fun4AllServer::instance();
 
   SubsysReco* eval = new SvtxEvaluator("SvtxEVALUATOR", outputfile.c_str());
-  eval->Verbosity(5);
+  eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
   
   return;
