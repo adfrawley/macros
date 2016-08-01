@@ -26,19 +26,29 @@ int Fun4All_G4_sPHENIX(
   // What to run
   //======================
 
-  bool do_bbc = false;
+  bool do_bbc = true;
   
   bool do_pipe = true;
-  
-  bool do_svtx = false;
-  bool do_svtx_cell = false;
-  bool do_svtx_track = false;
-  bool do_svtx_eval = false;
 
-  bool do_maps = true;
-  bool do_maps_cell = true;
-  bool do_maps_track = true;
-  bool do_maps_eval = true;
+  bool svtx = false;
+  bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
+  if(svtx)
+    {
+      do_svtx = true;
+      do_svtx_cell = true;
+      do_svtx_track = true;
+      do_svtx_eval=true;
+    }
+
+  bool maps_ladders = true;
+  bool do_maps = false, do_maps_cell = false, do_maps_track = false, do_maps_eval = false;
+  if(maps_ladders)
+    {      
+      do_maps = true;
+      do_maps_cell = true;
+      do_maps_track = true;
+      do_maps_eval = true;
+    }
 
   bool do_preshower = false;
   
@@ -111,7 +121,7 @@ int Fun4All_G4_sPHENIX(
   // this would be:
   //  rc->set_IntFlag("RANDOMSEED",PHRandomSeed());
   // or set it to a fixed value so you can debug your code
-  // rc->set_IntFlag("RANDOMSEED", 12345);
+  rc->set_IntFlag("RANDOMSEED", 12345);
 
   //-----------------
   // Event generation
@@ -156,8 +166,8 @@ int Fun4All_G4_sPHENIX(
     {
       // toss low multiplicity dummy events
       PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
-      gen->add_particles("e-",1); // mu+,e+,proton,pi+,Upsilon
-      //gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
+      //gen->add_particles("e-",10); // mu+,e+,proton,pi+,Upsilon
+      gen->add_particles("pi+",10); // mu-,e-,anti_proton,pi-
       if (readhepmc) {
 	gen->set_reuse_existing_vertex(true);
 	gen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
@@ -166,7 +176,7 @@ int Fun4All_G4_sPHENIX(
 					       PHG4SimpleEventGenerator::Uniform,
 					       PHG4SimpleEventGenerator::Uniform);
 	gen->set_vertex_distribution_mean(0.0,0.0,0.0);
-	gen->set_vertex_distribution_width(0.0,0.0,5.0);
+	gen->set_vertex_distribution_width(0.0,0.0,0.0);
       }
       gen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
       gen->set_vertex_size_parameters(0.0,0.0);
@@ -175,7 +185,7 @@ int Fun4All_G4_sPHENIX(
       gen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
       //gen->set_phi_range(0.78539, 0.78539);
       //gen->set_phi_range(0.0, 0.0);
-      gen->set_pt_range(0.5, 10.0);
+      gen->set_pt_range(0.5, 8.0);
       gen->Embed(1);
       gen->Verbosity(0);
       se->registerSubsystem(gen);
@@ -207,7 +217,7 @@ int Fun4All_G4_sPHENIX(
 
   if (do_svtx_cell) Svtx_Cells();
 
-  if (do_maps_cell) Maps_Cells();
+  if (do_maps_cell) Svtx_Cells();
 
   if (do_cemc_cell) CEMC_Cells();
 
@@ -242,7 +252,7 @@ int Fun4All_G4_sPHENIX(
 
   if (do_svtx_track) Svtx_Reco();
 
-  if (do_maps_track) Maps_Reco();
+  if (do_maps_track) Svtx_Reco();
 
   //-----------------
   // Global Vertexing
@@ -275,7 +285,7 @@ int Fun4All_G4_sPHENIX(
 
   if (do_svtx_eval) Svtx_Eval("g4svtx_eval.root");
 
-  if (do_maps_eval) Maps_Eval("g4svtx_eval.root");
+  if (do_maps_eval) Svtx_Eval("g4svtx_eval.root");
 
   if (do_cemc_eval) CEMC_Eval("g4cemc_eval.root");
 
