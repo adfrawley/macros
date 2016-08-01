@@ -206,7 +206,7 @@ void CBfitter_1state()
   f1S->SetParameter(2, 9.46);      // xmean
   f1S->SetParameter(3, 0.2);     // sigma
   f1S->SetParLimits(3,0.05,0.20);
-  f1S->SetParameter(4, 400.0);    // N
+  f1S->SetParameter(4, 200.0);    // N
   //f1S->SetParameter(4, 4000.0);    // N
   f1S->SetParNames("alpha1S","n1S","m1S","sigma1S","N1S");
   f1S->SetLineColor(kBlue);

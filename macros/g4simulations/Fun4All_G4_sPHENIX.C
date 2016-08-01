@@ -1,7 +1,7 @@
 
 int Fun4All_G4_sPHENIX(
 		       const int process = 0,
-		       const int nEvents = 1,
+		       const int nEvents = 10000,
 		       const char * inputFile = "/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
@@ -80,12 +80,27 @@ int Fun4All_G4_sPHENIX(
   bool do_bbc = true;
   
   bool do_pipe = true;
-  
-  bool do_svtx = true;
-  bool do_svtx_cell = true;
-  bool do_svtx_track = true;
-  bool do_svtx_eval = true;
 
+ bool svtx = false;
+  bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
+  if(svtx)
+    {
+      do_svtx = true;
+      do_svtx_cell = true;
+      do_svtx_track = true;
+      do_svtx_eval=true;
+    }
+
+  bool maps_ladders = true;
+  bool do_maps = false, do_maps_cell = false, do_maps_track = false, do_maps_eval = false;
+  if(maps_ladders)
+    {      
+      do_maps = true;
+      do_maps_cell = true;
+      do_maps_track = true;
+      do_maps_eval = true;
+    }
+  
   bool do_preshower = false;
   
   bool do_cemc = false;
@@ -132,7 +147,7 @@ int Fun4All_G4_sPHENIX(
 
   // establish the geometry and reconstruction setup
   gROOT->LoadMacro("G4Setup_sPHENIX.C");
-  G4Init(do_svtx,do_preshower,do_cemc,do_hcalin,do_magnet,do_hcalout,do_pipe);
+  G4Init(do_svtx,do_maps,do_preshower,do_cemc,do_hcalin,do_magnet,do_hcalout,do_pipe);
 
   int absorberactive = 1; // set to 1 to make all absorbers active volumes
   //  const string magfield = "1.5"; // if like float -> solenoidal field in T, if string use as fieldmap name (including path)
@@ -297,7 +312,7 @@ int Fun4All_G4_sPHENIX(
       //---------------------
 
       G4Setup(absorberactive, magfield, TPythia6Decayer::kAll,
-	      do_svtx, do_preshower, do_cemc, do_hcalin, do_magnet, do_hcalout, do_pipe, magfield_rescale);
+	      do_svtx, do_maps, do_preshower, do_cemc, do_hcalin, do_magnet, do_hcalout, do_pipe, magfield_rescale);
     }
 
   //---------
@@ -315,6 +330,8 @@ int Fun4All_G4_sPHENIX(
   //------------------
 
   if (do_svtx_cell) Svtx_Cells();
+
+ if (do_maps_cell) Svtx_Cells();
 
   if (do_cemc_cell) CEMC_Cells();
 
@@ -346,6 +363,8 @@ int Fun4All_G4_sPHENIX(
   //--------------
 
   if (do_svtx_track) Svtx_Reco();
+
+  if (do_maps_track) Svtx_Reco();
 
   //-----------------
   // Global Vertexing
@@ -380,6 +399,8 @@ int Fun4All_G4_sPHENIX(
   sprintf(outfile,"eval_output/g4svx_eval_%i.root",process);
   
   if (do_svtx_eval) Svtx_Eval(outfile);
+
+ if (do_maps_eval) Svtx_Eval("g4svtx_eval.root");
 
   if (do_cemc_eval) CEMC_Eval("g4cemc_eval.root");
 

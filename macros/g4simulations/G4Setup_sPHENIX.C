@@ -21,21 +21,17 @@ void G4Init(bool do_svtx = false,
     }  
   if (do_svtx)
     {
-      gROOT->LoadMacro("G4_Svtx.C");                 // default MIE projections
-      //gROOT->LoadMacro("G4_Svtx_pixels+strips.C"); // testing
-      //gROOT->LoadMacro("G4_Svtx_pixels+tpc.C");    // testing
-      //gROOT->LoadMacro("G4_Svtx_maps+strips.C");   // testing
-      //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
-      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // testing
-      //gROOT->LoadMacro("G4_Svtx_maps_5layers.C");  // testing
-      //gROOT->LoadMacro("G4_Svtx_ladders.C");       // testing (new geometries)
+      //gROOT->LoadMacro("G4_Svtx.C");                 // default MIE projections
+      gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // cylinder cell maps IB + tpc
+      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // cylinder cell 7 layer maps
       SvtxInit();
     }
 
   if (do_maps)
     {
-      gROOT->LoadMacro("G4_ITS_MAPS.C");                 // ITS like tracker
-      MapsInit();
+      //gROOT->LoadMacro("G4_ITS_MAPS.C");                 // ITS like ladder tracker
+      gROOT->LoadMacro("G4_Svtx_maps_ladders+tpc.C");    // ladder maps IB + tpc
+      SvtxInit();
     }
 
   if (do_preshower) 
@@ -129,7 +125,7 @@ int G4Setup(const int absorberactive = 0,
 
   //----------------------------------------
   // Maps
-  if (do_maps) radius = Maps(g4Reco, radius, absorberactive);
+  if (do_maps) radius = Svtx(g4Reco, radius, absorberactive);
 
   //----------------------------------------
   // PRESHOWER

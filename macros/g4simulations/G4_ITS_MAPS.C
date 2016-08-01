@@ -27,8 +27,9 @@ double Maps(PHG4Reco* g4Reco, double radius,
   // Inner Cylinder layers for pixels
   //--------------------------------- 
  
-  double maps_layer_radius[7] = {23.0, 31.0, 39.0, 194.0, 247.0, 353.0, 405.0};   // mm
-  // type 1 = inner barrel stave, 2 = middle barrel stave, 3 = outer barrel stave
+  //double maps_layer_radius[7] = {23.0, 31.0, 39.0, 194.0, 247.0, 353.0, 405.0};   // mm
+  double maps_layer_radius[7] = {23.635, 31.5, 39.385, 217.6775, 272.07, 363.179, 415.0775};   // mm  - adjusted for closest fit
+ // type 1 = inner barrel stave, 2 = middle barrel stave, 3 = outer barrel stave
   int stave_type[7] = {0, 0, 0, 1, 1, 2, 2};
   double max_radius = 0.0;
 
@@ -42,7 +43,7 @@ double Maps(PHG4Reco* g4Reco, double radius,
       lyr->set_nominal_layer_radius(maps_layer_radius[ilayer]);
       // The cell size is used only during pixilization of sensor hits, but it is convemient to set it now 
       lyr->set_pixel_x(0.0020);  // 20 microns in cm
-      lyr->set_pixel_y(0.0020);  // 20 microns in cm
+      lyr->set_pixel_z(0.0020);  // 20 microns in cm
       lyr->set_pixel_thickness(0.0018);  // 18 microns in cm
       lyr->SetActive();
       lyr->OverlapCheck(overlapcheck);
