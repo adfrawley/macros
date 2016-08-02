@@ -258,9 +258,15 @@ void Svtx_Reco(int verbosity = 0)
 
   PHG4SvtxThresholds* thresholds = new PHG4SvtxThresholds();
   thresholds->Verbosity(verbosity);
+  thresholds->set_threshold(0,0.1);
+  thresholds->set_threshold(1,0.1);
+  thresholds->set_threshold(2,0.1);
+
+  /*
   thresholds->set_threshold(0,0.25);
   thresholds->set_threshold(1,0.25);
   thresholds->set_threshold(2,0.25);
+  */
   se->registerSubsystem( thresholds );
 
   //-------------
@@ -268,6 +274,7 @@ void Svtx_Reco(int verbosity = 0)
   //-------------
 
   PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",Min_si_layer,n_svx_layer-1);
+  clusterizer->set_threshold(0.1);
   se->registerSubsystem( clusterizer );
   
   PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_svx_layer,Max_si_layer);
@@ -291,7 +298,6 @@ void Svtx_Reco(int verbosity = 0)
   hough->setZBinScale(1.0);
 
   hough->Verbosity(verbosity);
-  //hough->Verbosity(5);
   double mat_scale = 1.0;
   hough->set_material(0, mat_scale*0.003);
   hough->set_material(1, mat_scale*0.003);

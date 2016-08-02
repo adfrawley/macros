@@ -75,9 +75,9 @@ void quarkonia_reconstruction_embedded()
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
-  ntp_vertex->Add("../g4svtx_eval.root");
-  ntp_track->Add("../g4svtx_eval.root");
-  ntp_gtrack->Add("../g4svtx_eval.root");
+  ntp_vertex->Add("../eval_output/g4svx_eval_0.root");
+  ntp_track->Add("../eval_output/g4svx_eval_0.root");
+  ntp_gtrack->Add("../eval_output/g4svx_eval_0.root");
 
   /*  
   // The condor jobs make 1000 files

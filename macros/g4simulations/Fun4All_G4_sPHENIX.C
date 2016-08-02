@@ -1,7 +1,7 @@
 
 int Fun4All_G4_sPHENIX(
 		       const int process = 0,
-		       const int nEvents = 10000,
+		       const int nEvents = 6000,
 		       const char * inputFile = "/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
@@ -400,7 +400,7 @@ int Fun4All_G4_sPHENIX(
   
   if (do_svtx_eval) Svtx_Eval(outfile);
 
- if (do_maps_eval) Svtx_Eval("g4svtx_eval.root");
+  if (do_maps_eval) Svtx_Eval(outfile);
 
   if (do_cemc_eval) CEMC_Eval("g4cemc_eval.root");
 

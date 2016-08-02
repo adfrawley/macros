@@ -297,9 +297,8 @@ void Svtx_Reco(int verbosity = 0)
 
   PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",Min_si_layer,n_svx_layer-1);
   clusterizer->Verbosity(verbosity);
-  // reduced by 2.5 when going  from cylinder maps with 50 microns thickness to actual maps with 18 microns thickness
-  // This should not have been necessary, threshold should have been scaled with pixel thickness
-  clusterizer->set_threshold(0.2);   
+  // no reason for this to be higher than threshold for cells, many hits are single cell
+  clusterizer->set_threshold(0.1);   
   se->registerSubsystem( clusterizer );
 
   PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_svx_layer,Max_si_layer-1);
