@@ -286,9 +286,17 @@ void Svtx_Reco(int verbosity = 0)
   PHG4SvtxThresholds* thresholds = new PHG4SvtxThresholds();
   thresholds->Verbosity(10);
   // reduced by x2.5 when going from cylinder maps with 50 microns thickness to actual maps with 18 microns thickness
+  // to set it at a similar fraction of charge deposited
+  // Note the non-use of set_using_thickness here, this is so that the shortest dimension of the cell sets the mip energy loss
+  /*
+  thresholds->set_threshold(0,0.25);
+  thresholds->set_threshold(1,0.25);
+  thresholds->set_threshold(2,0.25);
+  */
   thresholds->set_threshold(0,0.1);
   thresholds->set_threshold(1,0.1);
   thresholds->set_threshold(2,0.1);
+  
   se->registerSubsystem( thresholds );
 
   //-------------
@@ -297,9 +305,11 @@ void Svtx_Reco(int verbosity = 0)
 
   PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",Min_si_layer,n_svx_layer-1);
   clusterizer->Verbosity(2);
-  // reduced by 2.5 when going  from cylinder maps with 50 microns thickness to actual maps with 18 microns thickness
-  // This should not have been necessary, threshold should have been scaled with pixel thickness
-  clusterizer->set_threshold(0.2);   
+  // Reduced by 2 relative to cylinder cell maps macro. I found this necessary to get full efficiency
+  // Many hits in the present simulation are single cell hits, so it is not clear why the cluster 
+  // threshold should be higher than the cell threshold
+  //clusterizer->set_threshold(0.5);   // fraction of a mip
+  clusterizer->set_threshold(0.1);   // fraction of a mip
   se->registerSubsystem( clusterizer );
 
   PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_svx_layer,Max_si_layer-1);
