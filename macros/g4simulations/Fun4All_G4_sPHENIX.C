@@ -1,7 +1,7 @@
 
 int Fun4All_G4_sPHENIX(
 		       const int process = 0,
-		       const int nEvents = 6000,
+		       const int nEvents = 1,
 		       const char * inputFile = "/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
@@ -30,13 +30,13 @@ int Fun4All_G4_sPHENIX(
   //===============
 
   // Upsilons
-  bool upsilons = true;           // throw single Upsilons if true
+  bool upsilons = false;           // throw single Upsilons if true
   int istate = 1;  // Upsilon state = 1,2,3
   bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
 
   // pions
-  bool pions = false;      // throw single pions if true
-  bool embed_pions = false;  // throw single pions in a Hijing event if true
+  bool pions = true;      // throw single pions if true
+  bool embed_pions = true;  // throw single pions in a Hijing event if true
 
   // Hijing events only
   bool hijing_events = false;  // if true, throw hijing events only
@@ -81,7 +81,7 @@ int Fun4All_G4_sPHENIX(
   
   bool do_pipe = true;
 
- bool svtx = false;
+ bool svtx = true;
   bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
   if(svtx)
     {
@@ -91,7 +91,7 @@ int Fun4All_G4_sPHENIX(
       do_svtx_eval=true;
     }
 
-  bool maps_ladders = true;
+  bool maps_ladders = false;
   bool do_maps = false, do_maps_cell = false, do_maps_track = false, do_maps_eval = false;
   if(maps_ladders)
     {      
@@ -214,10 +214,9 @@ int Fun4All_G4_sPHENIX(
 
   if (pions || embed_pions)
     {
-
+      /*
       PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
-      //pgen->add_particles("pi+",2); // mu-,e-,anti_proton,pi-
-      pgen->add_particles("Upsilon",10); // mu-,e-,anti_proton,pi-
+      pgen->add_particles("pi+",2); // mu-,e-,anti_proton,pi-
       pgen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
 					     PHG4SimpleEventGenerator::Uniform,
 					     PHG4SimpleEventGenerator::Uniform);
@@ -233,8 +232,8 @@ int Fun4All_G4_sPHENIX(
       pgen->Embed(1);
       pgen->Verbosity(0);
       se->registerSubsystem(pgen);      
+      */
       
-      /*
       for(int i=0; i<80; i++)
 	{
 	  double pt = (double) i * 0.5 + 0.5;
@@ -265,7 +264,6 @@ int Fun4All_G4_sPHENIX(
 	  se->registerSubsystem(pgen);
 	  
 	}
-      */
     }
   
   if(upsilons || embed_upsilons)
