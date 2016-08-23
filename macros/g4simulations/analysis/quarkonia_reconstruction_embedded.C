@@ -75,13 +75,8 @@ void quarkonia_reconstruction_embedded()
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
-  ntp_vertex->Add("../eval_output/g4svx_eval_0.root");
-  ntp_track->Add("../eval_output/g4svx_eval_0.root");
-  ntp_gtrack->Add("../eval_output/g4svx_eval_0.root");
-
-  /*  
   // The condor jobs make 1000 files
-  for(int i=0;i<500;i++)
+  for(int i=0;i<200;i++)
     {
       char name[500];
       sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
@@ -89,13 +84,8 @@ void quarkonia_reconstruction_embedded()
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
     }
-  */
 
-  // # include "ntuple_files.C"
-  //#include "ntuple_files_maps_5layer.C"
-    
-  //#endif
-  
+
   // Ntuple access variables
   // This include file contains the definitions of the ntuple variables                                                                        
 #include "ntuple_variables.C"
@@ -109,49 +99,6 @@ void quarkonia_reconstruction_embedded()
   TH1F* hrdca2d = new TH1F("hrdca2d", "Reconstructed track dca2d", 1000, 0, 0.05);
   TH1F* hrpt = new TH1F("hrpt"," pT", nbpt, 0.0, ptmax);
   TH1F* hgpt = new TH1F("hgpt","g4 pT", nbpt, 0.0, ptmax);
-
-  /*  
-  int nby = 50;
-  int nbphi = 50;
-  int nbeta = 50;
-  int nbth = 50;
-
-  TH1F* hrcharge = new TH1F("hrcharge","reconstructed charge", 300, 0, 30);
-  TH1F* hrpx = new TH1F("hrpx","reconstructed px; p_{x}", 300, 0, 30);
-  TH1F* hrpy = new TH1F("hrpy","reconstructed px; p_{y}", 300, 0, 30);
-  TH1F* hrpz = new TH1F("hrpz","reconstructed px; p_{z}", 300, 0, 30);
-  
-  TH1F* hrphi = new TH1F("hrphi"," phi", nbphi, -3.5,3.5);
-  TH1F* hry = new TH1F("hry"," y", nby, -2.5, 2.5);
-  TH1F* hreta = new TH1F("hreta"," reta", nbeta, -3.0, 3.0);
-  TH1F* hrdeta = new TH1F("hrdeta"," rdeta", nbeta, -3.0, 3.0);
-  TH1F* hrdphi = new TH1F("hrdphi"," rdphi", nbphi, -3.5, 3.5);
-  TH1F* hrdth = new TH1F("hrdth"," rdphi", nbth, 0.0, 3.5);
-  TH1F* hrdpt = new TH1F("hrdpt"," rdpt", nbpt, 0.0, 10.0);
-  
-  TH1F* hrvz = new TH1F("hrvz","rvz", 300, -12.0, 12.0);
-
-  // Define some histograms
-  TH1F* htpx = new TH1F("htpx","g4 px; p_{x}", 300, 0, 30);
-  TH1F* htpy = new TH1F("htpy","g4 px; p_{y}", 300, 0, 30);
-  TH1F* htpz = new TH1F("htpz","g4 px; p_{z}", 300, 0, 30);
-
-  TH1F* hgphi = new TH1F("hgphi","g4 phi", nbphi, -3.5,3.5);
-  TH1F* hgy = new TH1F("hgy","g4 y", nby, -2.5, 2.5);
-  TH1F* hgeta = new TH1F("hgeta"," geta", nbeta, -3.0, 3.0);
-  TH1F* hgdeta = new TH1F("hgdeta"," gdeta", nbeta, -3.0, 3.0);
-  TH1F* hgdphi = new TH1F("hgdphi"," gdphi", nbphi, -3.5, 3.5);
-  TH1F* hgdth = new TH1F("hgdth"," gdphi", nbth, 0.0, 3.5);
-  TH1F* hgdpt = new TH1F("hgdpt"," gdpt", nbpt, 0.0, 10.0);
-
-  TH1F* hgvz = new TH1F("hgvz","gvz", 300, -12.0, 12.0);
-
-  TH2D *hreta12 = new TH2D("hreta12","hreta12",100,-2.2,2.2,100,-4,4);
-  TH2D *hrtheta12 = new TH2D("hrtheta12","hrtheta12",100,0.5,2.7,100,0.5,2.7);
-  TH2D *hrphi12 = new TH2D("hrphi12","hrphi12",100,-4,4,100,-4,4);
-  TH1D *g4radmass = new TH1D("g4radmass","G4 invariant mass after tracking",100,7.0,11.0);
-  g4radmass->GetXaxis()->SetTitle("invariant mass (GeV/c^{2})");
-  */
 
   TH1D *g4mass = new TH1D("g4mass","G4 input invariant mass",100,7.0,11.0);
   g4mass->GetXaxis()->SetTitle("invariant mass (GeV/c^{2})");

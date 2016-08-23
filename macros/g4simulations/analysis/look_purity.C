@@ -19,9 +19,18 @@ void look_purity()
 
   bool pt_resolution_fit = true;
 
-  TFile *fin = new TFile("purity_out.root");  
+  TFile *fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
+  //TFile *fin = new TFile("root_files/maps3+tpc60_purity_out.root");
+
+  //TFile *fin = new TFile("root_files/purity_out.root");  
   //TFile *fin = new TFile("ladder_maps_purity_out.root");  
   //TFile *fin = new TFile("cylinder_maps_purity_out.root");  
+
+  if(!fin)
+    {
+      cout << "Failed to find input file" << endl;
+      exit(1);
+    }
 
   TCanvas *c1 = new TCanvas("c1","c1",5,5,800,600);
   c1->Divide(2,1);
@@ -162,7 +171,8 @@ void look_purity()
 
   // Parameterize pT resolution
   
-  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 10.0);
+  //TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 10.0);
+  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 25.0);
   fpt->SetParameter(0,0.0054);
   fpt->SetParameter(1,0.0023);
   if(pt_resolution_fit)  
@@ -218,7 +228,7 @@ void look_purity()
       double truth_yield = hpt_truth->Integral(tlo, thi);;
       eff_pt[i] = hpt1->Integral(momlo, momhi) / truth_yield;
 
-      /*
+
       cout << " ptval " << ptval 
 	   << " ptreslo " << ptreslo
 	   << " ptreshi " << ptreshi
@@ -231,7 +241,9 @@ void look_purity()
 	   << " truth " << truth_yield
 	   << " eff_pt " << eff_pt[i]
 	   << endl;
-      */
+
+      delete hpt1;
+
     }  
   
   cout << " create canvas c7" << endl;
@@ -260,6 +272,11 @@ void look_purity()
 
   TH2D *hpt_hijing_compare = 0;
   fin->GetObject("hpt_hijing_compare",hpt_hijing_compare);
+  if(!hpt_hijing_compare)
+    {
+      cout << "Did not get hpt_hijing_compare - quit!" << endl;
+      exit(1);
+    }
 
   static const int NVARBINS = 36;
   double xbins[NVARBINS+1] = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,
@@ -459,7 +476,7 @@ void look_purity()
 
   // Output some graphs for comparison plots
 
- TFile *fout = new TFile("look_purity_silicon_out.root","recreate");
+ TFile *fout = new TFile("root_files/look_purity_out.root","recreate");
   gr_eff->Write();
   grdca2d->Write();
   grdpt->Write();

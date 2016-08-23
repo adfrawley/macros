@@ -81,6 +81,7 @@ int Fun4All_G4_sPHENIX(
   
   bool do_pipe = true;
 
+  // run the cylinder cell model of the inner barrel if svtx = true
  bool svtx = true;
   bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
   if(svtx)
@@ -90,7 +91,7 @@ int Fun4All_G4_sPHENIX(
       do_svtx_track = true;
       do_svtx_eval=true;
     }
-
+  // OR: run the ITS ladder version of the inner barrel if maps_ladders = true 
   bool maps_ladders = false;
   bool do_maps = false, do_maps_cell = false, do_maps_track = false, do_maps_eval = false;
   if(maps_ladders)
@@ -234,7 +235,7 @@ int Fun4All_G4_sPHENIX(
       se->registerSubsystem(pgen);      
       */
       
-      for(int i=0; i<80; i++)
+      for(int i=0; i<1000; i++)
 	{
 	  double pt = (double) i * 0.5 + 0.5;
 

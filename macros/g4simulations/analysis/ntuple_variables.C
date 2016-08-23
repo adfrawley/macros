@@ -93,6 +93,8 @@ cout << "Number of clusters " << num_clusters << endl;
   // Access ntp_track (reco'd) variables
   //=====================================
 
+cout << "set up ntp_track access" << endl;
+
   Float_t rpx;
   Float_t rpy;
   Float_t rpz;
@@ -199,8 +201,10 @@ cout << "Number of clusters " << num_clusters << endl;
   b_rgembed = ntp_track->GetBranch("gembed");
   
   //================================
-  // Access the g4 ntuple variables
+  // Access the g4track ntuple variables
   //================================
+
+cout << "set up ntp_gtrack access" << endl;
 
   Float_t tpx;
   Float_t tpy;
@@ -214,7 +218,7 @@ cout << "Number of clusters " << num_clusters << endl;
   Float_t tvx;
   Float_t tvy;
   Float_t tvz;
-  Float_t tmatch;
+  Float_t tnhits;
   Float_t tchisq;
   Float_t tprimary;
   Float_t tbestpurity;
@@ -232,7 +236,7 @@ cout << "Number of clusters " << num_clusters << endl;
   TBranch* b_tvx;
   TBranch* b_tvy;
   TBranch* b_tvz;
-  TBranch* b_tmatch;
+  TBranch* b_tnhits;
   TBranch* b_tchisq;
   TBranch* b_tprimary;
   TBranch* b_tbestpurity;
@@ -251,7 +255,7 @@ cout << "Number of clusters " << num_clusters << endl;
   ntp_gtrack->SetBranchAddress("gvx", &tvx);
   ntp_gtrack->SetBranchAddress("gvy", &tvy);
   ntp_gtrack->SetBranchAddress("gvz", &tvz);
-  ntp_gtrack->SetBranchAddress("gnhits", &tmatch);
+  ntp_gtrack->SetBranchAddress("gnhits", &tnhits);
   ntp_gtrack->SetBranchAddress("chisq", &tchisq);
   ntp_gtrack->SetBranchAddress("gprimary", &tprimary);
 //ntp_gtrack->SetBranchAddress("bestpurity", &tbestpurity);
@@ -270,12 +274,14 @@ cout << "Number of clusters " << num_clusters << endl;
   b_tvx = ntp_gtrack->GetBranch("gvx");
   b_tvy = ntp_gtrack->GetBranch("gvy");
   b_tvz = ntp_gtrack->GetBranch("gvz");
-  b_tmatch = ntp_gtrack->GetBranch("gnhits");
+  b_tnhits = ntp_gtrack->GetBranch("gnhits");
   b_tprimary = ntp_gtrack->GetBranch("gprimary");
 //b_tbestpurity = ntp_gtrack->GetBranch("bestpurity");
   b_tembed = ntp_gtrack->GetBranch("gembed");
 
   // ntp_cluster access variables
+
+cout << "set up ntp_cluster access" << endl;
   
   float_t cevent;
   Float_t hitID;
@@ -285,13 +291,14 @@ cout << "Number of clusters " << num_clusters << endl;
   float_t layer;
   float_t g4hitID;
   Float_t gtrackID;
+  Float_t trackID;
   Float_t gflavor;
   Float_t gpx;
   Float_t gpy;
   Float_t gpz;
   Float_t glast;
-  Float_t nhits;
-  Float_t purity;
+  Float_t size;
+  Float_t cgembed;
 
   TBranch* b_cevent;
   TBranch* b_hitID;
@@ -301,12 +308,13 @@ cout << "Number of clusters " << num_clusters << endl;
   TBranch* b_layer;
   TBranch* b_g4hitID;
   TBranch* b_gtrackID;
+  TBranch* b_trackID;
   TBranch* b_cgflavor;
   TBranch* b_cgpx;
   TBranch* b_cgpy;
   TBranch* b_cgpz;
-  TBranch* b_nhits;
-  TBranch* b_cpurity;
+  TBranch* b_size;
+  TBranch* b_cgembed;
   
   //set branches
 
@@ -318,12 +326,13 @@ cout << "Number of clusters " << num_clusters << endl;
   ntp_cluster->SetBranchAddress("layer", &layer);
   ntp_cluster->SetBranchAddress("g4hitID", &g4hitID);
   ntp_cluster->SetBranchAddress("gtrackID", &gtrackID);
+  ntp_cluster->SetBranchAddress("trackID", &trackID);
   ntp_cluster->SetBranchAddress("gflavor", &gflavor);
   ntp_cluster->SetBranchAddress("gpx", &gpx);
   ntp_cluster->SetBranchAddress("gpy", &gpy);
   ntp_cluster->SetBranchAddress("gpz", &gpz);
-  ntp_cluster->SetBranchAddress("nhits", &nhits);
-  ntp_cluster->SetBranchAddress("purity", &purity);
+  ntp_cluster->SetBranchAddress("size", &size);
+  ntp_cluster->SetBranchAddress("gembed", &cgembed);
   
   //get Branches
   b_cevent = ntp_cluster->GetBranch("event");
@@ -338,7 +347,7 @@ cout << "Number of clusters " << num_clusters << endl;
   b_cgpx = ntp_cluster->GetBranch("gpx");
   b_cgpy = ntp_cluster->GetBranch("gpy");
   b_cgpz = ntp_cluster->GetBranch("gpz");
-  b_nhits = ntp_cluster->GetBranch("nhits");
-  b_cpurity = ntp_cluster->GetBranch("purity");
+  b_size = ntp_cluster->GetBranch("size");
+  b_cgembed = ntp_cluster->GetBranch("gembed");
 
 

@@ -46,11 +46,12 @@ void purity()
 
   // should normally be true
   bool use_reco_pt = true;
-    double mom_rescale = 1.0;
-
+  double mom_rescale = 1.0;
+  
   // This should be inner maps layers (3) + TPC (60)
-  static const int nlayers = 63;  // maximum number of tracking layers
-  static const int nmissed = 32;  // maximum number of missed layers
+  //static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
+  static const int nlayers = 63;  // maximum number of tracking layers for tpc60+maps3
+  static const int nmissed = 40;  // maximum number of missed layers
   double ptmax = 12.2;
   
   double pT_sigmas = 3.0;  // number of sigmas in pT to use for track evaluation
@@ -69,36 +70,7 @@ void purity()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor job output files
-  for(int i=0;i<500;i++)
-    {
-      char name[500];
-      sprintf(name,"../eval_output_1/g4svx_eval_%i.root",i);
-      ntp_vertex->Add(name);
-      ntp_track->Add(name);
-      ntp_gtrack->Add(name);
-    }
-
-  for(int i=0;i<1000;i++)
-    {
-      char name[500];
-      sprintf(name,"../eval_output_2/g4svx_eval_%i.root",i);
-      ntp_vertex->Add(name);
-      ntp_track->Add(name);
-      ntp_gtrack->Add(name);
-    }
-
-  for(int i=0;i<1000;i++)
-    {
-      char name[500];
-      sprintf(name,"../eval_output_3/g4svx_eval_%i.root",i);
-      ntp_vertex->Add(name);
-      ntp_track->Add(name);
-      ntp_gtrack->Add(name);
-    }
-
-
-  /*
-  for(int i=0;i<2500;i++)
+  for(int i=0;i<2000;i++)
     {
       char name[500];
       sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
@@ -106,7 +78,6 @@ void purity()
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
     }
-  */
 
   // This include file contains the definitions of the ntuple variables, and the chain definitions
 #include "ntuple_variables.C"
@@ -235,6 +206,7 @@ void purity()
 	  double gpT = sqrt(tpx*tpx+tpy*tpy);	  	  
 	  //cout << " ig " << ig << " tembed " << tembed << " tmatch " << tmatch << " tgtrackid " << tgtrackid << " rgpT " << rgpT << endl; 
 
+	  // record embedded pions and Hijing tracks separately
 	  if(tembed == 0)
 	    {
 	      hpt_hijing_truth->Fill(gpT);
@@ -623,7 +595,7 @@ void purity()
   //==============
   // Output the results
 
-  TFile *fout = new TFile("purity_out.root","recreate");
+  TFile *fout = new TFile("root_files/purity_out.root","recreate");
 
   hnhits->Write();
 

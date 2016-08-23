@@ -21,9 +21,9 @@ void G4Init(bool do_svtx = false,
     }  
   if (do_svtx)
     {
-      //gROOT->LoadMacro("G4_Svtx.C");                 // default MIE projections
-      gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // cylinder cell maps IB + tpc
-      //gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // cylinder cell 7 layer maps
+      //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // cylinder cell maps IB + tpc
+      gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
+
       SvtxInit();
     }
 
