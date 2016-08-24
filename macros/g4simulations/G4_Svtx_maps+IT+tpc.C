@@ -1,8 +1,7 @@
 
-const int n_ib_layer = 3;
-//const int n_intt_layer = 4;
-const int n_intt_layer = 0;
-const int n_gas_layer = 60;
+const int n_ib_layer = 3;   // number of maps inner barrel layers
+const int n_intt_layer = 4; // number of int. tracker layers
+const int n_gas_layer = 60; // number of TPC layers
 double inner_cage_radius = 20.;
 
 int Min_si_layer = 0;
@@ -133,7 +132,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   radius += cage_thickness;
 
-  // TPC gas layers
+  // TPC gas material in region not read out
   double inner_readout_radius = 30.;
   if (inner_readout_radius<radius)  inner_readout_radius = radius;
 
@@ -152,7 +151,8 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   }
 
   radius = inner_readout_radius;
-  
+
+  // Active TPC gas layers  
   double outer_radius = 80.; // should be 78 cm, right?
   int npoints = Max_si_layer - n_ib_layer-n_intt_layer;
   double delta_radius =  ( outer_radius - inner_readout_radius )/( (double)npoints );
@@ -360,20 +360,21 @@ void Svtx_Reco(int verbosity = 0)
   hough->Verbosity(verbosity);
 
   double mat_scale = 1.0;
-  // maps inner barrel, total of 0.3% of X_0
+  // maps inner barrel, total of 0.3% of X_0 per layer
   for(int i=0;i<n_ib_layer;i++)
     hough->set_material(i, mat_scale*0.003);
-  // intermediate tracker, total 1% of X_0
+  // intermediate tracker, total 1% of X_0 pair layer
   for(int i=n_ib_layer;i<n_ib_layer+n_intt_layer;i++)
     hough->set_material(i-n_ib_layer, mat_scale*0.010);
   // TPC inner field cage wall, 1% of X_0
   hough->set_material(n_ib_layer+n_intt_layer, mat_scale*0.010);
+  // material for inactive gas region here?
   // TPC gas
   for (int i=(n_ib_layer+n_intt_layer+1);i<Max_si_layer;++i) {
     hough->set_material(i, mat_scale*0.06/n_gas_layer);
   }
   hough->setUseCellSize(true);
-  
+
   // TPC
   for (int i=n_ib_layer+n_intt_layer;i<Max_si_layer;++i) {
     hough->setFitErrorScale(i, 1./sqrt(12.));
@@ -447,12 +448,12 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   //----------------
 
   SvtxEvaluator* eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str());
-  eval->do_cluster_eval(true);
-  eval->do_g4hit_eval(true);
-  eval->do_hit_eval(false);
-  eval->do_gpoint_eval(false);
-  eval->scan_for_embedded(true);  // evaluator will only collect embedded tracks - it will ignore decay tracks!
-  //eval->scan_for_embedded(false); // evaluator takes all tracks
+  eval->do_cluster_eval(true);   // make cluster ntuple
+  eval->do_g4hit_eval(false);     // make g4hit ntuple
+  eval->do_hit_eval(false);         // make hit ntuple
+  eval->do_gpoint_eval(false);  
+  //eval->scan_for_embedded(true);  // evaluator will only collect embedded tracks - it will also ignore decay tracks from embedded particles!
+  eval->scan_for_embedded(false); // evaluator takes all tracks
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
 

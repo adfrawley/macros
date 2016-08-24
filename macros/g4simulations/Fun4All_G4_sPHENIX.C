@@ -235,7 +235,7 @@ int Fun4All_G4_sPHENIX(
       se->registerSubsystem(pgen);      
       */
       
-      for(int i=0; i<1000; i++)
+      for(int i=0; i<100; i++)
 	{
 	  double pt = (double) i * 0.5 + 0.5;
 

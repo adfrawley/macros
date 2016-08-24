@@ -19,10 +19,10 @@ void look_purity()
 
   bool pt_resolution_fit = true;
 
-  TFile *fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
+  //TFile *fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
   //TFile *fin = new TFile("root_files/maps3+tpc60_purity_out.root");
 
-  //TFile *fin = new TFile("root_files/purity_out.root");  
+  TFile *fin = new TFile("root_files/purity_out.root");  
   //TFile *fin = new TFile("ladder_maps_purity_out.root");  
   //TFile *fin = new TFile("cylinder_maps_purity_out.root");  
 

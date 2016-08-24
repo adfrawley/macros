@@ -49,16 +49,16 @@ void purity()
   double mom_rescale = 1.0;
   
   // This should be inner maps layers (3) + TPC (60)
-  //static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
-  static const int nlayers = 63;  // maximum number of tracking layers for tpc60+maps3
+  static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
+  //static const int nlayers = 63;  // maximum number of tracking layers for tpc60+maps3
   static const int nmissed = 40;  // maximum number of missed layers
   double ptmax = 12.2;
   
-  double pT_sigmas = 3.0;  // number of sigmas in pT to use for track evaluation
+  double pT_sigmas = 4.0;  // number of sigmas in pT to use for track evaluation
   
   //based on plots of purity vs DCA  and vs quality
   double quality_cut = 1.0;
-    double dca_cut = 0.1; // 1mm, used only if use_dca_sigmas is false
+  double dca_cut = 0.1; // 1mm, used only if use_dca_sigmas is false
   //===============================
   
   // Open the evaluator output file 
@@ -70,10 +70,10 @@ void purity()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor job output files
-  for(int i=0;i<2000;i++)
+  for(int i=0;i<2;i++)
     {
       char name[500];
-      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"../maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
       ntp_vertex->Add(name);
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
@@ -192,7 +192,7 @@ void purity()
       
       if(iev%100 == 0)
 	cout << "Get event " << iev << " with Z vertex " << evt_vertex_z 
-	     << " ntracks " << ntracks << endl;
+	     << " ngtracks " << ngtracks << " ntracks " << ntracks << endl;
       
       // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
       // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
@@ -202,18 +202,24 @@ void purity()
 	{
 	  int recoget = ntp_gtrack->GetEntry(ig);
 
+	  if(recoget == 0)
+	    {
+	      cout << "Failed to get entry " << ig << " in ntp_gtrack" << endl;
+	      continue;
+	    }
+
 	  // get the truth pT
-	  double gpT = sqrt(tpx*tpx+tpy*tpy);	  	  
-	  //cout << " ig " << ig << " tembed " << tembed << " tmatch " << tmatch << " tgtrackid " << tgtrackid << " rgpT " << rgpT << endl; 
+	  double tgpT = sqrt(tpx*tpx+tpy*tpy);	  	  
+	  cout << " ig " << ig << " tembed " << tembed << " tgtrackid " << tgtrackid << " tgpT " << tgpT << endl; 
 
 	  // record embedded pions and Hijing tracks separately
 	  if(tembed == 0)
 	    {
-	      hpt_hijing_truth->Fill(gpT);
+	      hpt_hijing_truth->Fill(tgpT);
 	    }
 	  else
 	    {
-	      hpt_truth->Fill(gpT);
+	      hpt_truth->Fill(tgpT);
 	    }
 	}     
       
@@ -233,12 +239,14 @@ void purity()
 	  // Does the track pass the dca2d cut? 
 	  // If so, add to hquality
 
-	  if(rgembed != 1)
-	    if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
-	      if(rgpT > 0.5 && fabs(rdca2d) < dca_cut)
+	  //if(rgembed != 1)
+	  if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
+	      // if(rgpT > 0.5 && fabs(rdca2d) < dca_cut)
 		{
 		  hquality->Fill(rquality);
 		}
+	  //else
+	  //	cout << "Track failed rpurity = " << rpurity << " rgpT = " << rgpT << " dca2d = " << rdca2d  << endl;
 	  
 	  // Make a histogram of purity vs quality or dca sigmas with no cuts
 	  int ipurity = nlayers - (int) rpurity;
@@ -246,6 +254,7 @@ void purity()
 	  // if number of missed layers exceeds the limit, skip this track
 	  if(ipurity > nmissed)
 	    {
+	      cout << "Skip track because ipurity = " << ipurity << " nmised = " << nmissed << endl;
 	      continue;
 	    }
 
@@ -259,6 +268,7 @@ void purity()
 
 	  if(rquality > quality_cut)
 	    {
+	      cout << "Failed quality cut - rejected " << endl;
 	      continue;
 	    }
 
