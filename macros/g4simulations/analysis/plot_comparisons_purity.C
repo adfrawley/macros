@@ -7,6 +7,7 @@
 #include <TStyle.h>
 #include <TLegend.h>
 #include <TLatex.h>
+#include <TLine.h>
 
 void plot_comparisons_purity()
 {
@@ -20,14 +21,26 @@ void plot_comparisons_purity()
 
   TFile *fin[NPLOTS];
 
-  fin[0] = new TFile("look_purity_cylinder_maps_out.root");  
-  fin[1] = new TFile("look_purity_ladder_maps_out.root");  
+  fin[0] = new TFile("root_files/maps3+tpc60_look_purity_out.root");  
+  fin[1] = new TFile("root_files/maps3+intt4+tpc60_look_purity_out.root");  
+  //fin[0] = new TFile("root_files/nofit_maps3+tpc60_look_purity_out.root");  
+  //fin[1] = new TFile("root_files/nofit_maps3+intt4+tpc60_look_purity_out.root");  
 
   TGraph *gdca[NPLOTS];
   TGraph *geff[NPLOTS];
   TGraph *grdpt[NPLOTS];
 
   int col[3] = {kRed, kBlue, kBlack};
+
+  TLine *lmax[2];
+  lmax[0] = new TLine(0.0, 0.97, 40.0, 0.97);
+  lmax[0]->SetLineColor(col[0]);
+  lmax[0]->SetLineStyle(2);
+  lmax[0]->SetLineWidth(3.0);
+  lmax[1] = new TLine(0.0, 0.93, 40.0, 0.93);
+  lmax[1]->SetLineColor(col[1]);
+  lmax[1]->SetLineStyle(2);
+  lmax[1]->SetLineWidth(2.0);
 
   for(int i=0;i<NPLOTS;i++)
     {
@@ -59,7 +72,7 @@ void plot_comparisons_purity()
     }
   
   
-   TCanvas *ceff = new TCanvas("ceff","ceff",50,50,800,800);
+   TCanvas *ceff = new TCanvas("ceff","ceff",50,50,800,600);
   ceff->SetLeftMargin(0.12);
   
   TH1F *hd = new TH1F("hd","hd",100, 0.0, 40.0);
@@ -81,17 +94,18 @@ void plot_comparisons_purity()
 	geff[i]->Draw("same p");
     }
 
-  TLegend *lpd = new TLegend(0.35, 0.25, 0.70, 0.40,"Inner barrel","NDC");
+  TLegend *lpd = new TLegend(0.35, 0.25, 0.80, 0.40,"","NDC");
   lpd->SetBorderSize(0);
   lpd->SetFillColor(0);
   lpd->SetFillStyle(0);
-  lpd->AddEntry(geff[0], "cylinder maps", "p");
-  lpd->AddEntry(geff[1], "ladder maps", "p");
+  lpd->AddEntry(geff[0], "MAPS(3)+TPC(60)", "p");
+  lpd->AddEntry(geff[1], "MAPS(3)+INTT(4)+TPC(60)", "p");
   lpd->Draw();
   
+  for(int i=0;i<2;i++)
+    lmax[i]->Draw();
 
-
-  TCanvas *cdca = new TCanvas("cdca","cdca",50,50,800,800);
+  TCanvas *cdca = new TCanvas("cdca","cdca",50,50,800,600);
   cdca->SetLeftMargin(0.15);
 
   TH1F *hdca = new TH1F("hdca","hdca",100, 0.0, 40.0);
@@ -113,15 +127,15 @@ void plot_comparisons_purity()
 	gdca[i]->Draw("same p");
     }
 
-  TLegend *lpd1 = new TLegend(0.45, 0.55, 0.80, 0.70,"Inner barrel","NDC");
+  TLegend *lpd1 = new TLegend(0.45, 0.55, 0.89, 0.70,"","NDC");
   lpd1->SetBorderSize(0);
   lpd1->SetFillColor(0);
   lpd1->SetFillStyle(0);
-  lpd1->AddEntry(geff[0], "cylinder maps", "p");
-  lpd1->AddEntry(geff[1], "ladder maps", "p");
+  lpd1->AddEntry(geff[0], "MAPS(3)+TPC(60)", "p");
+  lpd1->AddEntry(geff[1], "MAPS(3)+INTT(4)+TPC(60)", "p");
   lpd1->Draw();
   
-  TCanvas *crdpt = new TCanvas("crdpt","crdpt",50,50,800,800);
+  TCanvas *crdpt = new TCanvas("crdpt","crdpt",50,50,800,600);
   crdpt->SetLeftMargin(0.15);
 
   TH1F *hrdpt = new TH1F("hrdpt","hrdpt",100, 0.0, 40.0);
@@ -143,12 +157,12 @@ void plot_comparisons_purity()
 	grdpt[i]->Draw("same p");
     }
 
-  TLegend *lpd2 = new TLegend(0.25, 0.65, 0.60, 0.80,"Inner barrel","NDC");
+  TLegend *lpd2 = new TLegend(0.25, 0.65, 0.70, 0.80,"","NDC");
   lpd2->SetBorderSize(0);
   lpd2->SetFillColor(0);
   lpd2->SetFillStyle(0);
-  lpd2->AddEntry(geff[0], "cylinder maps", "p");
-  lpd2->AddEntry(geff[1], "ladder maps", "p");
+  lpd2->AddEntry(geff[0], "MAPS(3)+TPC(60)", "p");
+  lpd2->AddEntry(geff[1], "MAPS(3)+INTT(4)+TPC(60)", "p");
   lpd2->Draw();
   
 

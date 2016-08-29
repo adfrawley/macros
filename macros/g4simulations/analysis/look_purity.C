@@ -7,6 +7,7 @@
 #include <TStyle.h>
 #include <TLegend.h>
 #include <TLatex.h>
+#include <TLine.h>
 #include <TEfficiency.h>
 #include <TGraphAsymmErrors.h>
 
@@ -17,14 +18,27 @@ void look_purity()
   gStyle->SetOptFit(0);
   gStyle->SetOptTitle(0);
 
+  // set to true for maps3+intt4+tpc, false for maps3+tpc
+  // this determines the max possible single track efficiency due to silicon dead area of 1% per layer
+  bool intt = false;
+  //bool intt = true;
+  double max_eff = 0.97;
+  if(intt)
+    {
+      max_eff = 0.93;
+    }
+
+  // set to false only to generate pT resolution plots without fits
+  // BEWARE: false means that the 4 sigma cuts are meaningless - thay are not done with fitted parameters
   bool pt_resolution_fit = true;
-
-  //TFile *fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
-  //TFile *fin = new TFile("root_files/maps3+tpc60_purity_out.root");
-
-  TFile *fin = new TFile("root_files/purity_out.root");  
-  //TFile *fin = new TFile("ladder_maps_purity_out.root");  
-  //TFile *fin = new TFile("cylinder_maps_purity_out.root");  
+  
+  TFile *fin;
+  if(intt)
+    fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
+  else
+    fin = new TFile("root_files/maps3+tpc60_purity_out.root");
+  
+  //TFile *fin = new TFile("root_files/purity_out.root");  
 
   if(!fin)
     {
@@ -98,6 +112,7 @@ void look_purity()
   TGraph *grdca2d = new TGraph(NPT,pT,dca2d);
   grdca2d->SetMarkerStyle(20);
   grdca2d->SetMarkerSize(1.2);
+  grdca2d->SetMarkerColor(kRed);
   grdca2d->SetName("dca2d_resolution");
   grdca2d->SetTitle("dca2d resolution");
 
@@ -111,6 +126,18 @@ void look_purity()
   hdummy->Draw();
   grdca2d->Draw("p");
 
+ TLegend *ldca = new TLegend(0.4, 0.55, 0.85, 0.70,"","NDC");
+  ldca->SetBorderSize(0);
+  ldca->SetFillColor(0);
+  ldca->SetFillStyle(0);
+  char lstr1[500];
+  if(intt)
+    sprintf(lstr1,"MAPS(3)+INTT(4)+TPC(60)");
+  else
+    sprintf(lstr1,"MAPS(3)+TPC(60)");
+  ldca->AddEntry(grdca2d, lstr1, "p");
+  ldca->Draw();
+
   //===================================
   // extract pT resolution vs pT from hpt_compare
 
@@ -119,7 +146,6 @@ void look_purity()
   double dpT[80];
 
   for(int i = 0;i<NPT;i++)
-  //for(int i = 10;i<11;i++)
     {
       double ptlo = (double) i * 0.5 + 0.25;
       double pthi = ptlo + 0.5;
@@ -171,10 +197,9 @@ void look_purity()
 
   // Parameterize pT resolution
   
-  //TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 10.0);
   TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 25.0);
-  fpt->SetParameter(0,0.0054);
-  fpt->SetParameter(1,0.0023);
+  fpt->SetParameter(0,0.0069);
+  fpt->SetParameter(1,0.001758);
   if(pt_resolution_fit)  
     grdpt->Fit(fpt,"R");
 
@@ -198,6 +223,8 @@ void look_purity()
       cout << "Failed to get hpt_truth, quit!" << endl;
       exit(1);
     }
+  
+  TCanvas *ctruth = new TCanvas("ctruth","ctruth", 5,5,800,600);
 
   TH1D *hpt_matched = new TH1D("hpt_matched","hpt_matched", 500, 0.0, 40.0);
   double eff_pt[80];
@@ -227,7 +254,28 @@ void look_purity()
       int thi = hpt_truth->FindBin(ptval+0.1);
       double truth_yield = hpt_truth->Integral(tlo, thi);;
       eff_pt[i] = hpt1->Integral(momlo, momhi) / truth_yield;
+      //eff_pt[i] = hpt1->Integral() / truth_yield;
 
+      /*
+      if(i == 20)
+	{
+	  ctruth->cd(0);
+	  hpt1->DrawCopy();
+	  TF1 *fres = new TF1("fres","gaus");
+	  fres->SetParameter(0, 20.0);
+	  fres->FixParameter(1, 1.0);
+	  fres->FixParameter(2, ptres);
+	  fres->SetLineColor(kRed);
+	  hpt1->Fit(fres);
+	  fres->DrawCopy("same");
+	  ctruth->Update();
+	  cout << hpt1->Integral() << endl;
+	  cout << ptres << endl;
+	  int k = 0;
+	  int y=0;
+	  cin >> k >> y;
+	}
+      */
 
       cout << " ptval " << ptval 
 	   << " ptreslo " << ptreslo
@@ -264,10 +312,29 @@ void look_purity()
 
   gr_eff->Draw("p");
 
+  // indicate the maximum possible single track eff due to silicon dead area of 1%/layer
+  TLine *lmax = new TLine(0.0, max_eff, 40.0, max_eff);
+  lmax->SetLineColor(kRed);
+  lmax->SetLineStyle(2);
+  lmax->SetLineWidth(3.0);
+  lmax->Draw();
+
+ TLegend *leff = new TLegend(0.4, 0.25, 0.85, 0.40,"","NDC");
+  leff->SetBorderSize(0);
+  leff->SetFillColor(0);
+  leff->SetFillStyle(0);
+  char lstr[500];
+  if(intt)
+    sprintf(lstr,"MAPS(3)+INTT(4)+TPC(60)");
+  else
+    sprintf(lstr,"MAPS(3)+TPC(60)");
+  leff->AddEntry(gr_eff, lstr, "p");
+  leff->AddEntry(lmax, "max possible efficiency", "l");
+  leff->Draw();
 
   //=======================
   // Get track purity for Hijing events by 
-  // finding tracks within 3 sigmas of the 
+  // finding tracks within pt_sigmas of the 
   // truth pT
 
   TH2D *hpt_hijing_compare = 0;
@@ -310,12 +377,14 @@ void look_purity()
       int momhi = hpt1->GetXaxis()->FindBin(ptreshi);
 
       // This to avoid TEfficiency's stupid insistence that the histograms cannot be filled with weights
-      for (int i=0;i<(int)hpt1->Integral(momlo,momhi);i++)
+      for (int j=0;j<(int)hpt1->Integral(momlo,momhi);j++)
 	hpt_hijing_matched->Fill(ptval);
-      for (int i=0;i<(int)hpt1->Integral();i++)
+      for (int j=0;j<(int)hpt1->Integral();j++)
 	hpt_hijing_allreco->Fill(ptval);
 
       //purity_pt[i] = hpt1->Integral(momlo, momhi) / hpt1->Integral();
+
+      delete hpt1;
     }
 
   cout << " create canvas c7" << endl;
@@ -325,7 +394,10 @@ void look_purity()
   //if(TEfficiency::CheckConsistency(*hpt_hijing_matched,*hpt_hijing_allreco))
     {
       pEff = new TEfficiency(*hpt_hijing_matched,*hpt_hijing_allreco);
-      pEff->SetTitle("Reconstruction efficiency (3.0#sigma p_{T}) ; p_{T} (GeV/c) ; reco'd tracks within 3 #sigma p_{T}");
+      char tname[500];
+      sprintf(tname,"Reconstruction efficiency (%.1f#sigma p_{T}) ; p_{T} (GeV/c) ; reco'd tracks within %.0f #sigma p_{T}",pT_sigmas,pT_sigmas);
+      //pEff->SetTitle("Reconstruction efficiency (3.0#sigma p_{T}) ; p_{T} (GeV/c) ; reco'd tracks within 3 #sigma p_{T}");
+      pEff->SetTitle(tname);
       pEff->SetMarkerStyle(20);
       pEff->SetMarkerColor(kBlack);
       pEff->SetMarkerSize(1);

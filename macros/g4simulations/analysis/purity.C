@@ -49,16 +49,16 @@ void purity()
   double mom_rescale = 1.0;
   
   // This should be inner maps layers (3) + TPC (60)
-  static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
-  //static const int nlayers = 63;  // maximum number of tracking layers for tpc60+maps3
+  //static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
+  static const int nlayers = 63;  // maximum number of tracking layers for tpc60+maps3
   static const int nmissed = 40;  // maximum number of missed layers
   double ptmax = 12.2;
   
   double pT_sigmas = 4.0;  // number of sigmas in pT to use for track evaluation
   
   //based on plots of purity vs DCA  and vs quality
-  double quality_cut = 1.0;
-  double dca_cut = 0.1; // 1mm, used only if use_dca_sigmas is false
+  double quality_cut = 1.5;
+  double dca_cut = 0.1; // 1mm
   //===============================
   
   // Open the evaluator output file 
@@ -70,14 +70,24 @@ void purity()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor job output files
-  for(int i=0;i<2;i++)
+  for(int i=0;i<2000;i++)
     {
       char name[500];
-      sprintf(name,"../maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"../maps3+tpc60_eval_output/eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/isibf5y/macros-QTG_macros/macros/g4simulations/hijing/g4eval_hij_pionsembed_qtgmac_map_tpc_%i.root",i);
+
       ntp_vertex->Add(name);
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
     }
+
+  cout << "ntp_vertex enties: " << ntp_vertex->GetEntries()
+       << " ntp_gtrack entires: " << ntp_gtrack->GetEntries()
+       << " ntp_track entries: " << ntp_track->GetEntries()
+       << endl;
+
 
   // This include file contains the definitions of the ntuple variables, and the chain definitions
 #include "ntuple_variables.C"
@@ -142,9 +152,6 @@ void purity()
 			    2.2,2.4,2.6,2.8,3.0,3.2,3.4,3.6,3.8,4.0,
 			      4.5,5.0,5.5,6.0,7.0,8.0,10.0};
 
-  TH1D *hpt_allreco = new TH1D("hpt_allreco","hpt_allreco",NVARBINS,xbins);
-  TH1D *hpt_goodreco = new TH1D("hpt_goodreco","hpt_goodreco",NVARBINS,xbins);
-
   TH1D *hpt_truth = new TH1D("hpt_truth","hpt_truth",500, 0.0, 40.0);
   TH2D *hpt_compare = new TH2D("hpt_compare","hpt_compare",500, 0.0, 40.0, 2000, 0.0, 2.0);
   hpt_compare->GetXaxis()->SetTitle("p_{T}");
@@ -171,46 +178,47 @@ void purity()
 
   //============================================================
   // Loop over events 
-  //   Reject events with bad event vertex
   //   Loop over reco'd tracks
-  //     Make quality cut (usually < 3)
+  //     Make quality cut
   //       Fill dca2d histos
   //       Make loose dca2d cut (usually < 1 mm)
   //         Fill Z dca histo
   //         Drop tracks outside 1 mm in Z dca from evt vertex
-  //           Add this reco'd track to hpt_allreco
-  //           Make a cut on rpT < pT_sigmas from rgpT
-  //             fill hpt_goodreco
-  //   Make a TEfficiency of hpt_goodreco / hpt_allreco
+  //           Add this reco'd track 2D histo of (rpT-pT) vs pT
   //============================================================
   int nr = 0;
   int ng = 0;
   for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
     {
       int recoget = ntp_vertex->GetEntry(iev);
+      if(!recoget)
+	{
+	  cout << "Failed to get ntp_vertex entry " << iev << endl;
+	  exit(1);
+	}
       double evt_vertex_z = evz;
       
-      if(iev%100 == 0)
+      if(iev%1 == 0)
 	cout << "Get event " << iev << " with Z vertex " << evt_vertex_z 
-	     << " ngtracks " << ngtracks << " ntracks " << ntracks << endl;
+	     << " ngtracks " << ngtracks << " ntracks " << ntracks 
+	     << " ng " << ng << " nr " << nr 
+	     << endl;
       
       // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
       // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
-      cout << " iev " << iev << " ng " << ng << " ngtracks " << ngtracks << " nr " << nr << " ntracks " << ntracks << endl;
-      
+            
       for(int ig=ng;ig<ng+ngtracks;ig++)
 	{
 	  int recoget = ntp_gtrack->GetEntry(ig);
-
 	  if(recoget == 0)
 	    {
-	      cout << "Failed to get entry " << ig << " in ntp_gtrack" << endl;
+	      cout << "Failed to get ntp_gtrack entry " << ig << " in ntp_gtrack" << endl;
+	      //exit(1);
 	      continue;
 	    }
 
 	  // get the truth pT
 	  double tgpT = sqrt(tpx*tpx+tpy*tpy);	  	  
-	  cout << " ig " << ig << " tembed " << tembed << " tgtrackid " << tgtrackid << " tgpT " << tgpT << endl; 
 
 	  // record embedded pions and Hijing tracks separately
 	  if(tembed == 0)
@@ -226,49 +234,42 @@ void purity()
       for(int ir=nr;ir<nr+ntracks;ir++)
 	{
 	  int recoget = ntp_track->GetEntry(ir);
-
-	  hnhits->Fill(rnhits);
-	  // want only tracks with hits in most layers 
-	  // The Hough is set to accept tracks with max layers - 6 or more hits
-	  if(rnhits <  nlayers - nmissed)
-	    continue;
-
+	  if(!recoget)
+	    {
+	      cout << "Failed to get ntp_track entry " << ir << endl;
+	      //exit(1);
+	      continue;
+	    }
 	  double rgpT = sqrt(rgpx*rgpx+rgpy*rgpy);	  	  
 	  double rpT = sqrt(rpx*rpx+rpy*rpy);
 
+	  hnhits->Fill(rnhits);
+
 	  // Does the track pass the dca2d cut? 
 	  // If so, add to hquality
-
-	  //if(rgembed != 1)
-	  if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
-	      // if(rgpT > 0.5 && fabs(rdca2d) < dca_cut)
-		{
-		  hquality->Fill(rquality);
-		}
-	  //else
-	  //	cout << "Track failed rpurity = " << rpurity << " rgpT = " << rgpT << " dca2d = " << rdca2d  << endl;
+	  if(rgembed == 1)
+	    if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
+	      {
+		hquality->Fill(rquality);
+	      }
 	  
 	  // Make a histogram of purity vs quality or dca sigmas with no cuts
 	  int ipurity = nlayers - (int) rpurity;
 
-	  // if number of missed layers exceeds the limit, skip this track
-	  if(ipurity > nmissed)
-	    {
-	      cout << "Skip track because ipurity = " << ipurity << " nmised = " << nmissed << endl;
-	      continue;
-	    }
-
 	  if(rgembed != 1)
 	    {
-	      hpurity_quality[ipurity]->Fill(rquality);
-	      hpurity_dca[ipurity]->Fill(rdca2d);
+	      if(ipurity < nmissed)
+		{
+		  hpurity_quality[ipurity]->Fill(rquality);
+		  hpurity_dca[ipurity]->Fill(rdca2d);
+		}
 	    }
 
 	  // Now make some cuts on dca and quality
 
 	  if(rquality > quality_cut)
 	    {
-	      cout << "Failed quality cut - rejected " << endl;
+	      //cout << "Failed quality cut - rejected " << endl;
 	      continue;
 	    }
 
@@ -291,7 +292,6 @@ void purity()
 	  if(fabs(rdca2d) > dca_cut)
 	    continue;
 	  
-	  
 	  // Histogram the track Z DCA for Hijing tracks
 	  if(rgembed != 1)
 	    hZdca->Fill(rvz - evz);
@@ -301,11 +301,11 @@ void purity()
 	    {	      
 	      continue;
 	    }
-	  
+
+
 	  // histogram the reco pT for the embedded tracks that pass the cuts
 	  if(rgembed == 1)
 	    {
-	      hpt_allreco->Fill(rpT);
 	      hpt_compare->Fill(rgpT,rpT/rgpT);
 	      hpt_dca2d->Fill(rgpT, rdca2d);
 	    }
@@ -322,21 +322,6 @@ void purity()
 		  }
 	    }
 
-	  // histogram the reco pT for tracks that:
-	  //   - have a reco momentum that is within +/- n sigmas of the G4 pT
-	  
-	  // make a cut on the momentum difference between rgpT and rpT
-	  double ptratio = rpT/rgpT;
-	  
-	  // The mom res is 1.08% constant + 2.71 E-04 linear
-	  double ptres = pT_res_constant + pT_res_linear * rgpT; 
-	  ptres = ptres * pT_sigmas;
-	  
-	  if( fabs(ptratio - 1.0) < ptres)
-	    {
-	      hpt_goodreco->Fill(rpT);
-	    }
-	  
 	  // make histograms of the purity for the tracks that passed the quality and dca cuts
 	  if(ipurity >= 0 && ipurity <= npurity)
 	    {
@@ -423,27 +408,6 @@ void purity()
   heta->SetMinimum(0.0);
   //gPad->SetLogy(1);
   heta->Draw();
-
-  TCanvas *cpt = new TCanvas("cpt","cpt",20,20,600,600);
-  cpt->SetLeftMargin(0.13);
-  char tstr[500];
-  sprintf(tstr,"Reconstructed track purity;p_{T} (GeV/c);Reco'd pT < %.1f #sigma",pT_sigmas);
-  TEfficiency* pEff = 0;
-  //hpt_goodreco->Rebin(4);
-  //hpt_allreco->Rebin(4);
-  if(TEfficiency::CheckConsistency(*hpt_goodreco,*hpt_allreco))
-    {
-      pEff = new TEfficiency(*hpt_goodreco,*hpt_allreco);
-      pEff->SetTitle(tstr);
-      pEff->SetMarkerStyle(20);
-      pEff->SetMarkerColor(kBlack);
-      pEff->SetMarkerSize(1);
-      pEff->Draw();
-      gPad->Update();
-      pEff->GetPaintedGraph()->GetYaxis()->SetTitleOffset(1.3);
-      pEff->GetPaintedGraph()->GetYaxis()->SetRangeUser(0.0,1.1);
-    }
-  
 
   // Make the purity plot for all tracks 
   //==================================== 
@@ -613,9 +577,6 @@ void purity()
   hdca2d[0]->Write();
   hdca2d[1]->Write();
   hdca2d[2]->Write();
-
-  hpt_goodreco->Write();
-  hpt_allreco->Write();
 
   // truth pT distributions for embedded and non-embedded particles
   hpt_truth->Write();
