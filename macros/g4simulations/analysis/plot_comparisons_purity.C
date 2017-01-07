@@ -21,10 +21,43 @@ void plot_comparisons_purity()
 
   TFile *fin[NPLOTS];
 
-  fin[0] = new TFile("root_files/maps3+tpc60_look_purity_out.root");  
-  fin[1] = new TFile("root_files/maps3+intt4+tpc60_look_purity_out.root");  
-  //fin[0] = new TFile("root_files/nofit_maps3+tpc60_look_purity_out.root");  
-  //fin[1] = new TFile("root_files/nofit_maps3+intt4+tpc60_look_purity_out.root");  
+  int maps_ladders_comp = 2;
+  char label[2][500]; 
+  if(maps_ladders_comp == 1)
+    {
+      // compare with and without ladders option - maps+tpc
+      fin[0] = new TFile("root_files/nofit_maps3+tpc60_look_purity_out.root");  
+      fin[1] = new TFile("root_files/look_purity_nofit_maps_ladders3_tpc60_out.root");  
+      sprintf(label[0],"cylinder maps + tpc");
+      sprintf(label[1], "maps ladders + tpc");
+    }
+  if(maps_ladders_comp == 2)
+    {
+      // compare with and without ladders option - maps+intt+tpc
+
+      //  fin[0] = new TFile("root_files/nofit_maps3+intt4_tpc60_look_purity_out.root");  
+      fin[0] = new TFile("root_files/look_purity_nofit_maps_cylinder3_intt4_tpc60_out.root");  
+      //fin[1] = new TFile("root_files/look_purity_nofit_maps_ladders3_intt4_tpc60_out.root");  
+      fin[1] = new TFile("root_files/maps_ladders3_intt_tpc60_single_pions_look_purity_out.root");  
+      sprintf(label[0],"cylinder maps + intt + tpc");
+      sprintf(label[1], "maps ladders + intt + tpc");
+    }
+  if(maps_ladders_comp == 3)
+    {
+      // compare ladder cases with and without INTT
+      fin[0] = new TFile("root_files/look_purity_nofit_maps_ladders3_tpc60_out.root");  
+      fin[1] = new TFile("root_files/look_purity_nofit_maps_ladders3_intt4_tpc60_out.root");  
+      sprintf(label[0],"maps ladders + tpc");
+      sprintf(label[1], "maps ladders + intt + tpc");
+    }
+  if(maps_ladders_comp == 4)
+    {
+      // compare cylinder cell cases with and without INTT
+      fin[0] = new TFile("root_files/nofit_maps3+tpc60_look_purity_out.root");  
+      fin[1] = new TFile("root_files/nofit_maps3+intt4_tpc60_look_purity_out.root");  
+      sprintf(label[0],"cylinder maps + tpc");
+      sprintf(label[1], "cylinder maps + intt + tpc");
+    }
 
   TGraph *gdca[NPLOTS];
   TGraph *geff[NPLOTS];
@@ -56,7 +89,7 @@ void plot_comparisons_purity()
       if(!geff[i])
 	{
 	  cout << "Failed to find geff for " << i  << endl;
-	  exit(1);
+	  //exit(1);
 	}
       if(!gdca[i])
 	{
@@ -95,11 +128,11 @@ void plot_comparisons_purity()
     }
 
   TLegend *lpd = new TLegend(0.35, 0.25, 0.80, 0.40,"","NDC");
-  lpd->SetBorderSize(0);
+  lpd->SetBorderSize(1);
   lpd->SetFillColor(0);
   lpd->SetFillStyle(0);
-  lpd->AddEntry(geff[0], "MAPS(3)+TPC(60)", "p");
-  lpd->AddEntry(geff[1], "MAPS(3)+INTT(4)+TPC(60)", "p");
+  lpd->AddEntry(geff[0],label[0], "p");
+  lpd->AddEntry(geff[1], label[1], "p");
   lpd->Draw();
   
   for(int i=0;i<2;i++)
@@ -128,12 +161,13 @@ void plot_comparisons_purity()
     }
 
   TLegend *lpd1 = new TLegend(0.45, 0.55, 0.89, 0.70,"","NDC");
-  lpd1->SetBorderSize(0);
+  lpd1->SetBorderSize(1);
   lpd1->SetFillColor(0);
   lpd1->SetFillStyle(0);
-  lpd1->AddEntry(geff[0], "MAPS(3)+TPC(60)", "p");
-  lpd1->AddEntry(geff[1], "MAPS(3)+INTT(4)+TPC(60)", "p");
+  lpd1->AddEntry(geff[0],label[0], "p");
+  lpd1->AddEntry(geff[1], label[1], "p");
   lpd1->Draw();
+
   
   TCanvas *crdpt = new TCanvas("crdpt","crdpt",50,50,800,600);
   crdpt->SetLeftMargin(0.15);
@@ -158,13 +192,49 @@ void plot_comparisons_purity()
     }
 
   TLegend *lpd2 = new TLegend(0.25, 0.65, 0.70, 0.80,"","NDC");
-  lpd2->SetBorderSize(0);
+  lpd2->SetBorderSize(1);
   lpd2->SetFillColor(0);
   lpd2->SetFillStyle(0);
-  lpd2->AddEntry(geff[0], "MAPS(3)+TPC(60)", "p");
-  lpd2->AddEntry(geff[1], "MAPS(3)+INTT(4)+TPC(60)", "p");
+  lpd2->AddEntry(geff[0], label[0], "p");
+  lpd2->AddEntry(geff[1], label[1], "p");
   lpd2->Draw();
-  
+
+
+  // draw the ratio of momentum resolution histograms
+
+  TCanvas *cdptratio = new TCanvas("cdptratio","cdptratio",50,50,800,600);
+  cdptratio->SetLeftMargin(0.15);
+
+  TH1F *hdptratio = new TH1F("hdptratio","hdptratio",100, 0.0, 40.0);
+  hdptratio->SetMinimum(0.8);
+  hdptratio->SetMaximum(1.4);
+  hdptratio->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+  hdptratio->GetXaxis()->SetTitleOffset(1.15);
+  hdptratio->GetYaxis()->SetTitle("#Delta p_{T} ratio");
+  hdptratio->GetYaxis()->SetTitleOffset(1.8);
+  hdptratio->Draw();
+
+  int N = grdpt[0]->GetN();
+  int N2 = grdpt[1]->GetN();
+  cout << "grdpt[0] has " << N << " points, " << " grdpt[1] has " << N2 <<  " points" << endl;
+
+  TGraph *gratio = new TGraph(N-1);
+  gratio->SetMarkerStyle(20);
+  gratio->SetMarkerSize(1);
+  for(int i=0;i<N-1;i++)
+    {
+      double x1 = 0;
+      double y1=0;
+      grdpt[0]->GetPoint(i, x1, y1);
+      double x2 = 0;
+      double y2=0;
+      grdpt[1]->GetPoint(i, x2, y2);
+      double ratio = y2/y1;
+      gratio->SetPoint(i,x1,ratio);
+    }
+
+  gratio->Draw("p");  
+
 
   /*
 

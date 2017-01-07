@@ -109,9 +109,8 @@ void CBfitter_1state()
   //bool do_subtracted = true;
 
   file1S = new TFile("ups1s_qual3.00_dca2d0.10.root");
-  //file1S = new TFile("maps+IT+tpc_4pc_18cm_ups1s_qr_out.root");
-  //file1S = new TFile("maps+IT+tpc_4pc_10cm_ups1s_qr_out.root");
-  //file1S = new TFile("maps+tpc_ups1s_qr_out.root");
+  //file1S = new TFile("root_files/maps_cylinders_intt_tpc_ups1s_qual3.00_dca2d0.10.root");
+  //file1S = new TFile("root_files/maps_ladders_intt_tpc_ups1s_qual3.00_dca2d0.10.root");
 
   recomass1S = (TH1 *)file1S->Get("recomass");
 

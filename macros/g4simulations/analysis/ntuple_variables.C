@@ -115,10 +115,13 @@ cout << "set up ntp_track access" << endl;
   Float_t rprimary;
   Float_t rpurity;
   Float_t rvz;
-//Float_t rdca;
+  Float_t rpcax;
+  Float_t rpcay;
+  Float_t rpcaz;
   Float_t rdca2d;
   Float_t rdca2dsigma;
   Float_t rnhits;
+  Float_t rgnhits;
   Float_t rgembed;
   
   TBranch* b_px;
@@ -141,10 +144,13 @@ cout << "set up ntp_track access" << endl;
   TBranch* b_primary;
   TBranch* b_purity;
   TBranch* b_gvz;
-//TBranch* b_dca;
+  TBranch* b_pcax;
+  TBranch* b_pcay;
+  TBranch* b_pcaz;
   TBranch* b_dca2d;
   TBranch* b_dca2dsigma;
   TBranch* b_rnhits;
+  TBranch* b_rgnhits;
   TBranch* b_rgembed;
   
   //set branches
@@ -168,10 +174,13 @@ cout << "set up ntp_track access" << endl;
   ntp_track->SetBranchAddress("gprimary", &rprimary);
   ntp_track->SetBranchAddress("nfromtruth", &rpurity);
   ntp_track->SetBranchAddress("gvz", &rvz);
-//ntp_track->SetBranchAddress("dca", &rdca);
+  ntp_track->SetBranchAddress("pcax", &rpcax);
+  ntp_track->SetBranchAddress("pcay", &rpcay);
+  ntp_track->SetBranchAddress("pcaz", &rpcaz);
   ntp_track->SetBranchAddress("dca2d", &rdca2d);
   ntp_track->SetBranchAddress("dca2dsigma", &rdca2dsigma);
   ntp_track->SetBranchAddress("nhits", &rnhits);
+  ntp_track->SetBranchAddress("gnhits", &rgnhits);
   ntp_track->SetBranchAddress("gembed", &rgembed);
   
   //get Branches
@@ -194,10 +203,13 @@ cout << "set up ntp_track access" << endl;
   b_primary = ntp_track->GetBranch("gprimary");
   b_purity = ntp_track->GetBranch("nfromtruth");
   b_gvz = ntp_track->GetBranch("gvz");
-//b_dca = ntp_track->GetBranch("dca");
+  b_pcax = ntp_track->GetBranch("pcax");
+  b_pcay = ntp_track->GetBranch("pcay");
+  b_pcaz = ntp_track->GetBranch("pcaz");
   b_dca2d = ntp_track->GetBranch("dca2d");
   b_dca2dsigma = ntp_track->GetBranch("dca2dsigma");
   b_rnhits = ntp_track->GetBranch("nhits");
+  b_rnhits = ntp_track->GetBranch("gnhits");
   b_rgembed = ntp_track->GetBranch("gembed");
   
   //================================

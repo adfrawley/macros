@@ -18,10 +18,11 @@ void look_purity()
   gStyle->SetOptFit(0);
   gStyle->SetOptTitle(0);
 
+  double ptmax = 40.0;
+
   // set to true for maps3+intt4+tpc, false for maps3+tpc
   // this determines the max possible single track efficiency due to silicon dead area of 1% per layer
-  bool intt = false;
-  //bool intt = true;
+  bool intt = true;
   double max_eff = 0.97;
   if(intt)
     {
@@ -30,15 +31,20 @@ void look_purity()
 
   // set to false only to generate pT resolution plots without fits
   // BEWARE: false means that the 4 sigma cuts are meaningless - thay are not done with fitted parameters
-  bool pt_resolution_fit = true;
+  //bool pt_resolution_fit = true;
+  bool pt_resolution_fit = false;
   
+  /*
   TFile *fin;
   if(intt)
     fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
   else
     fin = new TFile("root_files/maps3+tpc60_purity_out.root");
-  
+  */
+
   //TFile *fin = new TFile("root_files/purity_out.root");  
+  //TFile *fin = new TFile("root_files/maps_ladders3_tpc60_single_pions_purity_out.root");  
+  TFile *fin = new TFile("root_files/maps_ladders3_intt4_tpc60_single_pions_purity_out2.root");  
 
   if(!fin)
     {
@@ -67,14 +73,13 @@ void look_purity()
   
   //========================================
   // extract DCA resolution vs pT from 2D histo hpt_dca2d
-  // by fitting 80 pT slices
+  // by fitting NPT pT slices
 
   TCanvas *c2 = new TCanvas("c2","c2",20,20,800,600);
 
-  //int NPT = 79;
-  int NPT = 70;
-  double pT[80];
-  double dca2d[80];
+  static const int NPT = 69;
+  double pT[NPT];
+  double dca2d[NPT];
   for(int i = 0;i<NPT;i++)
     //for(int i = 10;i<11;i++)
     {
@@ -116,7 +121,7 @@ void look_purity()
   grdca2d->SetName("dca2d_resolution");
   grdca2d->SetTitle("dca2d resolution");
 
-  TH1D *hdummy = new TH1D("hdummy","#Delta dca2d vs p_{T}",100,0.0,40.0);
+  TH1D *hdummy = new TH1D("hdummy","#Delta dca2d vs p_{T}",100,0.0,ptmax);
   hdummy->SetMinimum(0);
   hdummy->SetMaximum(0.0050);
   hdummy->GetXaxis()->SetTitle("p_{T}");
@@ -143,7 +148,7 @@ void look_purity()
 
   TCanvas *c4 = new TCanvas("c4","c4",60,60,800,600);
 
-  double dpT[80];
+  double dpT[NPT];
 
   for(int i = 0;i<NPT;i++)
     {
@@ -186,7 +191,7 @@ void look_purity()
   grdpt->SetName("pt_resolution");
   grdpt->SetTitle("pT resolution");
 
-  TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,40.0);
+  TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,ptmax);
   hdummy2->SetMinimum(0);
   hdummy2->SetMaximum(0.12);
   hdummy2->GetXaxis()->SetTitle("p_{T}");
@@ -226,8 +231,8 @@ void look_purity()
   
   TCanvas *ctruth = new TCanvas("ctruth","ctruth", 5,5,800,600);
 
-  TH1D *hpt_matched = new TH1D("hpt_matched","hpt_matched", 500, 0.0, 40.0);
-  double eff_pt[80];
+  TH1D *hpt_matched = new TH1D("hpt_matched","hpt_matched", 500, 0.0, ptmax);
+  double eff_pt[NPT];
 
   for(int i = 0;i<NPT;i++)
     {
@@ -297,9 +302,9 @@ void look_purity()
   cout << " create canvas c7" << endl;
   TCanvas *c7 = new TCanvas("c7","c7",60,60,1000,600);
 
-  TH1F *hd = new TH1F("hd","hd",100, 0.0, 40.0);
+  TH1F *hd = new TH1F("hd","hd",100, 0.0, ptmax);
   hd->SetMinimum(0.0);
-  hd->SetMaximum(1.0);
+  hd->SetMaximum(1.2);
   hd->GetXaxis()->SetTitle("p_{T} (GeV/c)");
   hd->GetYaxis()->SetTitle("Single track efficiency");
   hd->Draw();
@@ -313,11 +318,11 @@ void look_purity()
   gr_eff->Draw("p");
 
   // indicate the maximum possible single track eff due to silicon dead area of 1%/layer
-  TLine *lmax = new TLine(0.0, max_eff, 40.0, max_eff);
+  TLine *lmax = new TLine(0.0, max_eff, ptmax, max_eff);
   lmax->SetLineColor(kRed);
   lmax->SetLineStyle(2);
   lmax->SetLineWidth(3.0);
-  lmax->Draw();
+  //lmax->Draw();
 
  TLegend *leff = new TLegend(0.4, 0.25, 0.85, 0.40,"","NDC");
   leff->SetBorderSize(0);
@@ -329,7 +334,7 @@ void look_purity()
   else
     sprintf(lstr,"MAPS(3)+TPC(60)");
   leff->AddEntry(gr_eff, lstr, "p");
-  leff->AddEntry(lmax, "max possible efficiency", "l");
+  //leff->AddEntry(lmax, "max possible efficiency", "l");
   leff->Draw();
 
   //=======================
@@ -546,6 +551,17 @@ void look_purity()
   l3->SetTextSize(0.07);
   l3->Draw();
 
+  /*
+  TCanvas *cvtx = new TCanvas("cvtx","cvtx",4,4,800,600);
+  TH1D *h_evt_dca2d = 0;
+  fin->GetObject("h_evt_dca2d",h_evt_dca2d);
+  if(!h_evt_dca2d)
+    {
+      cout << "Did not get h_evt_dca2d" << endl;
+      exit(1);
+    }
+  h_evt_dca2d->Draw();
+  */
   // Output some graphs for comparison plots
 
  TFile *fout = new TFile("root_files/look_purity_out.root","recreate");

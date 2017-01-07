@@ -66,9 +66,6 @@ void quarkonia_reconstruction_embedded()
   */
   cout << "Reading electron ntuples " << endl; 
 
-  bool ups1s = true;
-  bool ups2s = false;
-  bool ups3s = false;
   
   TChain* ntp_track = new TChain("ntp_track","reco tracks");
   TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
@@ -76,10 +73,16 @@ void quarkonia_reconstruction_embedded()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
   // The condor jobs make 1000 files
-  for(int i=0;i<200;i++)
+  for(int i=0;i<500;i++)
     {
       char name[500];
       sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../ups1s_maps3_intt4_1.05pc_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../ups1s_maps3_intt3_1.05pc_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../ups1s_maps3_intt2_1.05pc_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../ups1s_maps3_intt1_1.05pc_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../ups1s_maps3_intt0_eval_output/g4svx_eval_%i.root",i);
+
       ntp_vertex->Add(name);
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
@@ -110,9 +113,20 @@ void quarkonia_reconstruction_embedded()
   TH1D *recomass_primary = new TH1D("recomass_primary","Reconstructed invariant mass",200,7.0,11.0);
   recomass_primary->GetXaxis()->SetTitle("invariant mass (GeV/c^{2})");
 
-  int nups_requested = 20000;
-  cout << "Upsilons requested = " << nups_requested << endl;
+  int ups_state = 1;
+  int nups_requested = 0;
+  // These are for 1 year of pp running
+  if(ups_state == 1)
+    nups_requested = 8769;
+  else if(ups_state == 2)
+    nups_requested = 2205;
+  else if(ups_state == 3)
+    nups_requested = 1156;
+  else
+    nups_requested = 20000;
 
+  cout << "Upsilons requested = " << nups_requested << endl;
+  
   //=======================
   // Loop over events
   //=======================
@@ -154,6 +168,7 @@ void quarkonia_reconstruction_embedded()
         {
           int recoget1 = ntp_gtrack->GetEntry(ig);
       
+	  cout << "Number of ntp_gtrack entries = " << recoget1 << endl;
 
 	  // we want only electrons or positrons
 	  if(tflavor != 11 && tflavor != -11)
@@ -302,6 +317,8 @@ void quarkonia_reconstruction_embedded()
       for(int ir=nr;ir<nr+ntracks;ir++)
         {
           int recoget = ntp_track->GetEntry(ir);
+
+	  cout << "Number of ntp_track entries = " << recoget << endl;
 	  
 	  hrquality->Fill(rquality);
 	  hrdca2d->Fill(rdca2d);
@@ -450,14 +467,7 @@ void quarkonia_reconstruction_embedded()
 
   char fname[500];
 
-  // The Upsilon state is read from the input file
-  int state = 3;   // Upsilon state = 1 or 2 or 3
-  if(ups1s)
-    state = 1;
-  if(ups2s)
-    state = 2;
-
-  sprintf(fname,"ups%is_qual%.2f_dca2d%.2f.root",state,quality_cut,dca_cut);
+  sprintf(fname,"ups%is_qual%.2f_dca2d%.2f.root",ups_state,quality_cut,dca_cut);
 
   cout << "Create output file " << fname << endl;
 

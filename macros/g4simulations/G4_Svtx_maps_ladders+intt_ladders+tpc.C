@@ -1,15 +1,15 @@
+#include <vector>
 
-const int n_svx_layer = 3;
+const int n_maps_layer = 3;
+const int n_intt_layer = 0;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
 const int n_gas_layer = 60;
 double inner_cage_radius = 20.;
 
-int Min_si_layer = 0;
-int Max_si_layer = n_svx_layer + n_gas_layer;
+int Max_si_layer = n_maps_layer + n_intt_layer + n_gas_layer;
 
 void SvtxInit(int verbosity = 0)
 {
-  Min_si_layer = 0;
-  Max_si_layer = n_svx_layer + n_gas_layer;
+  Max_si_layer = n_maps_layer + n_intt_layer + n_gas_layer;
   double inner_cage_radius = 20.; // options of 20.0 or 30.0 cm
 }
 
@@ -17,89 +17,77 @@ double Svtx(PHG4Reco* g4Reco, double radius,
       const int absorberactive = 0,
       int verbosity = 0) {
 
-  bool overlapcheck = false; // set to true if you want to check for overlaps
+  bool maps_overlapcheck = false; // set to true if you want to check for overlaps
 
-  // silicon layers ------------------------------------------------------------
+  // MAPS inner barrel layers 
+  //======================================================
 
   //double maps_layer_radius[3] = {23.4, 31.5, 39.3};   // mm  - precise numbers from ITS.gdml
   double maps_layer_radius[3] = {23.635, 31.5, 39.385};   // mm  - adjusted for closest fit
   // type 1 = inner barrel stave, 2 = middle barrel stave, 3 = outer barrel stave
+  // we use only type 0 here
   int stave_type[3] = {0, 0, 0};
    
-  for (int ilayer = Min_si_layer; ilayer < n_svx_layer; ilayer++)
+  for (int ilayer = 0; ilayer < n_maps_layer; ilayer++)
     {
-      if (verbosity)
-      cout << " ilayer = " << ilayer << endl;
+      cout << "Create Maps layer " << ilayer  << " with radius " << maps_layer_radius[ilayer] << " mm, stave type " << stave_type[ilayer] 
+	   << " pixel thickness " << 0.0018 << endl;
 
-      if (verbosity)
-      cout << "Create Maps layer " << ilayer  << " with radius " << maps_layer_radius[ilayer] << " stave type " << stave_type[ilayer] << endl;
       PHG4MapsSubsystem  *lyr = new PHG4MapsSubsystem("MAPS", ilayer, stave_type[ilayer]);
       lyr->Verbosity(verbosity);
 
-//      lyr->set_nominal_layer_radius(maps_layer_radius[ilayer]);
       lyr->set_double_param("layer_nominal_radius",maps_layer_radius[ilayer]);// thickness in cm
 
       // The cell size is used only during pixilization of sensor hits, but it is convemient to set it now because the geometry object needs it
-//      lyr->set_pixel_x(0.0020);  // pitch in cm
-//      lyr->set_pixel_z(0.0020);  // length in cm
-//      lyr->set_pixel_thickness(0.0018);  // thickness in cm
       lyr->set_double_param("pixel_x",0.0020);// pitch in cm
       lyr->set_double_param("pixel_z",0.0020);// length in cm
       lyr->set_double_param("pixel_thickness",0.0018);// thickness in cm
       lyr->set_double_param("phitilt",0.304);   // radians, equivalent to 17.4 degrees
 
-//      lyr->SetActive();
       lyr->set_int_param("active",1);
-      lyr->OverlapCheck(overlapcheck);
+      lyr->OverlapCheck(maps_overlapcheck);
 
       lyr->set_string_param("stave_geometry_file",
           string(getenv("CALIBRATIONROOT")) + string("/Tracking/geometry/ALICE_ITS_tgeo.gdml"));
       
-      if (verbosity)
-      cout << "Created Maps layer for layer " << ilayer << " with radius  " << maps_layer_radius[ilayer]  << endl;
-      
       g4Reco->registerSubsystem( lyr );      
-
-      if (verbosity)
-      cout << "Registered  Maps layer for layer " << ilayer <<  endl;
 
       radius = maps_layer_radius[ilayer];
     }
 
-  /*
-  // For Si 1mm = 1.07% X_0
-  // For Cu 1mm = 6.96% X_0
-  
-  double si_thickness[3] = {0.0050, 0.0050, 0.0050};
-  double svxrad[3] = {svtx_inner_radius, 3.2, 3.9};
-  double support_thickness[3] = {0.0036, 0.0036, 0.0036};
-  double length[3] = {27.0, 27.0, 27.0};
-
-  for (int ilayer=0;ilayer<n_svx_layer;++ilayer) {
-    cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
-    radius = svxrad[ilayer];
-      cyl->set_double_param("radius",radius);
-	  cyl->set_int_param("lengthviarapidity",0);
-	  cyl->set_double_param("length",length[ilayer]);
-      cyl->set_string_param("material","G4_Si");
-      cyl->set_double_param("thickness",si_thickness[ilayer]);
-    cyl->SetActive();
-    cyl->SuperDetector("SVTX");
-    g4Reco->registerSubsystem( cyl );
-    
-    radius += si_thickness[ilayer] + no_overlapp;
-    
-    cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", ilayer);
-      cyl->set_double_param("radius",radius);
-	  cyl->set_int_param("lengthviarapidity",1);
-	  //    cyl->SetLength( length[ilayer] );
-      cyl->set_string_param("material","G4_Cu");
-      cyl->set_double_param("thickness",support_thickness[ilayer]);
-    cyl->SuperDetector("SVTXSUPPORT");
-    g4Reco->registerSubsystem( cyl );
-  }
-  */
-
+  if(n_intt_layer > 0)
+    {
+      //-------------------
+      // INTT ladders
+      //-------------------
+      
+      bool intt_overlapcheck = false; // set to true if you want to check for overlaps
+      
+      // instantiate the Silicon tracker subsystem and register it
+      // We make one instance of PHG4TrackerSubsystem for all four layers of tracker
+      // dimensions are in mm, angles are in radians
+      
+      // PHG4SiliconTrackerSubsystem creates the detetor layer using PHG4SiliconTrackerDetector
+      // and instantiates the appropriate PHG4SteppingAction
+      const double intt_radius_max = 140.; // including stagger radius (mm)
+      
+      // The length of vpair is used to determine the number of layers
+      std::vector<std::pair<int, int>> vpair; // (sphxlayer, inttlayer)
+      for(int i=0;i<n_intt_layer;i++)
+	{
+	  // We want the sPHENIX layer numbers for the INTT to be from n_maps_layer to n_maps_layer+n_intt_layer - 1
+	  vpair.push_back(std::make_pair(n_maps_layer+i, i));  // sphxlayer=n_maps_layer+i corresponding to inttlayer=i
+	  cout << "Create strip tracker layer " << vpair[i].second << " as  sphenix layer  "  << vpair[i].first << endl;
+	}
+      PHG4SiliconTrackerSubsystem *sitrack = new PHG4SiliconTrackerSubsystem("SILICON_TRACKER", vpair);
+      sitrack->Verbosity(verbosity);
+      sitrack->SetActive(1);
+      sitrack->OverlapCheck(intt_overlapcheck);
+      g4Reco->registerSubsystem( sitrack);
+      
+      // outer radius marker (translation back to cm)
+      radius = intt_radius_max*0.1;
+    }
 
   // time projection chamber layers --------------------------------------------
 
@@ -110,8 +98,9 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   double n_rad_length_cage = 1.0e-02;
   double cage_length = 160.; // rough length from Tom, also used in charge distortion calculation
   double cage_thickness = 1.43 * n_rad_length_cage;
-  
-  cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer);
+
+  // inner field cage  
+  cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_maps_layer + n_intt_layer);
   cyl->set_double_param("radius",radius);
   cyl->set_int_param("lengthviarapidity",0);
   cyl->set_double_param("length",cage_length);
@@ -127,8 +116,9 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   string tpcgas = "G4_Ar";
 
+  // Layer of inert TPC gas from 20-30 cm
   if (inner_readout_radius - radius > 0) {
-    cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer + 1);
+    cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_maps_layer + n_intt_layer + 1);
     cyl->set_double_param("radius",radius);
     cyl->set_int_param("lengthviarapidity",0);
     cyl->set_double_param("length",cage_length);
@@ -140,11 +130,15 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   radius = inner_readout_radius;
   
-  double outer_radius = 80.;
-  int npoints = Max_si_layer - n_svx_layer;
+  double outer_radius = 78.;
+  int npoints = Max_si_layer - n_maps_layer - n_intt_layer;
   double delta_radius =  ( outer_radius - inner_readout_radius )/( (double)npoints );
   
-  for(int ilayer=n_svx_layer;ilayer<(n_svx_layer+npoints);++ilayer) {
+  for(int ilayer=n_maps_layer + n_intt_layer;ilayer<(n_maps_layer + n_intt_layer + npoints);++ilayer) {
+
+    cout << "Create TPC gas layer " << ilayer  << " with radius " << radius  << " cm " 
+	 << " thickness " << delta_radius - 0.01 << " length " << cage_length << endl;
+
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
     cyl->set_double_param("radius",radius);
     cyl->set_int_param("lengthviarapidity",0);
@@ -158,7 +152,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     radius += delta_radius;
   }
 
-  cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_svx_layer+npoints);
+  cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_maps_layer + n_intt_layer + npoints);
   cyl->set_double_param("radius",radius);
   cyl->set_int_param("lengthviarapidity",0);
   cyl->set_double_param("length",cage_length);
@@ -199,6 +193,14 @@ void Svtx_Cells(int verbosity = 0)
   maps_cells->Verbosity(verbosity);
   se->registerSubsystem(maps_cells);
 
+  if(n_intt_layer > 0)
+    {
+      // INTT cells
+      PHG4SiliconTrackerCellReco *reco = new PHG4SiliconTrackerCellReco("SILICON_TRACKER");
+      reco->Verbosity(verbosity);
+      se->registerSubsystem(reco);
+    }
+
   // TPC cells
   double diffusion = 0.0057;
   double electrons_per_kev = 38.;
@@ -225,26 +227,20 @@ void Svtx_Cells(int verbosity = 0)
              inner_cage_radius);
     PHG4TPCSpaceChargeDistortion* tpc_distortion =
         new PHG4TPCSpaceChargeDistortion(TPC_distroation_file);
-    //  tpc_distortion -> setAccuracy(0); // option to over write default
-    //  factors
-    //  tpc_distortion -> setPrecision(1); // option to over write default
-    //  factors
+    //  tpc_distortion -> setAccuracy(0); // option to over write default  factors
+    //  tpc_distortion -> setPrecision(1); // option to over write default  factors
   }
-  PHG4CylinderCellTPCReco *svtx_cells = new PHG4CylinderCellTPCReco(n_svx_layer);
+
+  PHG4CylinderCellTPCReco *svtx_cells = new PHG4CylinderCellTPCReco(n_maps_layer+n_intt_layer);
   svtx_cells->setDistortion(tpc_distortion); // apply TPC distrotion if tpc_distortion is not NULL
   svtx_cells->setDiffusion(diffusion);
   svtx_cells->setElectronsPerKeV(electrons_per_kev);
   svtx_cells->Detector("SVTX");
 
+  // The INTT ladder cell size is set in the detector construction code
 
-  /*
-  for (int i=0;i<n_svx_layer;++i) {
-    svtx_cells->cellsize(i, svxcellsizex[i], svxcellsizey[i]);
-    svtx_cells->set_timing_window(i, -2000.0, +2000.0);
-  }
-  */
-
-  for (int i=n_svx_layer;i<Max_si_layer;++i) {
+  // set cylinder cell TPC cell sizes
+  for (int i=n_maps_layer + n_intt_layer;i<Max_si_layer;++i) {
     svtx_cells->cellsize(i, tpc_cell_x, tpc_cell_y);
     svtx_cells->set_timing_window(i, -14000.0, +14000.0);
   }
@@ -274,11 +270,35 @@ void Svtx_Reco(int verbosity = 0)
   //----------------------------------
   PHG4SvtxDigitizer* digi = new PHG4SvtxDigitizer();
   digi->Verbosity(verbosity);
-  for (int i=0;i<n_svx_layer;++i) {
-    //digi->set_adc_scale(i, 255, 1.0e-6);  // used for cylinder cell maps, wjere thickness was set to 50 microns
-    digi->set_adc_scale(i, 255, 0.4e-6);  // reduced by a factor of 2.5 when going from maps thickess of 50 microns to 18 microns
+  for (int i=0;i<n_maps_layer;++i) {
+      digi->set_adc_scale(i, 255, 0.4e-6);  // reduced by a factor of 2.5 when going from maps thickess of 50 microns to 18 microns
   }
-  for (int i=n_svx_layer;i<Max_si_layer;++i) {
+
+  if(n_intt_layer > 0)
+    {
+      // INTT
+      std::vector<double> userrange; // 3-bit ADC threshold relative to the mip_e at each layer.
+      // these should be used for the INTT
+      userrange.push_back(0.05);
+      userrange.push_back(0.10);
+      userrange.push_back(0.15);
+      userrange.push_back(0.20);
+      userrange.push_back(0.25);
+      userrange.push_back(0.30);
+      userrange.push_back(0.35);
+      userrange.push_back(0.40);
+      
+      PHG4SiliconTrackerDigitizer* digiintt = new PHG4SiliconTrackerDigitizer();
+      digiintt->Verbosity(verbosity);
+      for(int i=0;i<n_intt_layer;i++)
+	{
+	  digiintt->set_adc_scale(n_maps_layer+i, userrange);
+	}
+      se->registerSubsystem( digiintt );
+    }
+
+  // TPC layers
+  for (int i=n_maps_layer+n_intt_layer;i<Max_si_layer;++i) {
     digi->set_adc_scale(i, 10000, 1.0);
   }
   se->registerSubsystem( digi );
@@ -289,10 +309,15 @@ void Svtx_Reco(int verbosity = 0)
   // defaults to 1.0 (fully active)
   
   PHG4SvtxDeadArea* deadarea = new PHG4SvtxDeadArea();
-  deadarea->Verbosity(verbosity);
-  deadarea->set_hit_efficiency(0,0.99);
-  deadarea->set_hit_efficiency(1,0.99);
-  deadarea->set_hit_efficiency(2,0.99);
+  for(int i = 0;i<n_maps_layer;i++)
+    {  
+      deadarea->Verbosity(verbosity);
+      deadarea->set_hit_efficiency(i,0.99);
+    }
+  for(int i=n_maps_layer;i<n_maps_layer + n_intt_layer;i++)
+    {
+      deadarea->set_hit_efficiency(i,0.99);
+    }
   se->registerSubsystem( deadarea );
 
   //-----------------------------
@@ -301,17 +326,21 @@ void Svtx_Reco(int verbosity = 0)
 
   PHG4SvtxThresholds* thresholds = new PHG4SvtxThresholds();
   thresholds->Verbosity(verbosity);
-  // reduced by x2.5 when going from cylinder maps with 50 microns thickness to actual maps with 18 microns thickness
-  // to set it at a similar fraction of charge deposited
-  // Note the non-use of set_using_thickness here, this is so that the shortest dimension of the cell sets the mip energy loss
-  /*
-  thresholds->set_threshold(0,0.25);
-  thresholds->set_threshold(1,0.25);
-  thresholds->set_threshold(2,0.25);
-  */
-  thresholds->set_threshold(0,0.1);
-  thresholds->set_threshold(1,0.1);
-  thresholds->set_threshold(2,0.1);
+ 
+  // maps 
+  for(int i = 0;i<n_maps_layer;i++)
+    {  
+      // reduced by x2.5 when going from cylinder maps with 50 microns thickness to actual maps with 18 microns thickness
+      // Note the non-use of set_using_thickness here, this is so that the shortest dimension of the cell sets the mip energy loss
+      thresholds->set_threshold(i,0.1); 
+    }
+  // INTT
+  for(int i=n_maps_layer;i<n_maps_layer + n_intt_layer;i++)
+    {
+      thresholds->set_threshold(i,0.25);
+      thresholds->set_use_thickness_mip(i, true);
+
+    }
   
   se->registerSubsystem( thresholds );
 
@@ -319,16 +348,19 @@ void Svtx_Reco(int verbosity = 0)
   // Cluster Hits
   //-------------
 
-  PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",Min_si_layer,n_svx_layer-1);
+  PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",0, n_maps_layer + n_intt_layer - 1);
   clusterizer->Verbosity(verbosity);
-  // Reduced by 2 relative to cylinder cell maps macro. I found this necessary to get full efficiency
-  // Many hits in the present simulation are single cell hits, so it is not clear why the cluster 
-  // threshold should be higher than the cell threshold
-  //clusterizer->set_threshold(0.5);   // fraction of a mip
+  // Reduced by 2 relative to the cylinder cell maps macro. I found this necessary to get full efficiency
+  // Many hits in the present simulation are single cell hits, so it is not clear why the cluster threshold should be higher than the cell threshold
   clusterizer->set_threshold(0.1);   // fraction of a mip
+  // no Z clustering for INTT layers (only)
+  for(int i=n_maps_layer;i<n_maps_layer+n_intt_layer;i++)
+    {
+      clusterizer->set_z_clustering(i, false);
+    }
   se->registerSubsystem( clusterizer );
 
-  PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_svx_layer,Max_si_layer-1);
+  PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_maps_layer+n_intt_layer,Max_si_layer-1);
   tpcclusterizer->setEnergyCut(20.0*45.0/n_gas_layer);
   tpcclusterizer->Verbosity(verbosity);
   se->registerSubsystem( tpcclusterizer );
@@ -351,27 +383,32 @@ void Svtx_Reco(int verbosity = 0)
   hough->setZBinScale(1.0);
 
   hough->Verbosity(verbosity);
-//  hough->Verbosity(21);
+
   double mat_scale = 1.0;
-  hough->set_material(0, mat_scale*0.003);
-  hough->set_material(1, mat_scale*0.003);
-  hough->set_material(2, mat_scale*0.003);
-  hough->set_material(3, mat_scale*0.010);
-  for (int i=(n_svx_layer+1);i<Max_si_layer;++i) {
+  for(int i = 0;i<n_maps_layer;i++)
+    {  
+      hough->set_material(i, mat_scale*0.003);
+    }
+  for(int i=n_maps_layer;i<n_maps_layer + n_intt_layer;i++)
+    {
+       hough->set_material(i, mat_scale*0.010);
+    }
+
+  for (int i=(n_maps_layer + n_intt_layer);i<Max_si_layer;++i) {
     hough->set_material(i, mat_scale*0.06/n_gas_layer);
   }
   hough->setUseCellSize(true);
   
-  for (int i=n_svx_layer;i<Max_si_layer;++i) {
+  for (int i=n_maps_layer + n_intt_layer;i<Max_si_layer;++i) {
     hough->setFitErrorScale(i, 1./sqrt(12.));
   }
-  for (int i=n_svx_layer;i<Max_si_layer;++i) {
+  for (int i=n_maps_layer + n_intt_layer;i<Max_si_layer;++i) {
     hough->setVoteErrorScale(i, 1.0);
   }
-  for (int i=0;i<n_svx_layer;++i) {
+  for (int i=0;i<n_maps_layer + n_intt_layer;++i) {
     hough->setVoteErrorScale(i, 1.0);
   }
-  for (int i=0;i<n_svx_layer;++i) {
+  for (int i=0;i<n_maps_layer + n_intt_layer;++i) {
     hough->setFitErrorScale(i, 1./sqrt(12.));
   }
   
@@ -383,7 +420,32 @@ void Svtx_Reco(int verbosity = 0)
   TF1 *corr = new TF1("corr","1.0/(1+0.00908642+5.91337e-05*x+-1.87201e-05*x*x+-3.31928e-06*x*x*x+1.03004e-07*x*x*x*x+-1.05111e-09*x*x*x*x*x)",0.0,40.0);
   PHG4SvtxMomentumRecal* recal = new PHG4SvtxMomentumRecal("PHG4SvtxMomentumRecal",corr);
   se->registerSubsystem(recal);
-    
+ 
+  /*
+ //------------------------
+  // Final Track Refitting
+  //------------------------
+  PHG4TrackKalmanFitter *kalman = new PHG4TrackKalmanFitter();
+  //kalman->set_detector_type(PHG4TrackKalmanFitter::MAPS_TPC);//MAPS_LADDERS_TPC, MAPS_TPC, MAPS_IT_TPC, MIE
+  //kalman->Verbosity(10);
+
+  kalman->set_mag_field_file_name("/phenix/upgrades/decadal/fieldmaps/sPHENIX.2d.root");
+  kalman->set_mag_field_re_scaling_factor(1.4/1.5);
+  kalman->set_output_mode(PHG4TrackKalmanFitter::MakeNewNode);//enum OutPutMode {MakeNewNode, OverwriteOriginalNode, DebugMode};
+  kalman->set_fit_primary_tracks(false);
+
+  kalman->set_track_fitting_alg_name("DafRef");// KalmanFitterRefTrack, KalmanFitter, DafSimple, DafRef
+  kalman->set_primary_pid_guess(13);
+  kalman->set_vertexing_method("avf-smoothing:1");//https://rave.hepforge.org/trac/wiki/RaveMethods
+
+  kalman->set_do_eval(false);
+  kalman->set_eval_filename("PHG4TrackKalmanFitter_eval.root");
+
+  kalman->set_do_evt_display(false);
+
+  se->registerSubsystem(kalman);
+  */
+  
   //------------------
   // Track Projections
   //------------------
@@ -437,7 +499,7 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   eval->do_g4hit_eval(true);
   eval->do_hit_eval(false);
   eval->do_gpoint_eval(false);
-  eval->scan_for_embedded(true);
+  eval->scan_for_embedded(false); // take all tracks if false - take only embedded tracks if true (will not record decay particles!! - loses Upsilon electrons)
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
 

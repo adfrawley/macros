@@ -22,7 +22,9 @@ void G4Init(bool do_svtx = false,
   if (do_svtx)
     {
       //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // cylinder cell maps IB + tpc
-      gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
+      //gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
+      cout << "Loading G4_Svtx_maps+intt+tpc.C" << endl;
+      gROOT->LoadMacro("G4_Svtx_maps+intt+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
 
       SvtxInit();
     }
@@ -30,7 +32,10 @@ void G4Init(bool do_svtx = false,
   if (do_maps)
     {
       //gROOT->LoadMacro("G4_ITS_MAPS.C");                 // ITS like ladder tracker
-      gROOT->LoadMacro("G4_Svtx_maps_ladders+tpc.C");    // ladder maps IB + tpc
+      //gROOT->LoadMacro("G4_Svtx_maps_ladders+tpc.C");    // ladder maps IB + tpc
+      //gROOT->LoadMacro("G4_Svtx_maps_ladders+intt+tpc.C");    // ladder maps IB + tpc
+      cout << "Loading G4_Svtx_maps_ladders+intt_ladders+tpc.C" << endl;
+      gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc.C");    // ladder maps IB + ladder INTT + tpc
       SvtxInit();
     }
 
@@ -93,6 +98,7 @@ int G4Setup(const int absorberactive = 0,
   Fun4AllServer *se = Fun4AllServer::instance();
 
   PHG4Reco* g4Reco = new PHG4Reco();
+  g4Reco->save_DST_geometry(true);   //Save geometry from Geant4 to DST
   g4Reco->set_rapidity_coverage(1.1); // according to drawings
   if (decayType != TPythia6Decayer::kAll) {
     g4Reco->set_force_decay(decayType);
@@ -158,7 +164,7 @@ int G4Setup(const int absorberactive = 0,
   
   // swallow all particles coming out of the backend of sPHENIX
   PHG4CylinderSubsystem *blackhole = new PHG4CylinderSubsystem("BH", 1);
-blackhole->set_double_param("radius",radius + 10); // add 10 cm
+  blackhole->set_double_param("radius",radius + 10); // add 10 cm
 
   blackhole->set_int_param("lengthviarapidity",0);
   blackhole->set_double_param("length",g4Reco->GetWorldSizeZ() - no_overlapp); // make it cover the world in length

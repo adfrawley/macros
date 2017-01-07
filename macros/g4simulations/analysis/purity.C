@@ -34,8 +34,8 @@ void purity()
   //=============================================================================  
 
   // revised MIE reference design  
-  double pT_res_constant = 0.0108;
-  double pT_res_linear = 0.000271;
+  //double pT_res_constant = 0.0108;
+  //double pT_res_linear = 0.000271;
 
   //===============================================================================
 
@@ -48,13 +48,12 @@ void purity()
   bool use_reco_pt = true;
   double mom_rescale = 1.0;
   
-  // This should be inner maps layers (3) + TPC (60)
-  //static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
-  static const int nlayers = 63;  // maximum number of tracking layers for tpc60+maps3
+  // This should be inner maps layers (3) + INTT(4)+TPC (60)
+  static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
   static const int nmissed = 40;  // maximum number of missed layers
   double ptmax = 12.2;
   
-  double pT_sigmas = 4.0;  // number of sigmas in pT to use for track evaluation
+  //double pT_sigmas = 4.0;  // number of sigmas in pT to use for track evaluation
   
   //based on plots of purity vs DCA  and vs quality
   double quality_cut = 1.5;
@@ -70,11 +69,13 @@ void purity()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor job output files
-  for(int i=0;i<2000;i++)
+  for(int i=0;i<500;i++)
     {
       char name[500];
-      //sprintf(name,"../maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
-      sprintf(name,"../maps3+tpc60_eval_output/eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"../single_pions_dec6_cylinder_maps3_intt4_tpc60_eval_output/g4svx_eval_%i.root",i);
+
+      //sprintf(name,"../new_macro1_maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../maps3+tpc60_eval_output/eval_output/g4svx_eval_%i.root",i);
       //sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
       //sprintf(name,"/sphenix/user/isibf5y/macros-QTG_macros/macros/g4simulations/hijing/g4eval_hij_pionsembed_qtgmac_map_tpc_%i.root",i);
 
@@ -152,12 +153,12 @@ void purity()
 			    2.2,2.4,2.6,2.8,3.0,3.2,3.4,3.6,3.8,4.0,
 			      4.5,5.0,5.5,6.0,7.0,8.0,10.0};
 
-  TH1D *hpt_truth = new TH1D("hpt_truth","hpt_truth",500, 0.0, 40.0);
-  TH2D *hpt_compare = new TH2D("hpt_compare","hpt_compare",500, 0.0, 40.0, 2000, 0.0, 2.0);
+  TH1D *hpt_truth = new TH1D("hpt_truth","hpt_truth",500, 0.0, 50.0);
+  TH2D *hpt_compare = new TH2D("hpt_compare","hpt_compare",500, 0.0, 50.0, 2000, 0.0, 2.0);
   hpt_compare->GetXaxis()->SetTitle("p_{T}");
   hpt_compare->GetYaxis()->SetTitle("#Delta p_{T}/p_{T}");
 
-  TH2D *hpt_dca2d = new TH2D("hpt_dca2d","hpt_dca2d",500, 0.0, 40.0,500, -0.04, 0.04);
+  TH2D *hpt_dca2d = new TH2D("hpt_dca2d","hpt_dca2d",500, 0.0, 50.0,500, -0.04, 0.04);
   hpt_dca2d->GetXaxis()->SetTitle("p_{T}");
   hpt_dca2d->GetYaxis()->SetTitle("dca2d");
 
@@ -173,6 +174,9 @@ void purity()
       sprintf(hn,"hptreco%i",ipt);
       hptreco[ipt] = new TH1D(hn, hn, NVARBINS, xbins);
     }
+
+  //TH1D *h_evt_dca2d = new TH1D("h_evt_dca2d","h_evt_dca2d",1000,-0.001,0.001);
+
   // end of histogram definitions
   //===================================================
 
@@ -196,10 +200,10 @@ void purity()
 	  cout << "Failed to get ntp_vertex entry " << iev << endl;
 	  exit(1);
 	}
-      double evt_vertex_z = evz;
-      
-      if(iev%1 == 0)
-	cout << "Get event " << iev << " with Z vertex " << evt_vertex_z 
+
+      if(iev%100 == 0)
+	cout << "Get event " << iev << " with vertex x " << evx
+	     << " vertex y " << evy << " vertex z " << evz 
 	     << " ngtracks " << ngtracks << " ntracks " << ntracks 
 	     << " ng " << ng << " nr " << nr 
 	     << endl;
@@ -216,6 +220,10 @@ void purity()
 	      //exit(1);
 	      continue;
 	    }
+
+	  // skip tracks that do not pass through all layers (judged using truth track)
+	  if(tnhits != nlayers)
+	    continue;
 
 	  // get the truth pT
 	  double tgpT = sqrt(tpx*tpx+tpy*tpy);	  	  
@@ -240,15 +248,43 @@ void purity()
 	      //exit(1);
 	      continue;
 	    }
+
+	  // skip tracks that do not pass through all layers in truth
+	  if(rgnhits != nlayers)
+	    continue;
+
 	  double rgpT = sqrt(rgpx*rgpx+rgpy*rgpy);	  	  
 	  double rpT = sqrt(rpx*rpx+rpy*rpy);
+
+	  double corrected_rdca2d = rdca2d;
+	  bool calculate_dca2d = true;    // subtract event vertex position from pca values to get dca2d
+	  if(calculate_dca2d)
+	    {
+	      corrected_rdca2d = sqrt(pow(rpcax - evx, 2) + pow(rpcay-evy, 2));
+
+	      if(rdca2d < 0)
+		corrected_rdca2d *= -1.0;
+	    }
+
+	  /*
+	  cout << "dca2d " << rdca2d  
+	       << " rpcax " << rpcax 
+	       << " rpcay " << rpcay
+	       << " rpcaz " << rpcaz
+	       << endl;
+	  cout << " corrected rpcax " << rpcax - evx
+	       << " rpcay " << rpcay - evy
+	       << " rpcaz " << rpcaz - evz
+	       << " rdca2d " << corrected_rdca2d 
+	       << endl;
+	  */
 
 	  hnhits->Fill(rnhits);
 
 	  // Does the track pass the dca2d cut? 
 	  // If so, add to hquality
 	  if(rgembed == 1)
-	    if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(rdca2d) < dca_cut)
+	    if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(corrected_rdca2d) < dca_cut)
 	      {
 		hquality->Fill(rquality);
 	      }
@@ -261,7 +297,7 @@ void purity()
 	      if(ipurity < nmissed)
 		{
 		  hpurity_quality[ipurity]->Fill(rquality);
-		  hpurity_dca[ipurity]->Fill(rdca2d);
+		  hpurity_dca[ipurity]->Fill(corrected_rdca2d);
 		}
 	    }
 
@@ -279,17 +315,17 @@ void purity()
 	    if(rquality < quality_cut)
 	      {
 		if(rgpT > 0.5 && rgpT <= 1.0)
-		  hdca2d[0]->Fill(rdca2d);
+		  hdca2d[0]->Fill(corrected_rdca2d);
 		else if(rgpT > 1.0 && rgpT <= 2.0)
-		  hdca2d[1]->Fill(rdca2d);
+		  hdca2d[1]->Fill(corrected_rdca2d);
 		else if(rgpT > 2.0)
-		  hdca2d[2]->Fill(rdca2d);
+		  hdca2d[2]->Fill(corrected_rdca2d);
 		
 		if(rgpT > 0.5)
-		  hdca2dsigma->Fill(rdca2d/rdca2dsigma);
+		  hdca2dsigma->Fill(corrected_rdca2d/rdca2dsigma);
 	      }
 	  
-	  if(fabs(rdca2d) > dca_cut)
+	  if(fabs(corrected_rdca2d) > dca_cut)
 	    continue;
 	  
 	  // Histogram the track Z DCA for Hijing tracks
@@ -307,7 +343,7 @@ void purity()
 	  if(rgembed == 1)
 	    {
 	      hpt_compare->Fill(rgpT,rpT/rgpT);
-	      hpt_dca2d->Fill(rgpT, rdca2d);
+	      hpt_dca2d->Fill(rgpT, corrected_rdca2d);
 	    }
 
 	  if(rgembed != 1)
@@ -603,6 +639,8 @@ void purity()
       hpurity_quality[i]->Write();
     }
   hZdca->Write();
+
+  //h_evt_dca2d->Write();
   
   fout->Close();
   

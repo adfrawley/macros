@@ -30,13 +30,13 @@ int Fun4All_G4_sPHENIX(
   //===============
 
   // Upsilons
-  bool upsilons = false;           // throw single Upsilons if true
+  bool upsilons = true;           // throw single Upsilons if true
   int istate = 1;  // Upsilon state = 1,2,3
   bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
 
   // pions
-  bool pions = true;      // throw single pions if true
-  bool embed_pions = true;  // throw single pions in a Hijing event if true
+  bool pions = false;      // throw single pions if true
+  bool embed_pions = false;  // throw single pions in a Hijing event if true
 
   // Hijing events only
   bool hijing_events = false;  // if true, throw hijing events only
@@ -82,7 +82,7 @@ int Fun4All_G4_sPHENIX(
   bool do_pipe = true;
 
   // run the cylinder cell model of the inner barrel if svtx = true
- bool svtx = true;
+ bool svtx = false;
   bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
   if(svtx)
     {
@@ -92,7 +92,7 @@ int Fun4All_G4_sPHENIX(
       do_svtx_eval=true;
     }
   // OR: run the ITS ladder version of the inner barrel if maps_ladders = true 
-  bool maps_ladders = false;
+  bool maps_ladders = true;
   bool do_maps = false, do_maps_cell = false, do_maps_track = false, do_maps_eval = false;
   if(maps_ladders)
     {      
@@ -234,7 +234,8 @@ int Fun4All_G4_sPHENIX(
       pgen->Verbosity(0);
       se->registerSubsystem(pgen);      
       */
-      
+
+      // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
       for(int i=0; i<100; i++)
 	{
 	  double pt = (double) i * 0.5 + 0.5;
@@ -474,6 +475,14 @@ int Fun4All_G4_sPHENIX(
     }
 
   se->run(nEvents);
+
+  if(process == 0)
+    PHGeomUtility::ExportGeomtry(se->topNode(),"tracker_config_export.root");
+  /*
+    load file in root
+    gFile->Get("Default")
+    gGeoManager->Export("test.xml")
+  */
 
   //-----
   // Exit

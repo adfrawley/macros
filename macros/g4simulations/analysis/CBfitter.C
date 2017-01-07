@@ -105,20 +105,20 @@ void CBfitter()
 
   if(ups1s)
     {
-      file1S = new TFile("ups1s_qual3.00_dca2d0.10_pp.root");
+      file1S = new TFile("ups1s_qual3.00_dca2d0.10.root");
       //file1S = new TFile("ups1s_qual3.00_dca2d0.10_AuAu_10pc.root");
       recomass1S = (TH1 *)file1S->Get("recomass");
     }
 
   if(ups2s)
     {
-      file2S = new TFile(" ups2s_qual3.00_dca2d0.10_pp.root ");
+      file2S = new TFile(" ups2s_qual3.00_dca2d0.10.root ");
       //file2S = new TFile(" ups2s_qual3.00_dca2d0.10_AuAu_10pc.root ");
       recomass2S = (TH1 *)file2S->Get("recomass");
     }
   if(ups3s)
     {
-      file3S = new TFile(" ups3s_qual3.00_dca2d0.10_pp.root");
+      file3S = new TFile(" ups3s_qual3.00_dca2d0.10.root");
       //file3S = new TFile(" ups3s_qual3.00_dca2d0.10_AuAu_10pc.root");
       recomass3S = (TH1 *)file3S->Get("recomass");
     }
