@@ -1,7 +1,7 @@
 #include <vector>
 
 const int n_maps_layer = 3;
-const int n_intt_layer = 0;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
+const int n_intt_layer = 4;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
 const int n_gas_layer = 60;
 double inner_cage_radius = 20.;
 
