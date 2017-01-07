@@ -21,8 +21,6 @@ void G4Init(bool do_svtx = false,
     }  
   if (do_svtx)
     {
-      //gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // cylinder cell maps IB + tpc
-      //gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
       cout << "Loading G4_Svtx_maps+intt+tpc.C" << endl;
       gROOT->LoadMacro("G4_Svtx_maps+intt+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
 
@@ -31,11 +29,9 @@ void G4Init(bool do_svtx = false,
 
   if (do_maps)
     {
-      //gROOT->LoadMacro("G4_ITS_MAPS.C");                 // ITS like ladder tracker
-      //gROOT->LoadMacro("G4_Svtx_maps_ladders+tpc.C");    // ladder maps IB + tpc
-      //gROOT->LoadMacro("G4_Svtx_maps_ladders+intt+tpc.C");    // ladder maps IB + tpc
       cout << "Loading G4_Svtx_maps_ladders+intt_ladders+tpc.C" << endl;
       gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc.C");    // ladder maps IB + ladder INTT + tpc
+
       SvtxInit();
     }
 
@@ -100,6 +96,9 @@ int G4Setup(const int absorberactive = 0,
   PHG4Reco* g4Reco = new PHG4Reco();
   g4Reco->save_DST_geometry(true);   //Save geometry from Geant4 to DST
   g4Reco->set_rapidity_coverage(1.1); // according to drawings
+// uncomment to set QGSP_BERT_HP physics list for productions 
+// (default is QGSP_BERT for speed)
+  //  g4Reco->SetPhysicsList("QGSP_BERT_HP"); 
   if (decayType != TPythia6Decayer::kAll) {
     g4Reco->set_force_decay(decayType);
   }

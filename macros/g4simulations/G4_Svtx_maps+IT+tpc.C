@@ -1,7 +1,6 @@
 
 const int n_ib_layer = 3;   // number of maps inner barrel layers
-//const int n_intt_layer = 4; // number of int. tracker layers
-const int n_intt_layer = 0;  // removes int. tracker layers completely
+const int n_intt_layer = 4; // number of int. tracker layers. Make this number 0 to use MAPS + TPC only.
 const int n_gas_layer = 60; // number of TPC layers
 double inner_cage_radius = 20.;
 
@@ -72,12 +71,11 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     cyl->SuperDetector("SVTXSUPPORT");
     g4Reco->registerSubsystem( cyl );
 
-    cout << "Added SVTXSUPPORT layer " << ilayer << " inner barrel layer         radius " << radius
-	 << " thickness " << ib_support_thickness[ilayer]
+    cout << "Added inner barrel layer with radius " << ib_rad[ilayer]
+	 << " si thickness " << ib_si_thickness[ilayer]
+	 << " support thickness " << ib_support_thickness[ilayer]
 	 << " length " << ib_length[ilayer]
-	 << " material " << copper.c_str()
 	 << endl;
-
   }
 
   // intermediate tracker
@@ -85,7 +83,9 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   double intt_si_thickness[4] = {0.0120, 0.0120, 0.0120,0.0120};
   double intt_rad[4] = { 6.0, 8.0, 10.0, 12.0};
   // 120 microns of silicon is 0.13% of X_0, so to get 1% total we need 0.87% more in the Cu
-  double intt_support_thickness[4] = {0.0125, 0.0125, 0.0125, 0.0125};
+  double multiplier = 0.87;  // how many times 1% do you want?
+  double apercent = 0.0144;  // Cu thickness in cm corresponding to 1% X_0 
+  double intt_support_thickness[4] = {apercent*multiplier, apercent*multiplier, apercent*multiplier, apercent*multiplier};
   double intt_length[4] = {50.0, 50.0, 50.0, 50.0};
 
   for (int ilayer=n_ib_layer;ilayer<n_intt_layer+n_ib_layer;++ilayer) {
@@ -120,9 +120,10 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     cyl->SuperDetector("SVTXSUPPORT");
     g4Reco->registerSubsystem( cyl );
  
-    cout << "Added SVTXSUPPORT layer " << ilayer << " INTT layer                 radius " << radius
-	 << " thickness " << intt_support_thickness[ilayer-n_ib_layer]
-	 << " material " << "G4_Cu"
+    cout << "Added intermediate tracker layer with radius " << intt_rad[ilayer-n_ib_layer]
+	 << " si thickness " << intt_si_thickness[ilayer-n_ib_layer]
+	 << " support thickness " << intt_support_thickness[ilayer-n_ib_layer]
+	 << " length " << intt_length[ilayer-n_ib_layer]
 	 << endl;
   }
   
@@ -144,7 +145,6 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   cyl->set_double_param("thickness",cage_thickness ); // Cu X_0 = 1.43 cm
   cyl->SuperDetector("SVTXSUPPORT");
   g4Reco->registerSubsystem( cyl );
-
 
   cout << "Added SVTXSUPPORT layer " << n_ib_layer+n_intt_layer << " TPC inner field cage layer radius " << radius
        << " thickness " << cage_thickness
@@ -177,6 +177,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 	 << " material " << tpcgas.c_str()
 	 << endl;
   }
+  
   
   radius = inner_readout_radius;
 

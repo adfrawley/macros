@@ -1,4 +1,3 @@
-
 int Fun4All_G4_sPHENIX(
 		       const int process = 0,
 		       const int nEvents = 1,
@@ -62,6 +61,9 @@ int Fun4All_G4_sPHENIX(
   // read previously generated g4-hits files, in this case it opens a DST and skips
   // the simulations step completely. The G4Setup macro is only loaded to get information
   // about the number of layers used for the cell reco code
+  //
+  // In case reading production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
+  // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
   const bool readhits = false;
   // Or:
   // read files in HepMC format (typically output from event generators like hijing or pythia)
@@ -69,9 +71,18 @@ int Fun4All_G4_sPHENIX(
   if(hijing_events || embed_upsilons || embed_pions)
     readhepmc = true;
   // Or:
-  // Use particle generator
+  // Use pythia
   const bool runpythia8 = false;
   const bool runpythia6 = false;
+  // else
+  // Use particle generator (default simple generator)
+  // or gun/ very simple generator
+  const bool usegun = false;
+  // And
+  // Further choose to embed newly simulated events to a previous simulation. Not compatible with `readhits = true`
+  // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
+  // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
+  const bool do_embedding = false;
 
   //======================
   // What to run
@@ -104,6 +115,7 @@ int Fun4All_G4_sPHENIX(
   
   bool do_preshower = false;
   
+
   bool do_cemc = false;
   bool do_cemc_cell = false;
   bool do_cemc_twr = false;
@@ -160,7 +172,7 @@ int Fun4All_G4_sPHENIX(
   //---------------
 
   Fun4AllServer *se = Fun4AllServer::instance();
-  se->Verbosity(0); 
+  se->Verbosity(0);
   // just if we set some flags somewhere in this macro
   recoConsts *rc = recoConsts::instance();
   // By default every random number generator uses
@@ -171,7 +183,7 @@ int Fun4All_G4_sPHENIX(
   // this would be:
   //  rc->set_IntFlag("RANDOMSEED",PHRandomSeed());
   // or set it to a fixed value so you can debug your code
-  // rc->set_IntFlag("RANDOMSEED", 12345);
+  //  rc->set_IntFlag("RANDOMSEED", 12345);
 
   //-----------------
   // Event generation
@@ -181,6 +193,13 @@ int Fun4All_G4_sPHENIX(
     {
       // Get the hits from a file
       // The input manager is declared later
+
+      if (do_embedding)
+       {
+         cout <<"Do not support read hits and embed background at the same time."<<endl;
+         exit(1);
+       }
+
     }
   else if (readhepmc)
     {
@@ -421,6 +440,19 @@ int Fun4All_G4_sPHENIX(
       hitsin->fileopen(inputFile);
       se->registerInputManager(hitsin);
     }
+  if (do_embedding)
+    {
+      if (embed_input_file == NULL)
+        {
+          cout << "Missing embed_input_file! Exit";
+          exit(3);
+        }
+
+      Fun4AllDstInputManager *in1 = new Fun4AllNoSyncDstInputManager("DSTinEmbed");
+      //      in1->AddFile(embed_input_file); // if one use a single input file
+      in1->AddListFile(embed_input_file); // RecommendedL: if one use a text list of many input files
+      se->registerInputManager(in1);
+    }
   if (readhepmc)
     {
       Fun4AllInputManager *in = new Fun4AllHepMCInputManager( "DSTIN");
@@ -455,9 +487,9 @@ int Fun4All_G4_sPHENIX(
           );
     }
 
-  // Fun4AllDstOutputManager *out = new Fun4AllDstOutputManager("DSTOUT", outputFile);
+  //  Fun4AllDstOutputManager *out = new Fun4AllDstOutputManager("DSTOUT", outputFile);
   // if (do_dst_compress) DstCompress(out);
-  // se->registerOutputManager(out);
+  //  se->registerOutputManager(out);
 
   //-----------------
   // Event processing

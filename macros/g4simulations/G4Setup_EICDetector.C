@@ -3,15 +3,21 @@ double no_overlapp = 0.0001; // added to radii to avoid overlapping volumes
 bool overlapcheck = false; // set to true if you want to check for overlaps
 
 void G4Init(bool do_svtx = true,
-	    bool do_preshower = false,
-	    bool do_cemc = true,
-	    bool do_hcalin = true,
-	    bool do_magnet = true,
-	    bool do_hcalout = true,
+            bool do_preshower = false,
+            bool do_cemc = true,
+            bool do_hcalin = true,
+            bool do_magnet = true,
+            bool do_hcalout = true,
             bool do_pipe = true,
             bool do_FGEM = true,
-	    bool do_FEMC = true,
-	    bool do_FHCAL = true) {
+            bool do_EGEM = true,
+            bool do_FEMC = true,
+            bool do_FHCAL = true,
+            bool do_EEMC = true,
+            bool do_DIRC = true,
+            bool do_RICH = true,
+            bool do_Aerogel = true
+	    ) {
 
   // load detector/material macros and execute Init() function
 
@@ -22,13 +28,11 @@ void G4Init(bool do_svtx = true,
     }
   if (do_svtx)
     {
-      gROOT->LoadMacro("G4_Svtx.C");
-      //gROOT->LoadMacro("G4_Svtx_ladders.C"); // testing
-      //gROOT->LoadMacro("G4_Svtx_ITS.C");     // testing
+      gROOT->LoadMacro("G4_Svtx_maps+tpc.C");
       SvtxInit();
     }
 
-  if (do_preshower) 
+  if (do_preshower)
     {
       gROOT->LoadMacro("G4_PreShower.C");
       PreShowerInit();
@@ -38,9 +42,9 @@ void G4Init(bool do_svtx = true,
     {
       gROOT->LoadMacro("G4_CEmc_Spacal.C");
       CEmcInit(72); // make it 2*2*2*3*3 so we can try other combinations
-    }  
+    }
 
-  if (do_hcalin) 
+  if (do_hcalin)
     {
       gROOT->LoadMacro("G4_HcalIn_ref.C");
       HCalInnerInit();
@@ -63,35 +67,72 @@ void G4Init(bool do_svtx = true,
       FGEM_Init();
     }
 
+  if (do_EGEM)
+    {
+      gROOT->LoadMacro("G4_EGEM_EIC.C");
+      EGEM_Init();
+    }
+
   if (do_FEMC)
     {
       gROOT->LoadMacro("G4_FEMC.C");
       FEMCInit();
     }
 
-  if (do_FHCAL) 
+  if (do_FHCAL)
     {
       gROOT->LoadMacro("G4_FHCAL.C");
       FHCALInit();
     }
+
+  if (do_EEMC)
+    {
+      gROOT->LoadMacro("G4_EEMC.C");
+      EEMCInit();
+    }
+
+  if (do_DIRC)
+    {
+      gROOT->LoadMacro("G4_DIRC.C");
+      DIRCInit();
+    }
+
+  if (do_RICH)
+    {
+      gROOT->LoadMacro("G4_RICH.C");
+      RICHInit();
+    }
+
+  if (do_Aerogel)
+    {
+      gROOT->LoadMacro("G4_Aerogel.C");
+      AerogelInit();
+    }
+
+
 }
 
 
 int G4Setup(const int absorberactive = 0,
-	    const string &field ="1.5",
-	    const EDecayType decayType = TPythia6Decayer::kAll,
-	    const bool do_svtx = true,
-	    const bool do_preshower = false,
-	    const bool do_cemc = true,
-	    const bool do_hcalin = true,
-	    const bool do_magnet = true,
-	    const bool do_hcalout = true,
-	    const bool do_pipe = true,
-	    const bool do_FGEM = true,
-	    const bool do_FEMC = false,
-	    const bool do_FHCAL = false,
-     	    const float magfield_rescale = 1.0) {
-  
+            const string &field ="1.5",
+            const EDecayType decayType = TPythia6Decayer::kAll,
+            const bool do_svtx = true,
+            const bool do_preshower = false,
+            const bool do_cemc = true,
+            const bool do_hcalin = true,
+            const bool do_magnet = true,
+            const bool do_hcalout = true,
+            const bool do_pipe = true,
+            const bool do_FGEM = true,
+            const bool do_EGEM = true,
+            const bool do_FEMC = false,
+            const bool do_FHCAL = false,
+            const bool do_EEMC = true,
+            const bool do_DIRC = true,
+            const bool do_RICH = true,
+            const bool do_Aerogel = true,
+            const float magfield_rescale = 1.0) {
+
   //---------------
   // Load libraries
   //---------------
@@ -106,7 +147,6 @@ int G4Setup(const int absorberactive = 0,
   Fun4AllServer *se = Fun4AllServer::instance();
 
   PHG4Reco* g4Reco = new PHG4Reco();
-  g4Reco->save_DST_geometry(true); //Save geometry from Geant4 to DST
   g4Reco->set_rapidity_coverage(1.1); // according to drawings
 // uncomment to set QGSP_BERT_HP physics list for productions 
 // (default is QGSP_BERT for speed)
@@ -115,7 +155,7 @@ int G4Setup(const int absorberactive = 0,
   if (decayType != TPythia6Decayer::kAll) {
     g4Reco->set_force_decay(decayType);
   }
-  
+
   double fieldstrength;
   istringstream stringline(field);
   stringline >> fieldstrength;
@@ -130,41 +170,41 @@ int G4Setup(const int absorberactive = 0,
     g4Reco->set_field(fieldstrength); // use const soleniodal field
   }
   g4Reco->set_field_rescale(magfield_rescale);
-  
+
   double radius = 0.;
 
   //----------------------------------------
   // PIPE
   if (do_pipe) radius = Pipe(g4Reco, radius, absorberactive);
-  
+
   //----------------------------------------
   // SVTX
   if (do_svtx) radius = Svtx(g4Reco, radius, absorberactive);
 
   //----------------------------------------
   // PRESHOWER
-  
+
   if (do_preshower) radius = PreShower(g4Reco, radius, absorberactive);
 
   //----------------------------------------
   // CEMC
-//
+  //
   if (do_cemc) radius = CEmc(g4Reco, radius, 8, absorberactive);
-//  if (do_cemc) radius = CEmc_Vis(g4Reco, radius, 8, absorberactive);// for visualization substructure of SPACAL, slow to render
-  
+  //  if (do_cemc) radius = CEmc_Vis(g4Reco, radius, 8, absorberactive);// for visualization substructure of SPACAL, slow to render
+
   //----------------------------------------
   // HCALIN
-  
+
   if (do_hcalin) radius = HCalInner(g4Reco, radius, 4, absorberactive);
 
   //----------------------------------------
   // MAGNET
-  
+
   if (do_magnet) radius = Magnet(g4Reco, radius, 0, absorberactive);
 
   //----------------------------------------
   // HCALOUT
-  
+
   if (do_hcalout) radius = HCalOuter(g4Reco, radius, 4, absorberactive);
 
   //----------------------------------------
@@ -172,6 +212,9 @@ int G4Setup(const int absorberactive = 0,
 
   if ( do_FGEM )
     FGEMSetup(g4Reco);
+
+  if ( do_EGEM )
+    EGEMSetup(g4Reco);
 
   //----------------------------------------
   // FEMC
@@ -184,6 +227,24 @@ int G4Setup(const int absorberactive = 0,
 
   if ( do_FHCAL )
     FHCALSetup(g4Reco, absorberactive);
+
+  //----------------------------------------
+  // EEMC
+
+  if ( do_EEMC )
+    EEMCSetup(g4Reco, absorberactive);
+
+  //----------------------------------------
+  // PID
+
+  if ( do_DIRC )
+    DIRCSetup(g4Reco);
+
+  if ( do_RICH )
+    RICHSetup(g4Reco);
+
+  if ( do_Aerogel )
+    AerogelSetup(g4Reco);
 
   // sPHENIX forward flux return(s)
   PHG4CylinderSubsystem *flux_return_plus = new PHG4CylinderSubsystem("FWDFLUXRET", 0);
@@ -201,9 +262,9 @@ int G4Setup(const int absorberactive = 0,
   PHG4CylinderSubsystem *flux_return_minus = new PHG4CylinderSubsystem("FWDFLUXRET", 0);
   flux_return_minus->set_int_param("lengthviarapidity",0);
   flux_return_minus->set_double_param("length",10.2);
-  flux_return_minus->set_double_param("radius",2.1);
+  flux_return_minus->set_double_param("radius",90.0);
   flux_return_minus->set_double_param("place_z",-335.9);
-  flux_return_minus->set_double_param("thickness",263.5-5.0);
+  flux_return_minus->set_double_param("thickness",263.5-5.0 - (90-2.1));
   flux_return_minus->set_string_param("material","G4_Fe");
   flux_return_minus->SetActive(false);
   flux_return_minus->SuperDetector("FLUXRET_ETA_MINUS");
@@ -211,15 +272,11 @@ int G4Setup(const int absorberactive = 0,
   g4Reco->registerSubsystem(flux_return_minus);
 
   //----------------------------------------
-  // piston magnet
-  make_piston("magpiston", g4Reco);
-
-  //----------------------------------------
   // BLACKHOLE
-  
+
   // swallow all particles coming out of the backend of sPHENIX
   PHG4CylinderSubsystem *blackhole = new PHG4CylinderSubsystem("BH", 1);
-blackhole->set_double_param("radius",radius + 10); // add 10 cm
+  blackhole->set_double_param("radius",radius + 100); // add 100 cm
 
   blackhole->set_int_param("lengthviarapidity",0);
   blackhole->set_double_param("length",g4Reco->GetWorldSizeZ() - no_overlapp); // make it cover the world in length
@@ -268,7 +325,7 @@ void ShowerCompress(int verbosity = 0) {
   gSystem->Load("libg4eval.so");
 
   Fun4AllServer *se = Fun4AllServer::instance();
-  
+
   PHG4DstCompressReco* compress = new PHG4DstCompressReco("PHG4DstCompressReco");
   compress->AddHitContainer("G4HIT_PIPE");
   compress->AddHitContainer("G4HIT_SVTXSUPPORT");
@@ -301,7 +358,7 @@ void ShowerCompress(int verbosity = 0) {
   compress->AddHitContainer("G4HIT_FEMC");
   compress->AddHitContainer("G4HIT_ABSORBER_FEMC");
   compress->AddHitContainer("G4HIT_FHCAL");
-  compress->AddHitContainer("G4HIT_ABSORBER_FHCAL"); 
+  compress->AddHitContainer("G4HIT_ABSORBER_FHCAL");
   compress->AddCellContainer("G4CELL_FEMC");
   compress->AddCellContainer("G4CELL_FHCAL");
   compress->AddTowerContainer("TOWER_SIM_FEMC");
@@ -310,10 +367,17 @@ void ShowerCompress(int verbosity = 0) {
   compress->AddTowerContainer("TOWER_SIM_FHCAL");
   compress->AddTowerContainer("TOWER_RAW_FHCAL");
   compress->AddTowerContainer("TOWER_CALIB_FHCAL");
-  
+
+  compress->AddHitContainer("G4HIT_EEMC");
+  compress->AddHitContainer("G4HIT_ABSORBER_EEMC");
+  compress->AddCellContainer("G4CELL_EEMC");
+  compress->AddTowerContainer("TOWER_SIM_EEMC");
+  compress->AddTowerContainer("TOWER_RAW_EEMC");
+  compress->AddTowerContainer("TOWER_CALIB_EEMC");
+
   se->registerSubsystem(compress);
-  
-  return; 
+
+  return;
 }
 
 void DstCompress(Fun4AllDstOutputManager* out) {
@@ -340,107 +404,12 @@ void DstCompress(Fun4AllDstOutputManager* out) {
     out->StripNode("G4HIT_FEMC");
     out->StripNode("G4HIT_ABSORBER_FEMC");
     out->StripNode("G4HIT_FHCAL");
-    out->StripNode("G4HIT_ABSORBER_FHCAL"); 
+    out->StripNode("G4HIT_ABSORBER_FHCAL");
     out->StripNode("G4CELL_FEMC");
     out->StripNode("G4CELL_FHCAL");
+
+    out->StripNode("G4HIT_EEMC");
+    out->StripNode("G4HIT_ABSORBER_EEMC");
+    out->StripNode("G4CELL_EEMC");
   }
 }
-
-int
-make_piston(string name, PHG4Reco* g4Reco)
-{
-  double be_pipe_radius    = 2.16;   // 2.16 cm based on spec sheet
-  double be_pipe_thickness = 0.0760; // 760 um based on spec sheet
-  double be_pipe_length    = 80.0;   // +/- 40 cm
-
-  double al_pipe_radius    = 2.16;   // same as Be pipe
-  double al_pipe_thickness = 0.1600; // 1.6 mm based on spec
-  double al_pipe_length    = 88.3;   // extension beyond +/- 40 cm
-
-  const double zpos0 = al_pipe_length + be_pipe_length * 0.5; // first large GEM station
-  const double zpos1 = 305 - 20; // front of forward ECal/MPC
-  const double zpos2 = 335.9 - 10.2 / 2.; // front of the forward field endcap
-  const double calorimeter_hole_diamater = 9.92331 *2; // side length of the middle hole of MPC that can hold the piston. Also the max diameter of the piston in that region
-
-  const double beampipe_radius = be_pipe_radius;
-
-  // teeth cone section specific
-  const double number_of_wteeth = 100;
-  const double teeth_thickness = 0.3504 * 2; //2 X0
-  const double eta_inner = -log(tan(atan((beampipe_radius + 0.1) / zpos0) / 2));
-  const double eta_outter = 4.2;
-  const double eta_teeth_outter = 4.05;
-  double pos = zpos0 + (zpos1 - zpos0) / 2;
-//  cout << "MAGNETIC PISTON:" << eta_inner << " " << eta_outter << " " << pos
-//      << endl;
-
-  PHG4ConeSubsystem *magpiston = new PHG4ConeSubsystem("Piston", 0);
-  magpiston->SetZlength((zpos1 - zpos0) / 2);
-  magpiston->SetPlaceZ((zpos1 + zpos0) / 2);
-  magpiston->SetR1(beampipe_radius,
-      tan(PHG4Sector::Sector_Geometry::eta_to_polar_angle(eta_outter)) * zpos0);
-  magpiston->SetR2(beampipe_radius,
-      tan(PHG4Sector::Sector_Geometry::eta_to_polar_angle(eta_outter)) * zpos1);
-  magpiston->SetMaterial("G4_Fe");
-  magpiston->OverlapCheck(overlapcheck);
-  g4Reco->registerSubsystem(magpiston);
-
-//  PHG4ConeSubsystem *magpiston = new PHG4ConeSubsystem(name.c_str(), 1);
-//  magpiston->SetZlength((zpos1 - zpos0) / 2);
-//  magpiston->SetPlaceZ(pos);
-//  magpiston->Set_eta_range(eta_outter, eta_inner);
-//  magpiston->SetMaterial("G4_Fe");
-//  magpiston->SuperDetector(name.c_str());
-//  magpiston->SetActive(false);
-//  g4Reco->registerSubsystem(magpiston);
-
-  pos = zpos0 + 1.0 + teeth_thickness / 2;
-  for (int i = 0; i < number_of_wteeth; i++)
-    {
-      stringstream s;
-      s << name;
-      s << "_teeth_";
-      s << i;
-
-      magpiston = new PHG4ConeSubsystem(s.str(), i);
-      magpiston->SuperDetector(name);
-      magpiston->SetZlength(teeth_thickness / 2);
-      magpiston->SetPlaceZ(pos);
-      magpiston->SetR1(
-          //
-          tan(PHG4Sector::Sector_Geometry::eta_to_polar_angle(eta_outter - .01))
-              * (pos - teeth_thickness / 2), //
-          tan(PHG4Sector::Sector_Geometry::eta_to_polar_angle(eta_teeth_outter))
-              * (pos - teeth_thickness / 2) //
-              );
-      magpiston->SetR2(
-          //
-          tan(PHG4Sector::Sector_Geometry::eta_to_polar_angle(eta_outter - .01))
-              * (pos + teeth_thickness / 2), //
-          tan(PHG4Sector::Sector_Geometry::eta_to_polar_angle(eta_outter - .01))
-              * (pos + teeth_thickness / 2) + .1 //
-              );
-      magpiston->SetMaterial("G4_W");
-      magpiston->SuperDetector(name.c_str());
-      magpiston->SetActive(false);
-      magpiston->OverlapCheck(overlapcheck);
-      g4Reco->registerSubsystem(magpiston);
-      pos += ((zpos1 - zpos0 - 10) / number_of_wteeth);
-    }
-
-  // last piece connect to the field return
-  PHG4CylinderSubsystem *magpiston2 = new PHG4CylinderSubsystem("Piston_EndSection", 0);
-  magpiston2->set_int_param("lengthviarapidity",0);
-  magpiston2->set_double_param("length",zpos2 - zpos1);
-  magpiston2->set_double_param("place_z", (zpos2 + zpos1) / 2.);
-  magpiston2->set_double_param("radius",beampipe_radius);
-  magpiston2->set_double_param("thickness",calorimeter_hole_diamater / 2. - beampipe_radius);
-  magpiston2->set_string_param("material","G4_Fe");
-  magpiston2->SuperDetector(name);
-  magpiston2->SetActive(false);
-  magpiston2->OverlapCheck(overlapcheck);
-  g4Reco->registerSubsystem(magpiston2);
-
-  return 0;
-}
-

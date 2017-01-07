@@ -453,7 +453,11 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   eval->do_g4hit_eval(true);
   eval->do_hit_eval(false);
   eval->do_gpoint_eval(false);
+<<<<<<< HEAD
   eval->scan_for_embedded(false); // take all tracks - otherwise take only embedded tracks (will not record decay particles!! - loses Upsilon electrons)
+=======
+  eval->scan_for_embedded(true);
+>>>>>>> e2c282faaf6b1865ccfe27e7e4faad8f2721db5b
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
 
