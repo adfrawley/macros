@@ -348,7 +348,7 @@ void Svtx_Reco(int verbosity = 0)
   // Cluster Hits
   //-------------
 
-  PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",0, n_maps_layer + n_intt_layer - 1);
+  PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",0, n_maps_layer + n_intt_layer-1);
   clusterizer->Verbosity(verbosity);
   // Reduced by 2 relative to the cylinder cell maps macro. I found this necessary to get full efficiency
   // Many hits in the present simulation are single cell hits, so it is not clear why the cluster threshold should be higher than the cell threshold
@@ -358,6 +358,7 @@ void Svtx_Reco(int verbosity = 0)
     {
       clusterizer->set_z_clustering(i, false);
     }
+
   se->registerSubsystem( clusterizer );
 
   PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_maps_layer+n_intt_layer,Max_si_layer-1);

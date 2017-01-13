@@ -1,6 +1,6 @@
 int Fun4All_G4_sPHENIX(
 		       const int process = 0,
-		       const int nEvents = 1,
+		       const int nEvents = 100,
 		       const char * inputFile = "/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
@@ -93,7 +93,7 @@ int Fun4All_G4_sPHENIX(
   bool do_pipe = true;
 
   // run the cylinder cell model of the inner barrel if svtx = true
- bool svtx = false;
+ bool svtx =false;
   bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
   if(svtx)
     {

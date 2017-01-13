@@ -343,9 +343,20 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   // SVTX evaluation
   //----------------
 
+  SvtxEvaluator* eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str());
+  eval->do_cluster_eval(true);
+  eval->do_g4hit_eval(true);
+  eval->do_hit_eval(false);
+  eval->do_gpoint_eval(false);
+  eval->scan_for_embedded(false); // take all tracks if false - take only embedded tracks if true (will not record decay particles!! - loses Upsilon electrons)
+  eval->Verbosity(verbosity);
+  se->registerSubsystem( eval );
+
+  /*
   SubsysReco* eval = new PHG4Evaluator("PHG4EVALUATOR", outputfile.c_str());
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );
+  */
 
   return;
 }
