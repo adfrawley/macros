@@ -72,16 +72,14 @@ void quarkonia_reconstruction_embedded()
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
-  // The condor jobs make 1000 files
+  // The condor jobs make 500 files
   for(int i=0;i<500;i++)
     {
       char name[500];
       sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../ups1s_maps3_intt4_1.05pc_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../ups1s_maps3_intt3_1.05pc_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../ups1s_maps3_intt2_1.05pc_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../ups1s_maps3_intt1_1.05pc_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../ups1s_maps3_intt0_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../pions_plus_ups1s_intt4_massfix_no_refit_eval_output/g4svx_eval_%i.root",i);
+
+      //sprintf(name,"../refit_pions_plus_ups1s_intt2_eval_output_2nd/g4svx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);
@@ -125,6 +123,9 @@ void quarkonia_reconstruction_embedded()
   else
     nups_requested = 20000;
 
+  // override
+  nups_requested = 100000;
+
   cout << "Upsilons requested = " << nups_requested << endl;
   
   //=======================
@@ -164,11 +165,15 @@ void quarkonia_reconstruction_embedded()
       int g4trnum_elec[1000];
       int g4trnum_pos[1000];
 
+      //cout << "Number of ntp_gtrack entries = " << recoget1 << endl;
+
       for(int ig=ng;ig<ng+ngtracks;ig++)
         {
           int recoget1 = ntp_gtrack->GetEntry(ig);
-      
-	  cout << "Number of ntp_gtrack entries = " << recoget1 << endl;
+
+	  if( tgtrackid != 1 && tgtrackid != 2)      
+	    //if( tgtrackid > 10)
+	    continue;
 
 	  // we want only electrons or positrons
 	  if(tflavor != 11 && tflavor != -11)
@@ -314,11 +319,12 @@ void quarkonia_reconstruction_embedded()
       int rectrnum_elec[1000];
       int rectrnum_pos[1000];
 
+      //cout << "Number of ntp_track entries = " << recoget << endl;
+
       for(int ir=nr;ir<nr+ntracks;ir++)
         {
           int recoget = ntp_track->GetEntry(ir);
 
-	  cout << "Number of ntp_track entries = " << recoget << endl;
 	  
 	  hrquality->Fill(rquality);
 	  hrdca2d->Fill(rdca2d);
@@ -327,11 +333,10 @@ void quarkonia_reconstruction_embedded()
 	  if(rquality > 3 || fabs(rdca2d) > 0.1)
 	    continue;
 
-	  /*
+
 	  // need to select electrons and positrons - for now we cheat
 	  if(rgflavor != 11 && rgflavor != -11)
 	    continue;
-	  */
 
 	  // make a list of electrons and positrons
 	  //if(rgflavor == 11)

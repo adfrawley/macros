@@ -6,7 +6,7 @@ Universe        = vanilla
 Notification    = Never
 
 # The executable we want to run.
-Executable   = /gpfs/mnt/gpfs02/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/runit_silicon_tracker
+Executable   = /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/runit_silicon_tracker
 
 # The argument to pass to the executable.
 # process number, number of events
@@ -37,20 +37,20 @@ GetEnv          = True
 
 # Used to give jobs a directory with respect to file input 
 # and output.
-Initialdir   = /gpfs/mnt/gpfs02/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/
+Initialdir   = /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/
 
 # Input file given to the job.
 Input           = /dev/null
 
 # The job's stdout is sent to this file.
-Output       =  /gpfs/mnt/gpfs02/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval.out.$(Process)
+Output       =  /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval.out.$(Process)
 
 # The job's stderr is sent to this file.
-Error      =   /gpfs/mnt/gpfs02/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval.err.$(Process)
+Error      =   /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval.err.$(Process)
 
 
 # The condor log file for this job, useful when debugging.
-Log       =    /gpfs/mnt/gpfs02/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval.log.$(Process)
+Log       =    /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval.log.$(Process)
 
 # Email address to send notification to.
 #Notify_user     = afrawley@fsu.edu

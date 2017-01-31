@@ -69,10 +69,11 @@ void purity()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor job output files
-  for(int i=0;i<500;i++)
+  for(int i=0;i<2000;i++)
     {
       char name[500];
-      sprintf(name,"../single_pions_dec6_cylinder_maps3_intt4_tpc60_eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"../refit_pions_plus_ups1s_intt4_eval_output_3rd/g4svx_eval_%i.root",i);
 
       //sprintf(name,"../new_macro1_maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
       //sprintf(name,"../maps3+tpc60_eval_output/eval_output/g4svx_eval_%i.root",i);
@@ -145,7 +146,8 @@ void purity()
   TH1D *hquality = new TH1D("hquality","hquality",2000,0.0,5.0);
   hquality->GetXaxis()->SetTitle("quality");
 
-  TH1D *heta = new TH1D("hea","heta",100,-1.2,1.2);
+  TH1D *hgeta = new TH1D("hgeta","hgeta",100,-1.2,1.2);
+  TH1D *hreta = new TH1D("hreta","hreta",100,-1.2,1.2);
 
   static const int NVARBINS = 36;
   double xbins[NVARBINS+1] = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,
@@ -201,7 +203,7 @@ void purity()
 	  exit(1);
 	}
 
-      if(iev%100 == 0)
+      if(iev%20 == 0)
 	cout << "Get event " << iev << " with vertex x " << evx
 	     << " vertex y " << evy << " vertex z " << evz 
 	     << " ngtracks " << ngtracks << " ntracks " << ntracks 
@@ -210,7 +212,9 @@ void purity()
       
       // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
       // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
-            
+
+      int n_embed_gtrack = 0;            
+      int n_embed_gtrack_1 = 0;            
       for(int ig=ng;ig<ng+ngtracks;ig++)
 	{
 	  int recoget = ntp_gtrack->GetEntry(ig);
@@ -220,10 +224,15 @@ void purity()
 	      //exit(1);
 	      continue;
 	    }
+	  if(tembed == 1)
+	    n_embed_gtrack++;
 
 	  // skip tracks that do not pass through all layers (judged using truth track)
-	  if(tnhits != nlayers)
-	    continue;
+	  //if(tnhits != nlayers)
+	  //continue;
+
+	  if(tembed == 1)
+	    n_embed_gtrack_1++;
 
 	  // get the truth pT
 	  double tgpT = sqrt(tpx*tpx+tpy*tpy);	  	  
@@ -237,8 +246,17 @@ void purity()
 	    {
 	      hpt_truth->Fill(tgpT);
 	    }
+
+	  if(tembed == 1)
+	    {
+	      double geta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
+	      hgeta->Fill(geta);
+	    }
+
 	}     
-      
+      //cout << "n_embed_gtrack = " << n_embed_gtrack << " n_embed_gtrack_1 " << n_embed_gtrack_1 << endl;
+
+      int n_embed_rtrack = 0;                  
       for(int ir=nr;ir<nr+ntracks;ir++)
 	{
 	  int recoget = ntp_track->GetEntry(ir);
@@ -249,9 +267,12 @@ void purity()
 	      continue;
 	    }
 
+	  if(rgembed == 1)
+	    n_embed_rtrack++;
+
 	  // skip tracks that do not pass through all layers in truth
-	  if(rgnhits != nlayers)
-	    continue;
+	  //if(rgnhits != nlayers)
+	  //continue;
 
 	  double rgpT = sqrt(rgpx*rgpx+rgpy*rgpy);	  	  
 	  double rpT = sqrt(rpx*rpx+rpy*rpy);
@@ -338,10 +359,11 @@ void purity()
 	      continue;
 	    }
 
-
+	  //cout << " rgembed = " << rgembed << " rgpT = " << rgpT << endl;
 	  // histogram the reco pT for the embedded tracks that pass the cuts
 	  if(rgembed == 1)
 	    {
+	      //cout << "   accepted: rgembed = " << rgembed << " rgpT = " << rgpT << endl;
 	      hpt_compare->Fill(rgpT,rpT/rgpT);
 	      hpt_dca2d->Fill(rgpT, corrected_rdca2d);
 	    }
@@ -366,12 +388,17 @@ void purity()
 	      else
 		hpurity[ipurity]->Fill(rgpT);
 	    }
-	  
-	  double eta = asinh(rpz/sqrt(rpx*rpx+rpy*rpy));
-	  heta->Fill(eta);
-	  
+
+	  if(rgembed == 1)
+	    {	  
+	      double reta = asinh(rpz/sqrt(rpx*rpx+rpy*rpy));
+	      hreta->Fill(reta);
+	    }
+
 	}  // end loop over reco'd tracks
-      
+
+      //cout << " n_embed_rtrack = " << n_embed_rtrack << endl; 
+     
       nr += ntracks;
       ng += ngtracks;
       
@@ -441,9 +468,13 @@ void purity()
   hZdca->Draw();
 
   TCanvas *ceta = new TCanvas("ceta","ceta",30,10,600,600);
-  heta->SetMinimum(0.0);
+  //hgeta->SetMinimum(0.0);
   //gPad->SetLogy(1);
-  heta->Draw();
+  hgeta->Draw();
+  hreta->SetLineColor(kRed);
+  hreta->Draw("same");
+
+  cout << " hgeta integral = " << hgeta->Integral()  << " hreta integral = "  << hreta->Integral() << endl;
 
   // Make the purity plot for all tracks 
   //==================================== 
@@ -641,6 +672,9 @@ void purity()
   hZdca->Write();
 
   //h_evt_dca2d->Write();
+
+  hreta->Write();
+  hgeta->Write();
   
   fout->Close();
   

@@ -21,15 +21,15 @@ void plot_comparisons_purity()
 
   TFile *fin[NPLOTS];
 
-  int maps_ladders_comp = 2;
+  int maps_ladders_comp = 1;
   char label[2][500]; 
   if(maps_ladders_comp == 1)
     {
       // compare with and without ladders option - maps+tpc
-      fin[0] = new TFile("root_files/nofit_maps3+tpc60_look_purity_out.root");  
-      fin[1] = new TFile("root_files/look_purity_nofit_maps_ladders3_tpc60_out.root");  
-      sprintf(label[0],"cylinder maps + tpc");
-      sprintf(label[1], "maps ladders + tpc");
+      fin[0] = new TFile("root_files/no_refit_intt4_massfix_look_purity_out.root");  
+      fin[1] = new TFile("root_files/refit_intt4_massfix_look_purity_out.root");  
+      sprintf(label[0],"No track refit");
+      sprintf(label[1], "Track refit");
     }
   if(maps_ladders_comp == 2)
     {

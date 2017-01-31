@@ -109,7 +109,7 @@ void CBfitter_1state()
   //bool do_subtracted = true;
 
   file1S = new TFile("ups1s_qual3.00_dca2d0.10.root");
-  //file1S = new TFile("root_files/maps_cylinders_intt_tpc_ups1s_qual3.00_dca2d0.10.root");
+  //file1S = new TFile("root_files/no_refit_pions_plus_ups1s_qual3.00_dca2d0.10.root");
   //file1S = new TFile("root_files/maps_ladders_intt_tpc_ups1s_qual3.00_dca2d0.10.root");
 
   recomass1S = (TH1 *)file1S->Get("recomass");
@@ -205,7 +205,7 @@ void CBfitter_1state()
   f1S->SetParameter(2, 9.46);      // xmean
   f1S->SetParameter(3, 0.2);     // sigma
   f1S->SetParLimits(3,0.05,0.20);
-  f1S->SetParameter(4, 200.0);    // N
+  f1S->SetParameter(4, 400.0);    // N
   //f1S->SetParameter(4, 4000.0);    // N
   f1S->SetParNames("alpha1S","n1S","m1S","sigma1S","N1S");
   f1S->SetLineColor(kBlue);

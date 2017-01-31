@@ -22,8 +22,7 @@ void G4Init(bool do_svtx = false,
   if (do_svtx)
     {
       //cout << "Loading G4_Svtx_maps+intt+tpc.C" << endl;
-      //gROOT->LoadMacro("G4_Svtx_maps+intt+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
-      gROOT->LoadMacro("G4_Svtx_ladders.C");      // Gaku's strip ladders macro
+      gROOT->LoadMacro("G4_Svtx_maps+intt+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
 
       SvtxInit();
     }

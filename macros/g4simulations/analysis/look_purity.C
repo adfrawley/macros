@@ -43,8 +43,8 @@ void look_purity()
   */
 
   //TFile *fin = new TFile("root_files/purity_out.root");  
-  //TFile *fin = new TFile("root_files/maps_ladders3_tpc60_single_pions_purity_out.root");  
-  TFile *fin = new TFile("root_files/maps_ladders3_intt4_tpc60_single_pions_purity_out2.root");  
+  TFile *fin = new TFile("root_files/no_refit_pions_purity_out.root");  
+  //TFile *fin = new TFile("root_files/refit_eta_purity_out.root");  
 
   if(!fin)
     {
@@ -93,8 +93,8 @@ void look_purity()
 
       TH1D *h = new TH1D("h","dca2d resolution",2000, 0.0, 2.0);
       hpt_dca2d->ProjectionY("h",binlo,binhi);
-      h->GetXaxis()->SetTitle("p_{T}");
-      h->GetXaxis()->SetTitle("#Delta dca2d");
+      h->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+      h->GetXaxis()->SetTitle("#Delta dca2d (cm)");
       h->GetXaxis()->SetTitleOffset(1.0);
       if(i>30) h->Rebin(4);
       h->DrawCopy();
@@ -107,7 +107,7 @@ void look_purity()
       pT[i] = (ptlo + pthi) / 2.0;
 
       dca2d[i] = f->GetParameter(2);
-      cout << " pT " << pT[i] << " dca2d " << dca2d[i] << endl;
+      cout << " pT " << pT[i] << " dca2d " << dca2d[i] << " counts " << h->Integral() << endl;
     }
 
   //============================================
@@ -124,20 +124,20 @@ void look_purity()
   TH1D *hdummy = new TH1D("hdummy","#Delta dca2d vs p_{T}",100,0.0,ptmax);
   hdummy->SetMinimum(0);
   hdummy->SetMaximum(0.0050);
-  hdummy->GetXaxis()->SetTitle("p_{T}");
-  hdummy->GetYaxis()->SetTitle("#Delta dca2d");
+  hdummy->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+  hdummy->GetYaxis()->SetTitle("#Delta dca2d (cm)");
   hdummy->GetYaxis()->SetTitleOffset(1.75);
   gPad->SetLeftMargin(0.15);
   hdummy->Draw();
   grdca2d->Draw("p");
 
- TLegend *ldca = new TLegend(0.4, 0.55, 0.85, 0.70,"","NDC");
+ TLegend *ldca = new TLegend(0.2, 0.65, 0.85, 0.80,"","NDC");
   ldca->SetBorderSize(0);
   ldca->SetFillColor(0);
   ldca->SetFillStyle(0);
   char lstr1[500];
   if(intt)
-    sprintf(lstr1,"MAPS(3)+INTT(4)+TPC(60)");
+    sprintf(lstr1,"MAPS (3 layers)+INTT (4 layers)+TPC");
   else
     sprintf(lstr1,"MAPS(3)+TPC(60)");
   ldca->AddEntry(grdca2d, lstr1, "p");
@@ -178,7 +178,7 @@ void look_purity()
       pT[i] = (ptlo + pthi) / 2.0;
 
       dpT[i] = f->GetParameter(2);
-      cout << " pT " << pT[i] << " dpT " << dpT[i] << endl;
+      cout << " pT " << pT[i] << " dpT " << dpT[i] << " integral " << hpt->Integral() << std::endl;
     }
 
   //==========================================
@@ -193,7 +193,7 @@ void look_purity()
 
   TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,ptmax);
   hdummy2->SetMinimum(0);
-  hdummy2->SetMaximum(0.12);
+  hdummy2->SetMaximum(0.08);
   hdummy2->GetXaxis()->SetTitle("p_{T}");
   hdummy2->GetYaxis()->SetTitle("#Delta p_{T}/p_{T}");
   hdummy2->GetYaxis()->SetTitleOffset(1.2);
@@ -550,6 +550,24 @@ void look_purity()
   l3->SetNDC();
   l3->SetTextSize(0.07);
   l3->Draw();
+
+
+  TCanvas *ceta = new TCanvas("ceta","ceta",10,10,600,600);
+
+  TH1D *hgeta = 0;
+  fin->GetObject("hgeta",hgeta);
+  if(!hgeta)
+    {
+      cout << "Did not get hgeta" << endl;
+      exit(1);
+    }
+  TH1D *hreta = 0;
+  fin->GetObject("hreta",hreta);
+
+  hgeta->Draw();
+  hreta->Draw("same");
+
+  ceta->Update();
 
   /*
   TCanvas *cvtx = new TCanvas("cvtx","cvtx",4,4,800,600);

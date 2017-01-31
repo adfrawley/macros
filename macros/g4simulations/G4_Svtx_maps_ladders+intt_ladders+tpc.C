@@ -1,7 +1,7 @@
 #include <vector>
 
-const int n_maps_layer = 3;
-const int n_intt_layer = 4;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
+const int n_maps_layer = 0;
+const int n_intt_layer = 1;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
 const int n_gas_layer = 60;
 double inner_cage_radius = 20.;
 
@@ -309,14 +309,17 @@ void Svtx_Reco(int verbosity = 0)
   // defaults to 1.0 (fully active)
   
   PHG4SvtxDeadArea* deadarea = new PHG4SvtxDeadArea();
+
   for(int i = 0;i<n_maps_layer;i++)
     {  
       deadarea->Verbosity(verbosity);
-      deadarea->set_hit_efficiency(i,0.99);
+      //deadarea->set_hit_efficiency(i,0.99);
+      deadarea->set_hit_efficiency(i,1.0);
     }
   for(int i=n_maps_layer;i<n_maps_layer + n_intt_layer;i++)
     {
-      deadarea->set_hit_efficiency(i,0.99);
+      //deadarea->set_hit_efficiency(i,0.99);
+      deadarea->set_hit_efficiency(i,1.0);
     }
   se->registerSubsystem( deadarea );
 
@@ -388,11 +391,11 @@ void Svtx_Reco(int verbosity = 0)
   double mat_scale = 1.0;
   for(int i = 0;i<n_maps_layer;i++)
     {  
-      hough->set_material(i, mat_scale*0.003);
+      hough->set_material(i, mat_scale*0.003);  // consistent with matscan for MAPS ladders
     }
   for(int i=n_maps_layer;i<n_maps_layer + n_intt_layer;i++)
     {
-       hough->set_material(i, mat_scale*0.010);
+      hough->set_material(i, mat_scale*0.019); // from matscan for INTT ladders
     }
 
   for (int i=(n_maps_layer + n_intt_layer);i<Max_si_layer;++i) {
@@ -421,31 +424,24 @@ void Svtx_Reco(int verbosity = 0)
   TF1 *corr = new TF1("corr","1.0/(1+0.00908642+5.91337e-05*x+-1.87201e-05*x*x+-3.31928e-06*x*x*x+1.03004e-07*x*x*x*x+-1.05111e-09*x*x*x*x*x)",0.0,40.0);
   PHG4SvtxMomentumRecal* recal = new PHG4SvtxMomentumRecal("PHG4SvtxMomentumRecal",corr);
   se->registerSubsystem(recal);
- 
-  /*
- //------------------------
-  // Final Track Refitting
-  //------------------------
+  
+
   PHG4TrackKalmanFitter *kalman = new PHG4TrackKalmanFitter();
-  //kalman->set_detector_type(PHG4TrackKalmanFitter::MAPS_TPC);//MAPS_LADDERS_TPC, MAPS_TPC, MAPS_IT_TPC, MIE
-  //kalman->Verbosity(10);
-
-  kalman->set_mag_field_file_name("/phenix/upgrades/decadal/fieldmaps/sPHENIX.2d.root");
-  kalman->set_mag_field_re_scaling_factor(1.4/1.5);
-  kalman->set_output_mode(PHG4TrackKalmanFitter::MakeNewNode);//enum OutPutMode {MakeNewNode, OverwriteOriginalNode, DebugMode};
-  kalman->set_fit_primary_tracks(false);
-
-  kalman->set_track_fitting_alg_name("DafRef");// KalmanFitterRefTrack, KalmanFitter, DafSimple, DafRef
-  kalman->set_primary_pid_guess(13);
-  kalman->set_vertexing_method("avf-smoothing:1");//https://rave.hepforge.org/trac/wiki/RaveMethods
-
-  kalman->set_do_eval(false);
-  kalman->set_eval_filename("PHG4TrackKalmanFitter_eval.root");
-
-  kalman->set_do_evt_display(false);
-
+  
+  // MIE, MAPS_TPC, MAPS_IT_TPC, LADDER_MAPS_TPC, LADDER_MAPS_IT_TPC, LADDER_MAPS_LADDER_IT_TPC, MAPS_LADDER_IT_TPC
+  kalman->set_detector_type(PHG4TrackKalmanFitter::LADDER_MAPS_LADDER_IT_TPC); //   LADDER_MAPS_LADDER_IT_TPC
+  kalman->set_output_mode(PHG4TrackKalmanFitter::OverwriteOriginalNode);
+    
+  //kalman->set_output_mode(PHG4TrackKalmanFitter::MakeNewNode);//MakeNewNode, OverwriteOriginalNode, DebugMode
+  //kalman->set_fit_primary_tracks(false);
+  //kalman->set_track_fitting_alg_name("DafRef");// KalmanFitterRefTrack, KalmanFitter, DafSimple, DafRef
+  //kalman->set_primary_pid_guess(211);
+  //kalman->set_vertexing_method("avf-smoothing:1");//https://rave.hepforge.org/trac/wiki/RaveMethods
+  //kalman->set_do_eval(true);
+  //kalman->set_eval_filename("PHG4TrackKalmanFitter_eval.root");
+  //kalman->set_do_evt_display(true);
+  
   se->registerSubsystem(kalman);
-  */
   
   //------------------
   // Track Projections

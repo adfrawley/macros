@@ -1,7 +1,7 @@
 int Fun4All_G4_sPHENIX(
-		       const int process = 0,
-		       const int nEvents = 100,
-		       const char * inputFile = "/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
+		       const int process = 5000,
+		       const int nEvents = -1,
+		       const char * inputFile = "/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
 {
@@ -31,6 +31,7 @@ int Fun4All_G4_sPHENIX(
   // Upsilons
   bool upsilons = true;           // throw single Upsilons if true
   int istate = 1;  // Upsilon state = 1,2,3
+  int nupsilons = 1;
   bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
 
   // pions
@@ -52,7 +53,7 @@ int Fun4All_G4_sPHENIX(
     {
       // get the Hijing input file name
       char hfile[500];
-      sprintf(inputFile,"/gpfs/mnt/gpfs02/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/in/hijing_%.5i.txt.bz2",process);
+      sprintf(inputFile,"/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/in/hijing_%.5i.txt.bz2",process);
 
       cout << "Reading Hijing events from file: " << endl << inputFile << endl; 
     }
@@ -92,7 +93,7 @@ int Fun4All_G4_sPHENIX(
   
   bool do_pipe = true;
 
-  // run the cylinder cell model of the inner barrel if svtx = true
+  // run the cylinder cell model of the inner barrel if svtx = true, used only for testing!
  bool svtx =false;
   bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
   if(svtx)
@@ -289,37 +290,40 @@ int Fun4All_G4_sPHENIX(
   
   if(upsilons || embed_upsilons)
     {
-      PHG4ParticleGeneratorVectorMeson *vgen = new PHG4ParticleGeneratorVectorMeson();
-      vgen->set_decay_types("e+","e-");    // dielectron decay
-      //vgen->set_vtx_zrange(-10.0, +10.0);
-      vgen->set_vtx_zrange(0.0, 0.0);
-      // Note: this rapidity range completely fills the acceptance of eta = +/- 1 unit
-      vgen->set_rapidity_range(-1.0, +1.0);
-      vgen->set_pt_range(0.0, 10.0);
-      
-      if(istate == 1)
+      for(int i=0; i<nupsilons; i++)
 	{
-	  // Upsilon(1S)
-	  vgen->set_mass(9.46);
-	  vgen->set_width(54.02e-6);
+	  PHG4ParticleGeneratorVectorMeson *vgen = new PHG4ParticleGeneratorVectorMeson();
+	  vgen->set_decay_types("e+","e-");    // dielectron decay
+	  //vgen->set_vtx_zrange(-10.0, +10.0);
+	  vgen->set_vtx_zrange(0.0, 0.0);
+	  // Note: this rapidity range completely fills the acceptance of eta = +/- 1 unit
+	  vgen->set_rapidity_range(-1.0, +1.0);
+	  vgen->set_pt_range(0.0, 10.0);
+	  
+	  if(istate == 1)
+	    {
+	      // Upsilon(1S)
+	      vgen->set_mass(9.46);
+	      vgen->set_width(54.02e-6);
+	    }
+	  else if (istate == 2)
+	    {
+	      // Upsilon(2S)
+	      vgen->set_mass(10.0233);
+	      vgen->set_width(31.98e-6);
+	    }
+	  else
+	    {
+	      // Upsilon(3S)
+	      vgen->set_mass(10.3552);
+	      vgen->set_width(20.32e-6);
+	    }
+	  
+	  vgen->Verbosity(0);
+	  se->registerSubsystem(vgen);
 	}
-      else if (istate == 2)
-	{
-	  // Upsilon(2S)
-	  vgen->set_mass(10.0233);
-	  vgen->set_width(31.98e-6);
-	}
-      else
-	{
-	  // Upsilon(3S)
-	  vgen->set_mass(10.3552);
-	  vgen->set_width(20.32e-6);
-	}
-      
-      vgen->Verbosity(0);
-      se->registerSubsystem(vgen);
-      
-      cout << "Upsilon generator for istate = " << istate << " created and registered " << endl;	  
+
+      cout << "Upsilon generator for istate = " << istate << " created and registered with " << nupsilons << " Upsilons "  << endl;	  
       
     }
   
@@ -524,4 +528,5 @@ int Fun4All_G4_sPHENIX(
   std::cout << "All done" << std::endl;
   delete se;
   gSystem->Exit(0);
-    }
+
+}
