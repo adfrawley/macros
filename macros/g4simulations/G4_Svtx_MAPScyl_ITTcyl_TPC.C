@@ -185,7 +185,7 @@ void Svtx_Reco(int verbosity = 0)
   // Digitize the cell energy into ADC
   //----------------------------------
   PHG4SvtxDigitizer* digi = new PHG4SvtxDigitizer();
-  digi->Verbosity(0);
+  digi->Verbosity(20);
   for (int i=0;i<n_ib_layer+n_intt_layer;++i) {
     digi->set_adc_scale(i, 255, 1.0e-6);
   }

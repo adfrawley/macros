@@ -1,6 +1,6 @@
 int Fun4All_G4_sPHENIX(
 		       const int process = 5000,
-		       const int nEvents = -1,
+		       const int nEvents = 200,
 		       const char * inputFile = "/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
 		       const char * outputFile = "G4sPHENIXCells.root"
 		       )
@@ -29,13 +29,13 @@ int Fun4All_G4_sPHENIX(
   //===============
 
   // Upsilons
-  bool upsilons = true;           // throw single Upsilons if true
+  bool upsilons = false;           // throw single Upsilons if true
   int istate = 1;  // Upsilon state = 1,2,3
   int nupsilons = 1;
   bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
 
   // pions
-  bool pions = false;      // throw single pions if true
+  bool pions = true;      // throw single pions if true
   bool embed_pions = false;  // throw single pions in a Hijing event if true
 
   // Hijing events only
@@ -94,7 +94,7 @@ int Fun4All_G4_sPHENIX(
   bool do_pipe = true;
 
   // run the cylinder cell model of the inner barrel if svtx = true, used only for testing!
- bool svtx =false;
+  bool svtx =true;
   bool do_svtx=false, do_svtx_cell=false, do_svtx_track=false, do_svtx_eval=false;
   if(svtx)
     {
@@ -104,7 +104,7 @@ int Fun4All_G4_sPHENIX(
       do_svtx_eval=true;
     }
   // OR: run the ITS ladder version of the inner barrel if maps_ladders = true 
-  bool maps_ladders = true;
+  bool maps_ladders = false;
   bool do_maps = false, do_maps_cell = false, do_maps_track = false, do_maps_eval = false;
   if(maps_ladders)
     {      
@@ -235,26 +235,34 @@ int Fun4All_G4_sPHENIX(
 
   if (pions || embed_pions)
     {
-      /*
+
       PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
-      pgen->add_particles("pi+",2); // mu-,e-,anti_proton,pi-
-      pgen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
-					     PHG4SimpleEventGenerator::Uniform,
-					     PHG4SimpleEventGenerator::Uniform);
-      pgen->set_vertex_distribution_mean(0.0,0.0,0.0);
-      //pgen->set_vertex_distribution_width(0.0,0.0,5.0);
-      pgen->set_vertex_distribution_width(0.0,0.0,0.0);
+      pgen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
+      pgen->add_particles("pi-",1); // mu-,e-,anti_proton,pi-
+      
+      if (readhepmc) {
+	pgen->set_reuse_existing_vertex(true);
+	pgen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
+      } else {
+	pgen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
+					       PHG4SimpleEventGenerator::Uniform,
+					       PHG4SimpleEventGenerator::Uniform);
+	pgen->set_vertex_distribution_mean(0.0,0.0,0.0);
+	//pgen->set_vertex_distribution_width(0.0,0.0,5.0);
+	pgen->set_vertex_distribution_width(0.0,0.0,0.0);
+      }
       pgen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
       pgen->set_vertex_size_parameters(0.0,0.0);
       pgen->set_eta_range(-1.0, 1.0);
       pgen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
-      pgen->set_pt_range(0.5, 10.0);
+      pgen->set_pt_range(2.0,2.0);
       
       pgen->Embed(1);
       pgen->Verbosity(0);
-      se->registerSubsystem(pgen);      
-      */
-
+      se->registerSubsystem(pgen);
+      
+    
+      /*
       // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
       for(int i=0; i<100; i++)
 	{
@@ -283,9 +291,9 @@ int Fun4All_G4_sPHENIX(
 	  
 	  pgen->Embed(1);
 	  pgen->Verbosity(0);
-	  se->registerSubsystem(pgen);
-	  
+	  se->registerSubsystem(pgen);	  
 	}
+      */
     }
   
   if(upsilons || embed_upsilons)

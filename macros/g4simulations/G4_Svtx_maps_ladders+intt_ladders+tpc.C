@@ -1,7 +1,7 @@
 #include <vector>
 
-const int n_maps_layer = 0;
-const int n_intt_layer = 1;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
+const int n_maps_layer = 3;
+const int n_intt_layer = 4;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
 const int n_gas_layer = 60;
 double inner_cage_radius = 20.;
 
@@ -425,7 +425,7 @@ void Svtx_Reco(int verbosity = 0)
   PHG4SvtxMomentumRecal* recal = new PHG4SvtxMomentumRecal("PHG4SvtxMomentumRecal",corr);
   se->registerSubsystem(recal);
   
-
+  /*
   PHG4TrackKalmanFitter *kalman = new PHG4TrackKalmanFitter();
   
   // MIE, MAPS_TPC, MAPS_IT_TPC, LADDER_MAPS_TPC, LADDER_MAPS_IT_TPC, LADDER_MAPS_LADDER_IT_TPC, MAPS_LADDER_IT_TPC
@@ -442,6 +442,7 @@ void Svtx_Reco(int verbosity = 0)
   //kalman->set_do_evt_display(true);
   
   se->registerSubsystem(kalman);
+  */
   
   //------------------
   // Track Projections

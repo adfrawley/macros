@@ -229,6 +229,7 @@ void AddTPC2Reco(PHG4SvtxDigitizer* digi, PHG4HoughTransformTPC* hough) {
   //clusterizer
   PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,previous_active_layers,previous_active_layers+TPC_GAS_LAYERS);
   tpcclusterizer->setEnergyCut(20.0*45.0/TPC_GAS_LAYERS);
+  tpcclusterizer->Verbosity(28);
   se->registerSubsystem( tpcclusterizer );
   //digitizer
   for(int i=previous_active_layers;i<previous_active_layers+TPC_GAS_LAYERS;++i) {
