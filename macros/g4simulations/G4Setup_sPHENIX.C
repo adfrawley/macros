@@ -21,14 +21,9 @@ void G4Init(bool do_svtx = false,
     }  
   if (do_svtx)
     {
-      cout << "Loading G4_Svtx_maps+intt+tpc.C" << endl;
-      //gROOT->LoadMacro("G4_Svtx_maps+intt+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
+      cout << "Loading G4_Svtx_maps+IT+tpc.C" << endl;
       gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
  
-      //gROOT->LoadMacro("G4_Svtx_MAPScyl_ITTcyl_TPC.C");      // cylinder cell maps IB + intermediate tracker + improved tpc
-      //gROOT->LoadMacro("G4_Svtx_MAPScyl_ITTcyl_TPC_Sourav.C");    // cylinder maps IB + cyl INTT + improved tpc from Sourav
-      //gROOT->LoadMacro("G4_Svtx_maps+IT+tpc_Sourav.C");    // cylinder maps IB + cyl INTT + improved tpc from Sourav
-
       SvtxInit();
     }
 
@@ -36,8 +31,6 @@ void G4Init(bool do_svtx = false,
     {
       cout << "Loading G4_Svtx_maps_ladders+intt_ladders+tpc.C" << endl;
       gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc.C");    // ladder maps IB + ladder INTT + tpc
-
-      //gROOT->LoadMacro("G4_Svtx_MAPSlad_INTTlad_TPC.C");    // ladder maps IB + ladder INTT + improved tpc
 
       SvtxInit();
     }

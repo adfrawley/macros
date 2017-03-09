@@ -84,7 +84,7 @@ void cluster_resolution()
   int nreco_tracks = 0;
   
   // The condor job output files
-  for(int i=5000;i <5001; i++)
+  for(int i=0;i <5; i++)
     {
       TChain* ntp_track = new TChain("ntp_track","reco tracks");
       TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
@@ -93,13 +93,13 @@ void cluster_resolution()
       
       char name[500];
       // latest files 
-      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval_%i.root",i);
 
       // cylinders and old TPC
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/two_pion_cylinders_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/nmissing_fixed_ups1s_cylinder_2pcIT_eval_output/g4svx_eval_%i.root",i);
 
       // ladders and old TPC
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/two_pion_ladders_eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/nmissing_fixed_ups1s_ladders_eval_output/g4svx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);

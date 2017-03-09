@@ -235,7 +235,7 @@ int Fun4All_G4_sPHENIX(
 
   if (pions || embed_pions)
     {
-
+      /*
       PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
       pgen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
       pgen->add_particles("pi-",1); // mu-,e-,anti_proton,pi-
@@ -260,9 +260,9 @@ int Fun4All_G4_sPHENIX(
       pgen->Embed(1);
       pgen->Verbosity(0);
       se->registerSubsystem(pgen);
-      
+      */      
     
-      /*
+
       // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
       for(int i=0; i<100; i++)
 	{
@@ -293,7 +293,7 @@ int Fun4All_G4_sPHENIX(
 	  pgen->Verbosity(0);
 	  se->registerSubsystem(pgen);	  
 	}
-      */
+
     }
   
   if(upsilons || embed_upsilons)

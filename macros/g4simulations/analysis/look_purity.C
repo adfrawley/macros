@@ -31,8 +31,8 @@ void look_purity()
 
   // set to false only to generate pT resolution plots without fits
   // BEWARE: false means that the 4 sigma cuts are meaningless - thay are not done with fitted parameters
-  //bool pt_resolution_fit = true;
-  bool pt_resolution_fit = false;
+  bool pt_resolution_fit = true;
+  //bool pt_resolution_fit = false;
   
   /*
   TFile *fin;
@@ -42,8 +42,8 @@ void look_purity()
     fin = new TFile("root_files/maps3+tpc60_purity_out.root");
   */
 
-  //TFile *fin = new TFile("root_files/purity_out.root");  
-  TFile *fin = new TFile("root_files/no_refit_pions_purity_out.root");  
+  TFile *fin = new TFile("root_files/purity_out.root");  
+  //TFile *fin = new TFile("root_files/no_refit_pions_purity_out.root");  
   //TFile *fin = new TFile("root_files/refit_eta_purity_out.root");  
 
   if(!fin)

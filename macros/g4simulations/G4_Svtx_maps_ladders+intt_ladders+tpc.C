@@ -373,7 +373,8 @@ void Svtx_Reco(int verbosity = 0)
   //---------------------
   // Track reconstruction
   //---------------------
-  PHG4HoughTransformTPC* hough = new PHG4HoughTransformTPC(Max_si_layer,Max_si_layer-20);
+  //PHG4HoughTransformTPC* hough = new PHG4HoughTransformTPC(Max_si_layer,Max_si_layer-20);
+  PHG4HoughTransformTPC* hough = new PHG4HoughTransformTPC(Max_si_layer,Max_si_layer-4);
   hough->set_mag_field(1.4);
   hough->setPtRescaleFactor(1.00/0.993892);
   hough->set_use_vertex(true);

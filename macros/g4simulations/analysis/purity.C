@@ -69,27 +69,21 @@ void purity()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
   
   // The condor job output files
-  for(int i=0;i<2000;i++)
+  for(int i=0;i<500;i++)
     {
       char name[500];
       sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../refit_pions_plus_ups1s_intt4_eval_output_3rd/g4svx_eval_%i.root",i);
-
-      //sprintf(name,"../new_macro1_maps3+intt4+tpc60_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../maps3+tpc60_eval_output/eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"/sphenix/user/isibf5y/macros-QTG_macros/macros/g4simulations/hijing/g4eval_hij_pionsembed_qtgmac_map_tpc_%i.root",i);
+      //sprintf(name,"../nmissing_fixed_pions_ladders_eval_output/g4svx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
     }
 
-  cout << "ntp_vertex enties: " << ntp_vertex->GetEntries()
-       << " ntp_gtrack entires: " << ntp_gtrack->GetEntries()
+  cout <<  " ntp_vertex entries: " << ntp_vertex->GetEntries()
+       << " ntp_gtrack entries: " << ntp_gtrack->GetEntries()
        << " ntp_track entries: " << ntp_track->GetEntries()
        << endl;
-
 
   // This include file contains the definitions of the ntuple variables, and the chain definitions
 #include "ntuple_variables.C"

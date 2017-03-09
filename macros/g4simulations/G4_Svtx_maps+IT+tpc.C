@@ -84,6 +84,8 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   double intt_rad[4] = { 6.0, 8.0, 10.0, 12.0};
   // 120 microns of silicon is 0.13% of X_0, so to get 1% total we need 0.87% more in the Cu
   double multiplier = 0.87;  // how many times 1% do you want?
+  // 120 microns of silicon is 0.13% of X_0, so to get 2% total we need 1.87% more in the Cu
+  //double multiplier = 1.87;  // how many times 1% do you want?
   double apercent = 0.0144;  // Cu thickness in cm corresponding to 1% X_0 
   double intt_support_thickness[4] = {apercent*multiplier, apercent*multiplier, apercent*multiplier, apercent*multiplier};
   double intt_length[4] = {50.0, 50.0, 50.0, 50.0};
