@@ -39,8 +39,10 @@ double Svtx(PHG4Reco* g4Reco, double radius,
       lyr->set_double_param("layer_nominal_radius",maps_layer_radius[ilayer]);// thickness in cm
 
       // The cell size is used only during pixilization of sensor hits, but it is convemient to set it now because the geometry object needs it
-      lyr->set_double_param("pixel_x",0.0020);// pitch in cm
-      lyr->set_double_param("pixel_z",0.0020);// length in cm
+      //lyr->set_double_param("pixel_x",0.0020);// pitch in cm
+      //lyr->set_double_param("pixel_z",0.0020);// length in cm
+      lyr->set_double_param("pixel_x",0.0030);// pitch in cm
+      lyr->set_double_param("pixel_z",0.0030);// length in cm
       lyr->set_double_param("pixel_thickness",0.0018);// thickness in cm
       lyr->set_double_param("phitilt",0.304);   // radians, equivalent to 17.4 degrees
 
@@ -190,7 +192,7 @@ void Svtx_Cells(int verbosity = 0)
 
   // MAPS cells
  PHG4MapsCellReco *maps_cells = new PHG4MapsCellReco("MAPS");
-  maps_cells->Verbosity(verbosity);
+  maps_cells->Verbosity(0);
   se->registerSubsystem(maps_cells);
 
   if(n_intt_layer > 0)

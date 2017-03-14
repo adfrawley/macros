@@ -76,7 +76,7 @@ void cluster_resolution()
   delta_rphi->GetYaxis()->SetTitle("Cluster Error (cm)");
   delta_rphi->GetXaxis()->SetTitle("Tracking Layer");
 
-  TH2D *cluster_size = new TH2D("cluster_size","cluster size by layer",70.0, 0.0, 70.0, 200, 0.0, 10.0); 
+  TH2D *cluster_size = new TH2D("cluster_size","cluster size by layer",70.0, 0.0, 70.0, 200, 0.0, 15.0); 
   cluster_size->GetYaxis()->SetTitle("Cluster Size (hits)");
   cluster_size->GetXaxis()->SetTitle("Tracking Layer");
 
@@ -84,7 +84,7 @@ void cluster_resolution()
   int nreco_tracks = 0;
   
   // The condor job output files
-  for(int i=0;i <5; i++)
+  for(int i=0;i <500; i++)
     {
       TChain* ntp_track = new TChain("ntp_track","reco tracks");
       TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
@@ -99,7 +99,7 @@ void cluster_resolution()
       //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/nmissing_fixed_ups1s_cylinder_2pcIT_eval_output/g4svx_eval_%i.root",i);
 
       // ladders and old TPC
-      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/nmissing_fixed_ups1s_ladders_eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/no_charge_sharing_eval_output/g4svx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);
@@ -414,10 +414,10 @@ void cluster_resolution()
   gPad->SetLeftMargin(0.14);
   gPad->SetRightMargin(0.01);
   gPad->SetLogy(1);
-  TH1D *hpc1 = new TH1D("hpc1","MAPS hits/cluster",200, 0, 10.0);
+  TH1D *hpc1 = new TH1D("hpc1","MAPS hits/cluster",200, 0, 15.0);
   cluster_size->ProjectionY("hpc1",1,3);
-  hpc1->GetXaxis()->SetRangeUser(0.0, 5.0);
-  hpc1->GetXaxis()->SetTitle("cluster size (hitrs)");
+  //hpc1->GetXaxis()->SetRangeUser(0.0, 15.0);
+  hpc1->GetXaxis()->SetTitle("cluster size (pixels)");
   hpc1->SetTitleOffset(0.1,"X");
   hpc1->GetXaxis()->SetTitleSize(0.05);
   hpc1->GetXaxis()->SetLabelSize(0.06);
@@ -437,7 +437,7 @@ void cluster_resolution()
   gPad->SetLogy(1);
   TH1D *hpc2 = new TH1D("hpc2","INTT hits/cluster",200, 0, 10.0);
   cluster_size->ProjectionY("hpc2",4,7); // for 2 layers
-  hpc2->GetXaxis()->SetRangeUser(0.0, 5.0);
+  hpc2->GetXaxis()->SetRangeUser(0.0, 10.0);
   hpc2->GetXaxis()->SetTitle("cluster size (hits)");
   hpc2->GetXaxis()->SetTitleOffset(0.6);
   hpc2->GetXaxis()->SetTitleSize(0.05);
@@ -474,6 +474,7 @@ void cluster_resolution()
 
   c9->Print("Hits_per_cluster.pdf","pdf");
 
+  /*
   TCanvas *c10 = new TCanvas("c10","c10",50,50,1200,800); 
   c10->Divide(2,1);
 
@@ -499,6 +500,30 @@ void cluster_resolution()
   clusters_per_layer_per_reco_track->GetXaxis()->SetTitle("Layer");
   clusters_per_layer_per_reco_track->SetMaximum(1.2);
   clusters_per_layer_per_reco_track->Draw();
+  */
+
+  TCanvas *c11 = new TCanvas("c11","c11",5,5,600,800);
   
+  hpy1->Draw();
+  c11->SetLeftMargin(0.15);  
+  c11->SetBottomMargin(0.12);  
+  //rms3 = 10000 * hpy1->GetRMS();
+  //sprintf(label,"RMS %.1f #mu m",rms3);
+  //TLatex *l3 = new TLatex(0.55,0.92,label);
+  //l3->SetNDC(1);
+  l1->Draw();
+
+
+  TCanvas *c12 = new TCanvas("c12","c12",500,5,600,800);
+  c12->SetLeftMargin(0.15);  
+  c12->SetBottomMargin(0.12);  
+  hpc1->Draw();
+  //rms3 = 10000 * hpy1->GetRMS();
+  //sprintf(label,"RMS %.1f #mu m",rms3);
+  //TLatex *l3 = new TLatex(0.55,0.92,label);
+  //l3->SetNDC(1);
+  lc1->Draw();
+
+
 }
   	     
