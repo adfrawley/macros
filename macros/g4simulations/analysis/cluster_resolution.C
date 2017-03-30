@@ -93,13 +93,15 @@ void cluster_resolution()
       
       char name[500];
       // latest files 
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval_%i.root",i);
 
       // cylinders and old TPC
       //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/nmissing_fixed_ups1s_cylinder_2pcIT_eval_output/g4svx_eval_%i.root",i);
 
       // ladders and old TPC
-      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/no_charge_sharing_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/30micron_pixels_charge_sharing_model_diffusion_35_12_check_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/30micron_pixels_charge_sharing_model_diffusion_45_20_eval_output/g4svx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/30micron_pixels_charge_sharing_model_diffusion_25_08_eval_output/g4svx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);
@@ -189,7 +191,7 @@ void cluster_resolution()
 		  if( (trackID == 0 && ( gtrackID == 1 || gtrackID == 2 ) )  || ( trackID == 1 && (gtrackID == 1) || gtrackID == 2) )
 		    {
 
-		      // extract the cluster r-phi resolution 
+		      // extract the cluster r-phi resolution - these are world coordinates, so we must consider both x and y
 		      double dx = x - gx;
 		      double dy = y - gy;
 		      double drphi = sqrt(dx*dx + dy*dy);
@@ -207,6 +209,10 @@ void cluster_resolution()
 		      if(layer < 3)
 			{
 			  //if(size > 1)  // optional cut on hits/cluster for MAPS
+			  delta_rphi->Fill( (double) layer, sign * drphi); 
+			}
+		      else if(layer >=3 && layer < 7) 
+			{
 			  delta_rphi->Fill( (double) layer, sign * drphi); 
 			}
 		      else
@@ -323,15 +329,16 @@ void cluster_resolution()
   h3->GetYaxis()->SetLabelSize(0.055);
   h3->Draw();
 
-  C1->Print("Layers_per_track.pdf","pdf");
 
-  TCanvas *C5 = new TCanvas("C5","C5",50,50,600,600); 
+  /*  TCanvas *C5 = new TCanvas("C5","C5",50,50,600,600); 
   rphi->Draw("p");
-
+  */
+  /*
   TCanvas *C6 = new TCanvas("C6","C6",50,50,800,800); 
   C6->SetLeftMargin(0.15);
   delta_rphi->GetYaxis()->SetTitleOffset(1.7);
   delta_rphi->Draw("p");
+  */
 
   TCanvas *c7 = new TCanvas("c7","c7",50,50,1200,800); 
   c7->Divide(3,1);
@@ -381,7 +388,7 @@ void cluster_resolution()
   gPad->SetLeftMargin(0.12);
   gPad->SetRightMargin(0.01);
   TH1D *hpy3 = new TH1D("hpy3","TPC clusters",500,-0.05, 0.05);
-  delta_rphi->ProjectionY("hpy3",8,40);
+  delta_rphi->ProjectionY("hpy3",8,68);
   hpy3->GetXaxis()->SetRangeUser(-0.045, 0.045);
   hpy3->GetXaxis()->SetNdivisions(506);
   hpy3->GetXaxis()->SetTitle("cluster error (cm)");
@@ -396,16 +403,16 @@ void cluster_resolution()
   l3->SetNDC(1);
   l3->Draw();
 
-  c7->Print("Cluster_errors.pdf","pdf");
-  
   cout << "MAPS cluster number " << hpy1->Integral() << " RMS = " << 10000 * hpy1->GetRMS() << " microns" << endl;
   cout << "INTT cluster number " << hpy2->Integral() << " RMS = " << 10000 * hpy2->GetRMS() << " microns" << endl;
   cout << "TPC cluster number " << hpy3->Integral() << " RMS = " << 10000 * hpy3->GetRMS() << " microns" << endl;
 
+  /*
   TCanvas *C8 = new TCanvas("C8","C8",50,50,800,800); 
   C6->SetLeftMargin(0.15);
   delta_rphi->GetYaxis()->SetTitleOffset(1.7);
   cluster_size->Draw("p");
+  */
 
   TCanvas *c9 = new TCanvas("c9","c9",50,50,1200,800); 
   c9->Divide(3,1);
@@ -472,9 +479,9 @@ void cluster_resolution()
   lc3->SetNDC(1);
   lc3->Draw();
 
-  c9->Print("Hits_per_cluster.pdf","pdf");
+  //  c9->Print("Hits_per_cluster.pdf","pdf");
 
-  /*
+
   TCanvas *c10 = new TCanvas("c10","c10",50,50,1200,800); 
   c10->Divide(2,1);
 
@@ -500,7 +507,7 @@ void cluster_resolution()
   clusters_per_layer_per_reco_track->GetXaxis()->SetTitle("Layer");
   clusters_per_layer_per_reco_track->SetMaximum(1.2);
   clusters_per_layer_per_reco_track->Draw();
-  */
+
 
   TCanvas *c11 = new TCanvas("c11","c11",5,5,600,800);
   
@@ -523,6 +530,27 @@ void cluster_resolution()
   //TLatex *l3 = new TLatex(0.55,0.92,label);
   //l3->SetNDC(1);
   lc1->Draw();
+
+  TCanvas *c13 = new TCanvas("c13","c13",5,5,600,800);
+  
+  hpy2->Draw();
+  c13->SetLeftMargin(0.15);  
+  c13->SetBottomMargin(0.12);  
+  //rms3 = 10000 * hpy1->GetRMS();
+  //sprintf(label,"RMS %.1f #mu m",rms3);
+  //TLatex *l3 = new TLatex(0.55,0.92,label);
+  //l3->SetNDC(1);
+  l2->Draw();
+
+  TCanvas *c14 = new TCanvas("c14","c14",500,5,600,800);
+  c14->SetLeftMargin(0.18);  
+  c14->SetBottomMargin(0.12);  
+  hpc2->Draw();
+  //rms3 = 10000 * hpy1->GetRMS();
+  //sprintf(label,"RMS %.1f #mu m",rms3);
+  //TLatex *l3 = new TLatex(0.55,0.92,label);
+  //l3->SetNDC(1);
+  lc2->Draw();
 
 
 }

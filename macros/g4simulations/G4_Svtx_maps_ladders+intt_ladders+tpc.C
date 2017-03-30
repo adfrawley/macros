@@ -199,7 +199,7 @@ void Svtx_Cells(int verbosity = 0)
     {
       // INTT cells
       PHG4SiliconTrackerCellReco *reco = new PHG4SiliconTrackerCellReco("SILICON_TRACKER");
-      reco->Verbosity(verbosity);
+      reco->Verbosity(0);
       se->registerSubsystem(reco);
     }
 
@@ -354,7 +354,7 @@ void Svtx_Reco(int verbosity = 0)
   //-------------
 
   PHG4SvtxClusterizer* clusterizer = new PHG4SvtxClusterizer("PHG4SvtxClusterizer",0, n_maps_layer + n_intt_layer-1);
-  clusterizer->Verbosity(verbosity);
+  clusterizer->Verbosity(0);
   // Reduced by 2 relative to the cylinder cell maps macro. I found this necessary to get full efficiency
   // Many hits in the present simulation are single cell hits, so it is not clear why the cluster threshold should be higher than the cell threshold
   clusterizer->set_threshold(0.1);   // fraction of a mip
@@ -428,7 +428,7 @@ void Svtx_Reco(int verbosity = 0)
   PHG4SvtxMomentumRecal* recal = new PHG4SvtxMomentumRecal("PHG4SvtxMomentumRecal",corr);
   se->registerSubsystem(recal);
   
-  /*
+  
   PHG4TrackKalmanFitter *kalman = new PHG4TrackKalmanFitter();
   
   // MIE, MAPS_TPC, MAPS_IT_TPC, LADDER_MAPS_TPC, LADDER_MAPS_IT_TPC, LADDER_MAPS_LADDER_IT_TPC, MAPS_LADDER_IT_TPC
@@ -445,7 +445,7 @@ void Svtx_Reco(int verbosity = 0)
   //kalman->set_do_evt_display(true);
   
   se->registerSubsystem(kalman);
-  */
+  
   
   //------------------
   // Track Projections
