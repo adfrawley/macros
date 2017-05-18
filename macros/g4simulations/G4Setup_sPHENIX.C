@@ -21,16 +21,10 @@ void G4Init(bool do_svtx = false,
     }  
   if (do_svtx)
     {
-      cout << "Loading G4_Svtx_maps+IT+tpc.C" << endl;
-      gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C");      // cylinder cell maps IB + intermediate tracker + tpc
- 
-      SvtxInit();
-    }
-
-  if (do_maps)
-    {
       cout << "Loading G4_Svtx_maps_ladders+intt_ladders+tpc.C" << endl;
       gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc.C");    // ladder maps IB + ladder INTT + tpc
+
+      gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc_KalmanPatRec.C"); 
 
       SvtxInit();
     }

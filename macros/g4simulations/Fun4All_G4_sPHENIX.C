@@ -1,8 +1,9 @@
 int Fun4All_G4_sPHENIX(
 		       const int process = 5000,
 		       const int nEvents = 1,
-		       const char * inputFile = "/phenix/hhj/hhj1/frawley/tracking/stage1_jobs/hijing_00000.txt.bz2",
-		       const char * outputFile = "G4sPHENIXCells.root"
+		       const char * inputFile = "/sphenix/sim/sim01/production/2016-07-21/single_particle/spacal2d/fieldmap/G4Hits_sPHENIX_e-_eta0_8GeV-0002.root",
+		       const char * outputFile = "G4sPHENIXCells.root",
+		       const char * embed_input_file = "/sphenix/sim/sim01/production/2016-07-12/sHijing/spacal2d/G4Hits_sPHENIX_sHijing-0-4.4fm.list"
 		       )
 {
   // Tracking configuration options are defined by which G4_Svtx_*.C macro is loaded in G4Setup_sPHENIX.C
