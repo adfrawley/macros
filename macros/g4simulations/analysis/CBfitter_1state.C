@@ -201,10 +201,10 @@ void CBfitter_1state()
 
   TF1 *f1S = new TF1("f1S",CBcalc,7,11,5);
   f1S->SetParameter(0, 1.0);     // alpha
-  f1S->SetParameter(1, 1.5);      // n
+  f1S->SetParameter(1, 1.0);      // n
   f1S->SetParameter(2, 9.46);      // xmean
-  f1S->SetParameter(3, 0.2);     // sigma
-  f1S->SetParLimits(3,0.05,0.20);
+  f1S->SetParameter(3, 0.090);     // sigma
+  f1S->SetParLimits(3,0.04,0.15);
   f1S->SetParameter(4, 400.0);    // N
   //f1S->SetParameter(4, 4000.0);    // N
   f1S->SetParNames("alpha1S","n1S","m1S","sigma1S","N1S");

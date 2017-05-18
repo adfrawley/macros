@@ -10,7 +10,7 @@ Executable   = /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations
 
 # The argument to pass to the executable.
 # process number, number of events
-Arguments       = $(Process)  10
+Arguments       = $(Process)  50
 
 # The requirement line specifies which machines we want to
 # run this job on.  Any arbitrary classad expression can
@@ -67,4 +67,4 @@ Log       =    /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations
 # job.  If a number is placed after the command (i.e. Queue 15)
 # then the job will be submitted N times.  Use the $(Process)
 # macro to make your input/output and log files unique.
-Queue 500
+Queue 1000

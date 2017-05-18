@@ -73,13 +73,14 @@ void quarkonia_reconstruction_embedded()
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
   // The condor jobs make 500 files
-  for(int i=0;i<500;i++)
+  for(int i=0;i<1000;i++)
     {
       char name[500];
-      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../pions_plus_ups1s_intt4_massfix_no_refit_eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"../eval_output/g4svtx_eval_%i.root",i);
 
-      //sprintf(name,"../refit_pions_plus_ups1s_intt2_eval_output_2nd/g4svx_eval_%i.root",i);
+      //sprintf(name,"../upsilons_kalman_pat_rec_may15_spcdist_eval_output/g4svtx_eval_%i.root",i);
+      //sprintf(name,"../upsilons_kalman_pat_rec_may15_spcdistx40_eval_output/g4svtx_eval_%i.root",i);
+
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);

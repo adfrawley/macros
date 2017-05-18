@@ -49,17 +49,19 @@ void purity()
   double mom_rescale = 1.0;
   
   // This should be inner maps layers (3) + INTT(4)+TPC (60)
-  static const int nlayers = 67;  // maximum number of tracking layers for tpc60+intt4+maps3
-  static const int nmissed = 40;  // maximum number of missed layers
+  static const int nlayers = 67;  // maximum number of tracking layers for tpc40+intt4+maps3
+  static const int nmissed = 4;  // maximum number of missed layers to allow
   double ptmax = 12.2;
   
   //double pT_sigmas = 4.0;  // number of sigmas in pT to use for track evaluation
   
   //based on plots of purity vs DCA  and vs quality
-  double quality_cut = 1.5;
+  //double quality_cut = 1.5;
+  double quality_cut = 40.0;
   double dca_cut = 0.1; // 1mm
   //===============================
-  
+
+  /*  
   // Open the evaluator output file 
   cout << "Reading ntuple " << endl;
 
@@ -67,26 +69,8 @@ void purity()
   TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
-  
-  // The condor job output files
-  for(int i=0;i<500;i++)
-    {
-      char name[500];
-      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../nmissing_fixed_pions_ladders_eval_output/g4svx_eval_%i.root",i);
-
-      ntp_vertex->Add(name);
-      ntp_track->Add(name);
-      ntp_gtrack->Add(name);
-    }
-
-  cout <<  " ntp_vertex entries: " << ntp_vertex->GetEntries()
-       << " ntp_gtrack entries: " << ntp_gtrack->GetEntries()
-       << " ntp_track entries: " << ntp_track->GetEntries()
-       << endl;
-
-  // This include file contains the definitions of the ntuple variables, and the chain definitions
-#include "ntuple_variables.C"
+  */
+    
 
   //=======================================
   // define histograms
@@ -137,7 +121,7 @@ void purity()
   TH1D *hZdca = new TH1D("hZdca","hZdca",2000,-0.5,0.5);
   hZdca->GetXaxis()->SetTitle("Z DCA (cm)");
 
-  TH1D *hquality = new TH1D("hquality","hquality",2000,0.0,5.0);
+  TH1D *hquality = new TH1D("hquality","hquality",2000,0.0,20.0);
   hquality->GetXaxis()->SetTitle("quality");
 
   TH1D *hgeta = new TH1D("hgeta","hgeta",100,-1.2,1.2);
@@ -186,218 +170,318 @@ void purity()
   //         Drop tracks outside 1 mm in Z dca from evt vertex
   //           Add this reco'd track 2D histo of (rpT-pT) vs pT
   //============================================================
-  int nr = 0;
-  int ng = 0;
-  for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
-    {
-      int recoget = ntp_vertex->GetEntry(iev);
-      if(!recoget)
-	{
-	  cout << "Failed to get ntp_vertex entry " << iev << endl;
-	  exit(1);
-	}
 
-      if(iev%20 == 0)
-	cout << "Get event " << iev << " with vertex x " << evx
-	     << " vertex y " << evy << " vertex z " << evz 
-	     << " ngtracks " << ngtracks << " ntracks " << ntracks 
-	     << " ng " << ng << " nr " << nr 
+  // The condor job output files
+  for(int i=0;i<1000;i++)
+    {
+      // Open the evaluator output file 
+      cout << "Reading ntuple " << endl;
+      
+      TChain* ntp_track = new TChain("ntp_track","reco tracks");
+      TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
+      TChain* ntp_vertex = new TChain("ntp_vertex","events");
+      TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
+      
+      // This include file contains the definitions of the ntuple variables, and the chain definitions
+#include "ntuple_variables.C"
+
+      char name[500];
+      sprintf(name,"../eval_output/g4svtx_eval_%i.root",i);
+      cout << "Adding file number " << i << " with name " << name << endl;
+      ntp_vertex->Add(name);
+      ntp_track->Add(name);
+      ntp_gtrack->Add(name);
+
+      // skip this file if there are no tracks 
+      if(! ntp_gtrack->GetEntries())
+	continue;
+
+      if(verbose> 0)  
+	cout <<  " ntp_vertex entries: " << ntp_vertex->GetEntries()
+	     << " ntp_gtrack entries: " << ntp_gtrack->GetEntries()
+	     << " ntp_track entries: " << ntp_track->GetEntries()
 	     << endl;
       
-      // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
-      // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
-
-      int n_embed_gtrack = 0;            
-      int n_embed_gtrack_1 = 0;            
-      for(int ig=ng;ig<ng+ngtracks;ig++)
+      int nr = 0;
+      int ng = 0;
+      //for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
+      for(int iev=0;iev<1;iev++)
 	{
-	  int recoget = ntp_gtrack->GetEntry(ig);
-	  if(recoget == 0)
-	    {
-	      cout << "Failed to get ntp_gtrack entry " << ig << " in ntp_gtrack" << endl;
-	      //exit(1);
-	      continue;
-	    }
-	  if(tembed == 1)
-	    n_embed_gtrack++;
-
-	  // skip tracks that do not pass through all layers (judged using truth track)
-	  //if(tnhits != nlayers)
-	  //continue;
-
-	  if(tembed == 1)
-	    n_embed_gtrack_1++;
-
-	  // get the truth pT
-	  double tgpT = sqrt(tpx*tpx+tpy*tpy);	  	  
-
-	  // record embedded pions and Hijing tracks separately
-	  if(tembed == 0)
-	    {
-	      hpt_hijing_truth->Fill(tgpT);
-	    }
-	  else
-	    {
-	      hpt_truth->Fill(tgpT);
-	    }
-
-	  if(tembed == 1)
-	    {
-	      double geta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
-	      hgeta->Fill(geta);
-	    }
-
-	}     
-      //cout << "n_embed_gtrack = " << n_embed_gtrack << " n_embed_gtrack_1 " << n_embed_gtrack_1 << endl;
-
-      int n_embed_rtrack = 0;                  
-      for(int ir=nr;ir<nr+ntracks;ir++)
-	{
-	  int recoget = ntp_track->GetEntry(ir);
-	  if(!recoget)
-	    {
-	      cout << "Failed to get ntp_track entry " << ir << endl;
-	      //exit(1);
-	      continue;
-	    }
-
-	  if(rgembed == 1)
-	    n_embed_rtrack++;
-
-	  // skip tracks that do not pass through all layers in truth
-	  //if(rgnhits != nlayers)
-	  //continue;
-
-	  double rgpT = sqrt(rgpx*rgpx+rgpy*rgpy);	  	  
-	  double rpT = sqrt(rpx*rpx+rpy*rpy);
-
-	  double corrected_rdca2d = rdca2d;
-	  bool calculate_dca2d = true;    // subtract event vertex position from pca values to get dca2d
-	  if(calculate_dca2d)
-	    {
-	      corrected_rdca2d = sqrt(pow(rpcax - evx, 2) + pow(rpcay-evy, 2));
-
-	      if(rdca2d < 0)
-		corrected_rdca2d *= -1.0;
-	    }
-
+	  if(verbose) cout << " iev = " << iev << " ng " << ng << " nr " << nr << endl;  
 	  /*
-	  cout << "dca2d " << rdca2d  
-	       << " rpcax " << rpcax 
-	       << " rpcay " << rpcay
-	       << " rpcaz " << rpcaz
-	       << endl;
-	  cout << " corrected rpcax " << rpcax - evx
-	       << " rpcay " << rpcay - evy
-	       << " rpcaz " << rpcaz - evz
-	       << " rdca2d " << corrected_rdca2d 
-	       << endl;
+	    int recoget = ntp_vertex->GetEntry(iev);
+	    if(!recoget)
+	    {
+	    cout << "Failed to get ntp_vertex entry " << iev << endl;
+	    exit(1);
+	    }
+	    
+	    if(iev%20 == 0)
+	    cout << "Get event " << iev << " with vertex x " << evx
+	    << " vertex y " << evy << " vertex z " << evz 
+	    << " ngtracks " << ngtracks << " ntracks " << ntracks 
+	    << " ng " << ng << " nr " << nr 
+	    << endl;
 	  */
 
-	  hnhits->Fill(rnhits);
+	  // expect 100 tracks or less per event
+	  ngtracks = 110;
 
-	  // Does the track pass the dca2d cut? 
-	  // If so, add to hquality
-	  if(rgembed == 1)
-	    if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(corrected_rdca2d) < dca_cut)
-	      {
-		hquality->Fill(rquality);
-	      }
+	  int naccept = 0;
+	 	  
+	  // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
+	  // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
 	  
-	  // Make a histogram of purity vs quality or dca sigmas with no cuts
-	  int ipurity = nlayers - (int) rpurity;
-
-	  if(rgembed != 1)
+	  int n_embed_gtrack = 0;            
+	  int n_embed_gtrack_1 = 0;            
+	  if(verbose > 0) cout << "Process truth tracks:" << endl;
+	  for(int ig=ng;ig<ng+ngtracks;ig++)
 	    {
-	      if(ipurity < nmissed)
+	      int recoget = ntp_gtrack->GetEntry(ig);
+	      if(recoget == 0)
 		{
-		  hpurity_quality[ipurity]->Fill(rquality);
-		  hpurity_dca[ipurity]->Fill(corrected_rdca2d);
+		  cout << "Failed to get ntp_gtrack entry " << ig << " in ntp_gtrack" << endl;
+		  //exit(1);
+		  //continue;
+		  break;
 		}
-	    }
-
-	  // Now make some cuts on dca and quality
-
-	  if(rquality > quality_cut)
-	    {
-	      //cout << "Failed quality cut - rejected " << endl;
-	      continue;
-	    }
-
-	  // The track passed the quality cut, add it to the 3 panel  dca2d histos
-	  // no embedded particles for this
-	  if(rgembed != 1)
-	    if(rquality < quality_cut)
-	      {
-		if(rgpT > 0.5 && rgpT <= 1.0)
-		  hdca2d[0]->Fill(corrected_rdca2d);
-		else if(rgpT > 1.0 && rgpT <= 2.0)
-		  hdca2d[1]->Fill(corrected_rdca2d);
-		else if(rgpT > 2.0)
-		  hdca2d[2]->Fill(corrected_rdca2d);
-		
-		if(rgpT > 0.5)
-		  hdca2dsigma->Fill(corrected_rdca2d/rdca2dsigma);
-	      }
-	  
-	  if(fabs(corrected_rdca2d) > dca_cut)
-	    continue;
-	  
-	  // Histogram the track Z DCA for Hijing tracks
-	  if(rgembed != 1)
-	    hZdca->Fill(rvz - evz);
-	  
-	  // drop tracks outside 1 mm in Z dca from the event vertex    
-	  if(fabs(rvz - evz) > 0.1)
-	    {	      
-	      continue;
-	    }
-
-	  //cout << " rgembed = " << rgembed << " rgpT = " << rgpT << endl;
-	  // histogram the reco pT for the embedded tracks that pass the cuts
-	  if(rgembed == 1)
-	    {
-	      //cout << "   accepted: rgembed = " << rgembed << " rgpT = " << rgpT << endl;
-	      hpt_compare->Fill(rgpT,rpT/rgpT);
-	      hpt_dca2d->Fill(rgpT, corrected_rdca2d);
-	    }
-
-	  if(rgembed != 1)
-	    {
-	      // for the non-embedded tracks from Hijing, we want to be able to do pt_sigma cuts later	  
-		hpt_hijing_compare->Fill(rgpT,rpT/rgpT);
-
-		for(int ipt=0;ipt<NVARBINS-1;ipt++)
-		  {
-		    if(rpT > xbins[ipt] && rpT < xbins[ipt+1])
-		      hptreco[ipt]->Fill(rpT);
-		  }
-	    }
-
-	  // make histograms of the purity for the tracks that passed the quality and dca cuts
-	  if(ipurity >= 0 && ipurity <= npurity)
-	    {
-	      if(use_reco_pt)
-		hpurity[ipurity]->Fill(rpT);
+	      
+	      if(tevent != iev)
+		{
+		  if(verbose) cout << " change of event, new tevent = " << tevent << endl;
+		  break;
+		}
+	      
+	      ng++;
+	      
+	      // only embedded tracks
+	      if(!tembed == 1)
+		continue;
+	      
+	      if(verbose > 0) cout << " ig = " << ig << " tevent " << tevent << " tgtrackid " << tgtrackid << endl;
+	      
+	      if(tembed == 1)
+		n_embed_gtrack++;
+	      
+	      // skip tracks that do not pass through all layers (judged using truth track)
+	      if(tnhits < nlayers-nmissed)
+		continue;
+	      
+	      if(tembed == 1)
+		n_embed_gtrack_1++;
+	      
+	      // get the truth pT
+	      double tgpT = sqrt(tpx*tpx+tpy*tpy);	  	  
+	      
+	      // record embedded pions and Hijing tracks separately
+	      if(tembed == 0)
+		{
+		  hpt_hijing_truth->Fill(tgpT);
+		}
 	      else
-		hpurity[ipurity]->Fill(rgpT);
+		{
+		  hpt_truth->Fill(tgpT);
+		}
+	      
+	      if(tembed == 1)
+		{
+		  double geta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
+		  hgeta->Fill(geta);
+		}
+	      
 	    }
 
-	  if(rgembed == 1)
-	    {	  
-	      double reta = asinh(rpz/sqrt(rpx*rpx+rpy*rpy));
-	      hreta->Fill(reta);
-	    }
+	  //cout << "n_embed_gtrack = " << n_embed_gtrack << " n_embed_gtrack_1 " << n_embed_gtrack_1 << endl;
+	  
+	  if(verbose > 0) cout << "Process reco tracks:" << endl;
+	  // overestimate number of tracks
+	  ntracks = 300;
+	  int n_embed_rtrack = 0;                  
+	  for(int ir=nr;ir<nr+ntracks;ir++)
+	    {
+	      
+	      int recoget = ntp_track->GetEntry(ir);
+	      if(!recoget)
+		{
+		  cout << "Failed to get ntp_track entry " << ir << endl;
+		  //exit(1);
+		  //continue;
+		  break;
+		}
+	      
+	      if(revent != iev)
+		{
+		  if(verbose) cout << " change of event, new revent = " << revent << endl;
+		  break;
+		}
+	      
+	      nr++;
+	      
+	      // only embedded tracks
+	      if(rgembed != 1)
+		continue;
+	      
+	      if(verbose > 0) cout << " ir = " << ir << " revent " << revent << " rquality " << rquality << "  rgtrackid = " << rgtrackid << " rgnhits " << rgnhits << endl;
+	      
+	      if(rgembed == 1)
+		n_embed_rtrack++;
+	      
+	      //skip tracks that do not pass through all layers in truth
+	      if(rgnhits < nlayers-nmissed)
+		{
+		  cout << "   --- skip because rgnhits too small " << endl;
+		  continue;
+		}
 
-	}  // end loop over reco'd tracks
+	      double rgpT = sqrt(rgpx*rgpx+rgpy*rgpy);	  	  
+	      double rpT = sqrt(rpx*rpx+rpy*rpy);
+	      
+	      if( isnan(rdca2d) )
+		rdca2d = 0.0;
+	      
+	      double corrected_rdca2d = rdca2d;
+	      bool calculate_dca2d = true;    // subtract event vertex position from dca values to get dca2d
+	      if(calculate_dca2d)
+		{
+		  corrected_rdca2d = sqrt(pow(rpcax - evx, 2) + pow(rpcay-evy, 2));		  
 
-      //cout << " n_embed_rtrack = " << n_embed_rtrack << endl; 
+		  if(rpcax < 0)
+		    corrected_rdca2d *= -1.0;
+		}
+	      
+	      /*
+		cout << "dca2d " << rdca2d  
+		<< " rpcax " << rpcax 
+		<< " rpcay " << rpcay
+		<< " rpcaz " << rpcaz
+		<< endl;
+		cout << " corrected rpcax " << rpcax - evx
+		<< " rpcay " << rpcay - evy
+		<< " rpcaz " << rpcaz - evz
+		<< " rdca2d " << corrected_rdca2d 
+		<< endl;
+	      */
+	      
+	      // Does the track pass the dca2d cut? 
+	      // If so, add to hquality
+	      if(rgembed == 1)
+		//if(rpurity > nlayers-nmissed && rgpT > 0.5 && fabs(corrected_rdca2d) < dca_cut)
+		{
+		  hquality->Fill(rquality);
+		}
+	      
+	      // Make a histogram of purity vs quality or dca sigmas with no cuts
+	      int ipurity = nlayers - (int) rpurity;
+	      //cout << " nlayers " << nlayers << " rpurity " << rpurity << " ipurity " << ipurity << endl;
+	      if(rgembed != 1)
+		{
+		  if(ipurity >= 0 && ipurity < nmissed)
+		    {
+		      //cout << "ipurity = " << ipurity << endl;
+		      hpurity_quality[ipurity]->Fill(rquality);
+		      hpurity_dca[ipurity]->Fill(corrected_rdca2d);
+		    }
+		}
+	      
+	      // Now make some cuts on dca and quality
+	      
+	      if(rquality > quality_cut)
+		{
+		  if(verbose > 0) cout << "   --- failed quality cut - rejected " << endl;
+		  continue;
+		}
+	      
+	      // The track passed the quality cut, add it to the 3 panel  dca2d histos
+	      // no embedded particles for this
+	      if(rgembed != 1)
+		if(rquality < quality_cut)
+		  {
+		    if(rgpT > 0.5 && rgpT <= 1.0)
+		      hdca2d[0]->Fill(corrected_rdca2d);
+		    else if(rgpT > 1.0 && rgpT <= 2.0)
+		      hdca2d[1]->Fill(corrected_rdca2d);
+		    else if(rgpT > 2.0)
+		      hdca2d[2]->Fill(corrected_rdca2d);
+		    
+		    if(rgpT > 0.5)
+		      hdca2dsigma->Fill(corrected_rdca2d/rdca2dsigma);
+		  }
+	      
+	      if(fabs(corrected_rdca2d) > dca_cut)
+		{
+		  cout << "   --- skip because failed dca cut" << endl;
+		  continue;
+		}
+
+	      // Histogram the track Z DCA for Hijing tracks
+	      if(rgembed != 1)
+		hZdca->Fill(rvz - evz);
+	      
+	      // drop tracks outside 1 mm in Z dca from the event vertex    
+	      if(fabs(rvz - evz) > 0.1)
+		{	      
+		  cout << "skip because failed z vertex cut" << endl;
+		  continue;
+		}
+	      	      	      
+	      //cout << " rgembed = " << rgembed << " rgpT = " << rgpT << endl;
+	      // histogram the reco pT for the embedded tracks that pass the cuts
+	      if(verbose > 0) cout << "    rnhits = " << rnhits << " rgembed " << rgembed << endl;
+	      //if(rgembed == 1 && rnhits > nlayers-nmissed)
+		{
+		  if(verbose > 0) cout << "   accepted: rgembed = " << rgembed << " rgpT = " << rgpT << endl;
+		  naccept++;
+		  hpt_compare->Fill(rgpT,rpT/rgpT);
+		  hpt_dca2d->Fill(rgpT, corrected_rdca2d);
+		  hnhits->Fill(rnhits);
+		}
+		//else
+		//cout << "   --- rejected because of low rnhits" << endl;
+	      
+	      if(rgembed != 1)
+		{
+		  // for the non-embedded tracks from Hijing, we want to be able to do pt_sigma cuts later	  
+		  hpt_hijing_compare->Fill(rgpT,rpT/rgpT);
+		  
+		  for(int ipt=0;ipt<NVARBINS-1;ipt++)
+		    {
+		      if(rpT > xbins[ipt] && rpT < xbins[ipt+1])
+			hptreco[ipt]->Fill(rpT);
+		    }
+		}
+	      
+	      // make histograms of the purity for the tracks that passed the quality and dca cuts
+	      if(ipurity >= 0 && ipurity <= npurity)
+		{
+		  if(use_reco_pt)
+		    hpurity[ipurity]->Fill(rpT);
+		  else
+		    hpurity[ipurity]->Fill(rgpT);
+		}
+	      
+	      if(rgembed == 1)
+		{	  
+		  double reta = asinh(rpz/sqrt(rpx*rpx+rpy*rpy));
+		  hreta->Fill(reta);
+		}
+	      
+	    }  // end loop over reco'd tracks
+	  
+	  if(verbose > 0) cout << " Done with loop: n_embed_rtrack = " << n_embed_rtrack << endl; 
      
-      nr += ntracks;
-      ng += ngtracks;
+	  //nr += ntracks;
+	  //ng += ngtracks;
+	  cout << "  accepted tracks this event = " << naccept << endl;
       
-    }  // end loop over events
-  
+	}  // end loop over events
+
+      delete ntp_gtrack;
+      delete ntp_track;
+      delete ntp_cluster;
+      delete ntp_vertex;
+      
+    } // end loop over files
+
   TCanvas *cc=new TCanvas("cc","cc",5,5,700,500);  
   cc->Divide(1,2);
   cc->cd(1);

@@ -43,9 +43,9 @@ void cluster_resolution()
   int n_maps_layers = 3;
   int n_intt_layers = 4;
   
-  // This should be inner maps layers (3) + intt(4) + TPC (60)
+  // This should be inner maps layers (3) + intt(4) + TPC (40)
   static const int nlayers = 67;  
-  static const int nmissed = 32;  // maximum number of missed layers
+  static const int nmissed = 7;  // maximum number of missed layers
   double ptmax = 35.0;
   
   //based on plots of purity vs DCA  and vs quality
@@ -72,7 +72,7 @@ void cluster_resolution()
   rphi->GetYaxis()->SetTitle("Y (cm)");
   rphi->GetXaxis()->SetTitle("X (cm)");
 
-  TH2D *delta_rphi = new TH2D("delta_rphi","cluster errors by layer",70.0, 0.0, 70.0, 2000, -0.05, 0.05); 
+  TH2D *delta_rphi = new TH2D("delta_rphi","cluster errors by layer",70.0, 0.0, 70.0, 2000, -0.10, 0.10); 
   delta_rphi->GetYaxis()->SetTitle("Cluster Error (cm)");
   delta_rphi->GetXaxis()->SetTitle("Tracking Layer");
 
@@ -84,8 +84,10 @@ void cluster_resolution()
   int nreco_tracks = 0;
   
   // The condor job output files
-  for(int i=0;i <500; i++)
+  for(int i=0;i <1000; i++)
     {
+      cout << "Enter file loop with i = " << i << endl;
+
       TChain* ntp_track = new TChain("ntp_track","reco tracks");
       TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
       TChain* ntp_vertex = new TChain("ntp_vertex","events");
@@ -93,15 +95,11 @@ void cluster_resolution()
       
       char name[500];
       // latest files 
-      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svx_eval_%i.root",i);
+      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svtx_eval_%i.root",i);
 
-      // cylinders and old TPC
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/nmissing_fixed_ups1s_cylinder_2pcIT_eval_output/g4svx_eval_%i.root",i);
-
-      // ladders and old TPC
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/30micron_pixels_charge_sharing_model_diffusion_35_12_check_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/30micron_pixels_charge_sharing_model_diffusion_45_20_eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/30micron_pixels_charge_sharing_model_diffusion_25_08_eval_output/g4svx_eval_%i.root",i);
+      // ladders and new TPC
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/upsilons_kalman_pat_rec_may15_spcdistx20_eval_output/g4svtx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/upsilons_kalman_pat_rec_may15_spcdist_eval_output/g4svtx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);
@@ -119,33 +117,55 @@ void cluster_resolution()
       int gtr_end = 0;
       int tr_start = 0;
       int tr_end = 0;
-      
+
+      /*      
       // Loop over events
       int nevt = ntp_vertex->GetEntries();
       cout << "Number of events in this file = " << nevt << endl;
-      
+      */
+      int nevt = 1;
+
       for(int iev=0;iev<nevt;iev++)
 	{
+	  //cout << "  Enter event loop with iev = " << iev << endl;
+
 	  ntracks = 0.0;
 	  ngtracks = 0.0;
-	  
+
+	  /*	  
 	  int evtget = ntp_vertex->GetEntry(iev);
 	  if(!evtget)
 	    cout << "Failed to get event " << iev << endl;
-	  
+
 	  int ntr_ev = (int) ntracks;
 	  int ngtr_ev = (int) ngtracks;
+	  */
+
+	  int ntr_ev = 0;
+	  int ngtr_ev = 0;
 	  
-	  tr_end = tr_start + ntr_ev;
-	  gtr_end = gtr_start + ngtr_ev;
+	  // expect 100 track events or less
+	  tr_end = tr_start + 150;
+	  gtr_end = gtr_start + 110;
+
+	  if(tr_end > ntp_track->GetEntries())
+	    tr_end = ntp_track->GetEntries();
+	  if(gtr_end > ntp_gtrack->GetEntries())
+	    gtr_end = ntp_gtrack->GetEntries();
 
 	  // count g4 tracks with track ID 1 or 2
 	  for(int j=gtr_start; j < gtr_end; j++)
 	    {
+	      //cout << "    Enter gtr loop with j = " << j << endl;
 	      int tget = ntp_gtrack->GetEntry(j);
 	      if(tget == 0)
 		cout << "Did not find entry in ntp_gtrack " << j << endl;
 
+	      if(tevent != iev)
+		break;
+
+	      ngtr_ev++;
+	      
 	      if( tgtrackid == 1 || tgtrackid == 2 )
 		ng4_tracks++;
 	    }
@@ -156,15 +176,27 @@ void cluster_resolution()
 	  //Use loop to fill multimap of (gtrackid, ntp_track entry number)
 	  for(int j=tr_start; j < tr_end; j++)
 	    {
+	      //cout << "    Enter tr loop with j = " << j << endl;
 	      int tget = ntp_track->GetEntry(j);
 	      if(tget == 0)
 		cout << "Did not find entry in ntp_track " << j << endl;
+
+	      if(revent != iev)
+		break;
+
+	      ntr_ev++;
+
 	      gtrackID_map.insert(std::pair<int,int>(rgtrackid, j));  
 
 	      // count reco tracks with rtrackid 0 or 1 and rgtrackid 1 or 2 (i.e. matched reconstructed tracks
 	      if( (rtrackid == 0 && ( rgtrackid == 1 || rgtrackid == 2 ) )  || ( rtrackid == 1 && (rgtrackid == 1) || rgtrackid == 2) )
 		nreco_tracks++;
 	    }
+	  cout << "Found ntr_ev = " << ntr_ev << " ngtr_ev = " << ngtr_ev << " for iev = " << iev << endl;
+
+	  // set the endi track numbers to the correct values
+	  gtr_end = gtr_start + ngtr_ev;
+	  tr_end = tr_start + ntr_ev;
 
 	  // use loop to fill multimap of (gtrackID,layer number) for all clusters in this event
 	  for(int p=0;p < ntp_cluster->GetEntries(); p++)
@@ -172,6 +204,8 @@ void cluster_resolution()
 	      int tget = ntp_cluster->GetEntry(p);
 	      if(tget == 0)
 		cout << "Did not find entry in ntp_cluster " << p << endl;
+
+	      //cout << " cevent " << cevent << " iev " << iev << endl;
 	      
 	      if(cevent == iev)
 		{
@@ -181,6 +215,7 @@ void cluster_resolution()
 		  rphi->Fill(x, y);
 
 		  // Histogram number of clusters per layer per g4 track 
+		  // look only at the first 2 tracks
 		  if(gtrackID == 1 || gtrackID == 2)
 		    clusters_per_layer_per_g4_track->Fill(layer);
 
@@ -208,7 +243,7 @@ void cluster_resolution()
 
 		      if(layer < 3)
 			{
-			  //if(size > 1)  // optional cut on hits/cluster for MAPS
+			  //if(size > 2)  // optional cut on hits/cluster for MAPS
 			  delta_rphi->Fill( (double) layer, sign * drphi); 
 			}
 		      else if(layer >=3 && layer < 7) 
@@ -238,7 +273,7 @@ void cluster_resolution()
 	  for(int k = gtr_start; k < gtr_end;k++) 
 	    {
 	      if( !(gtrackID == 1 || gtrackID == 2) )
-		 continue;
+		continue;
 	      
 	      int tget = ntp_gtrack->GetEntry(k);  
 	      if(tget == 0)
@@ -387,9 +422,9 @@ void cluster_resolution()
   c7->cd(3);
   gPad->SetLeftMargin(0.12);
   gPad->SetRightMargin(0.01);
-  TH1D *hpy3 = new TH1D("hpy3","TPC clusters",500,-0.05, 0.05);
+  TH1D *hpy3 = new TH1D("hpy3","TPC clusters",500,-0.10, 0.10);
   delta_rphi->ProjectionY("hpy3",8,68);
-  hpy3->GetXaxis()->SetRangeUser(-0.045, 0.045);
+  hpy3->GetXaxis()->SetRangeUser(-0.10, 10);
   hpy3->GetXaxis()->SetNdivisions(506);
   hpy3->GetXaxis()->SetTitle("cluster error (cm)");
   hpy3->GetXaxis()->SetTitleOffset(1.1);
@@ -491,7 +526,7 @@ void cluster_resolution()
   clusters_per_layer_per_g4_track->GetYaxis()->SetTitle("Clusters per g4 track");
   clusters_per_layer_per_g4_track->GetYaxis()->SetTitleOffset(1.2);
   clusters_per_layer_per_g4_track->GetXaxis()->SetTitle("Layer");
-  clusters_per_layer_per_g4_track->SetMaximum(1.2);
+  clusters_per_layer_per_g4_track->SetMaximum(1.7);
   clusters_per_layer_per_g4_track->Draw();
 
   c10->cd(2);
@@ -505,7 +540,7 @@ void cluster_resolution()
   clusters_per_layer_per_reco_track->GetYaxis()->SetTitle("Clusters per reco track");
   clusters_per_layer_per_reco_track->GetYaxis()->SetTitleOffset(1.2);
   clusters_per_layer_per_reco_track->GetXaxis()->SetTitle("Layer");
-  clusters_per_layer_per_reco_track->SetMaximum(1.2);
+  clusters_per_layer_per_reco_track->SetMaximum(1.7);
   clusters_per_layer_per_reco_track->Draw();
 
 

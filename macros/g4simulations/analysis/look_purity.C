@@ -34,17 +34,8 @@ void look_purity()
   bool pt_resolution_fit = true;
   //bool pt_resolution_fit = false;
   
-  /*
-  TFile *fin;
-  if(intt)
-    fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
-  else
-    fin = new TFile("root_files/maps3+tpc60_purity_out.root");
-  */
-
   TFile *fin = new TFile("root_files/purity_out.root");  
-  //TFile *fin = new TFile("root_files/no_refit_pions_purity_out.root");  
-  //TFile *fin = new TFile("root_files/refit_eta_purity_out.root");  
+  //TFile *fin = new TFile("root_files/haiwang_cyl_truthpatreco_purity_out.root");  
 
   if(!fin)
     {
@@ -168,12 +159,8 @@ void look_purity()
 
       std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << pthi << " binhi " << binhi << " integral " << hpt->Integral() << std::endl;
 
-      TF1 *f = new TF1("f","gaus");
-      //f->SetParameter(1,hpt->GetMean());
-      //f->SetParameter(2,hpt->GetRMS() );
-      f->SetParameter(1,0.008);
-      f->SetParameter(2,0.002 );
-      hpt->Fit(f);
+      TF1 *f = new TF1("f","gaus",0.8,1.2);
+      hpt->Fit(f,"R");
 
       pT[i] = (ptlo + pthi) / 2.0;
 
@@ -193,7 +180,8 @@ void look_purity()
 
   TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,ptmax);
   hdummy2->SetMinimum(0);
-  hdummy2->SetMaximum(0.08);
+  hdummy2->SetMaximum(0.05);
+  //hdummy2->SetMaximum(0.2);
   hdummy2->GetXaxis()->SetTitle("p_{T}");
   hdummy2->GetYaxis()->SetTitle("#Delta p_{T}/p_{T}");
   hdummy2->GetYaxis()->SetTitleOffset(1.2);
@@ -202,15 +190,15 @@ void look_purity()
 
   // Parameterize pT resolution
   
-  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 25.0);
-  fpt->SetParameter(0,0.0069);
-  fpt->SetParameter(1,0.001758);
+  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 30.0);
+  fpt->SetParameter(0,0.004);
+  fpt->SetParameter(1,0.0005);
   if(pt_resolution_fit)  
     grdpt->Fit(fpt,"R");
 
   char lab[1000];
   sprintf(lab,"#frac{#Deltap_{T}}{p_{T}} = #sqrt{%.4f^{2} + (%.6f #times p_{T})^{2}}", fpt->GetParameter(0), fpt->GetParameter(1));
-  TLatex *mres = new TLatex(0.2,0.65,lab);
+  TLatex *mres = new TLatex(0.2,0.75,lab);
   //mres->SetTextSize(0.1);
   mres->SetNDC();
   if(pt_resolution_fit)  
@@ -304,7 +292,7 @@ void look_purity()
 
   TH1F *hd = new TH1F("hd","hd",100, 0.0, ptmax);
   hd->SetMinimum(0.0);
-  hd->SetMaximum(1.2);
+  hd->SetMaximum(1.0);
   hd->GetXaxis()->SetTitle("p_{T} (GeV/c)");
   hd->GetYaxis()->SetTitle("Single track efficiency");
   hd->Draw();
@@ -330,7 +318,7 @@ void look_purity()
   leff->SetFillStyle(0);
   char lstr[500];
   if(intt)
-    sprintf(lstr,"MAPS(3)+INTT(4)+TPC(60)");
+    sprintf(lstr,"MAPS(3)+INTT(4)+TPC(40)");
   else
     sprintf(lstr,"MAPS(3)+TPC(60)");
   leff->AddEntry(gr_eff, lstr, "p");

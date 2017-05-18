@@ -1,9 +1,9 @@
 int Fun4All_G4_sPHENIX_TruthPatReco (
 				const int nproc = 5000,
 				const int nEvents = 1,
+				const int which_tracking = 5,
 				const char * inputFile = NULL,
 				const char * outputFile = "SvtxTracks.root",
-				const int which_tracking = 12,
 				const char * embed_input_file = "Hijing_G4Hits.root",
 				const bool do_embedding = false
 				)
@@ -43,7 +43,10 @@ int Fun4All_G4_sPHENIX_TruthPatReco (
 
 	bool output_tracks = false;
 	bool pion_momentum = true;
-
+	// Upsilons
+	bool upsilons = false;           // throw single Upsilons if true
+	int istate = 1;  // Upsilon state = 1,2,3
+	
 	bool do_bbc = true;
 
 	bool do_pipe = true;
@@ -54,6 +57,8 @@ int Fun4All_G4_sPHENIX_TruthPatReco (
 	bool use_truth_pat_rec = do_svtx_track && true;
 	bool do_refit = do_svtx_track && true;
 	bool do_svtx_eval = do_svtx_track && true;
+
+	cout << "Tracking options: which_tracking = " << which_tracking << " use_truth_pat_rec = " << use_truth_pat_rec << " do_refit = " << do_refit << endl;
 
 	bool do_preshower = false;
 
@@ -212,6 +217,41 @@ int Fun4All_G4_sPHENIX_TruthPatReco (
 		pgen->Verbosity(0);
 		se->registerSubsystem(pgen);	  
 	      }    
+	    
+	  }
+	else if(upsilons)
+	  {
+	    PHG4ParticleGeneratorVectorMeson *vgen = new PHG4ParticleGeneratorVectorMeson();
+	    vgen->set_decay_types("e+","e-");    // dielectron decay
+	    //vgen->set_vtx_zrange(-10.0, +10.0);
+	    vgen->set_vtx_zrange(0.0, 0.0);
+	    // Note: this rapidity range completely fills the acceptance of eta = +/- 1 unit
+	    vgen->set_rapidity_range(-1.0, +1.0);
+	    vgen->set_pt_range(0.0, 10.0);
+	    
+	    if(istate == 1)
+	      {
+		// Upsilon(1S)
+		vgen->set_mass(9.46);
+		vgen->set_width(54.02e-6);
+	      }
+	    else if (istate == 2)
+	      {
+		// Upsilon(2S)
+		vgen->set_mass(10.0233);
+		vgen->set_width(31.98e-6);
+	      }
+	    else
+	      {
+		// Upsilon(3S)
+		vgen->set_mass(10.3552);
+		vgen->set_width(20.32e-6);
+	      }
+	    
+	    vgen->Verbosity(0);
+	    se->registerSubsystem(vgen);
+
+	    cout << "Upsilon generator for istate = " << istate << " created and registered "  << endl;	  
 	    
 	  }
 	else

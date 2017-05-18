@@ -21,20 +21,11 @@ void G4Init(bool do_svtx = true,
     }  
   if (do_svtx)
     {
-      if(which_tracking == 0) gROOT->LoadMacro("G4_Svtx.C");               // default MIE projections
-      if(which_tracking == 1) gROOT->LoadMacro("G4_Svtx_maps+IT+tpc.C"); 	 // Reference design for 2016 tracking review
-      if(which_tracking == 2) gROOT->LoadMacro("G4_Svtx_pixels+strips.C"); // testing
-      if(which_tracking == 3) gROOT->LoadMacro("G4_Svtx_pixels+tpc.C");    // testing
-      if(which_tracking == 4) gROOT->LoadMacro("G4_Svtx_maps+strips.C");   // testing
-      if(which_tracking == 5) gROOT->LoadMacro("G4_Svtx_maps+tpc.C");      // testing
-      if(which_tracking == 6) gROOT->LoadMacro("G4_Svtx_maps_7layers.C");  // testing
-      if(which_tracking == 7) gROOT->LoadMacro("G4_Svtx_maps_5layers.C");  // testing
-      if(which_tracking == 8) gROOT->LoadMacro("G4_Svtx_ladders.C");       // testing (new geometries)
-      if(which_tracking == 9) gROOT->LoadMacro("G4_Svtx_maps_7layers_large_pixel.C");  // testing
-      if(which_tracking == 10) gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc.C");  // testing
-      if(which_tracking == 11) gROOT->LoadMacro("G4_Svtx_maps+IT+tpc_TruthPatRec.C");  // testing
-      if(which_tracking == 12) gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc_TruthPatRec.C");  // testing
-      if(which_tracking == 13) gROOT->LoadMacro("G4_Svtx_maps+IT+tpc_ladder_material_TruthPatRec.C");
+      if(which_tracking == 1) gROOT->LoadMacro("G4_Svtx_maps+IT+tpc_TruthPatRec.C");  // Haiwang's
+      if(which_tracking == 2) gROOT->LoadMacro("G4_Svtx_maps_cylinders+intt_cylinders+tpc_TruthPatRec.C");  // mine, old TPC
+      if(which_tracking == 3) gROOT->LoadMacro("G4_Svtx_maps_cylinders+intt_cylinders+tpc_new_TruthPatRec.C");  // mine, new TPC
+      if(which_tracking == 4) gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc_TruthPatRec.C");  // mine, old TPC
+      if(which_tracking == 5) gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc_new_TruthPatRec.C");  // mine, new TPC
       SvtxInit();
     }
 

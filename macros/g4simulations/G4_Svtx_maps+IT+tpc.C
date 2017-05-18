@@ -1,7 +1,6 @@
-
 const int n_ib_layer = 3;   // number of maps inner barrel layers
 const int n_intt_layer = 4; // number of int. tracker layers. Make this number 0 to use MAPS + TPC only.
-const int n_gas_layer = 60; // number of TPC layers
+const int n_gas_layer = 40; // number of TPC layers
 double inner_cage_radius = 20.;
 
 int Min_si_layer = 0;
@@ -42,7 +41,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   for (int ilayer=0;ilayer<n_ib_layer;++ilayer) {
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
-    cyl->Verbosity(2);
+    cyl->Verbosity(0);
     radius = ib_rad[ilayer];
     cyl->set_double_param("radius",radius);
     cyl->set_double_param("length",ib_length[ilayer]);
@@ -62,7 +61,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     radius += ib_si_thickness[ilayer] + no_overlapp;
     
     cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", ilayer);
-    cyl->Verbosity(2);
+    cyl->Verbosity(0);
     cyl->set_double_param("radius",radius);
     //cyl->set_int_param("lengthviarapidity",1);
     cyl->set_double_param("length",ib_length[ilayer]);
@@ -84,15 +83,13 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   double intt_rad[4] = { 6.0, 8.0, 10.0, 12.0};
   // 120 microns of silicon is 0.13% of X_0, so to get 1% total we need 0.87% more in the Cu
   double multiplier = 0.87;  // how many times 1% do you want?
-  // 120 microns of silicon is 0.13% of X_0, so to get 2% total we need 1.87% more in the Cu
-  //double multiplier = 1.87;  // how many times 1% do you want?
   double apercent = 0.0144;  // Cu thickness in cm corresponding to 1% X_0 
   double intt_support_thickness[4] = {apercent*multiplier, apercent*multiplier, apercent*multiplier, apercent*multiplier};
   double intt_length[4] = {50.0, 50.0, 50.0, 50.0};
 
   for (int ilayer=n_ib_layer;ilayer<n_intt_layer+n_ib_layer;++ilayer) {
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
-    cyl->Verbosity(2);
+    cyl->Verbosity(0);
     radius = intt_rad[ilayer-n_ib_layer];
     cyl->set_double_param("radius",radius);
     cyl->set_int_param("lengthviarapidity",1);
@@ -113,7 +110,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
     radius += intt_si_thickness[ilayer-n_ib_layer] + no_overlapp;
     
     cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", ilayer);
-    cyl->Verbosity(2);
+    cyl->Verbosity(0);
     cyl->set_double_param("radius",radius);
     cyl->set_int_param("lengthviarapidity",1);
     //cyl->set_double_param("length", intt_length[ilayer-n_ib_layer]);
@@ -139,7 +136,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   double cage_thickness = 1.43 * n_rad_length_cage;
   
   cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_ib_layer+n_intt_layer);
-  cyl->Verbosity(2);
+  cyl->Verbosity(0);
   cyl->set_double_param("radius",radius);
   cyl->set_int_param("lengthviarapidity",0);
   cyl->set_double_param("length",cage_length);
@@ -164,7 +161,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   if (inner_readout_radius - radius > 0) {
     cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_ib_layer + n_intt_layer+1);
-    cyl->Verbosity(2);
+    cyl->Verbosity(0);
     cyl->set_double_param("radius",radius);
     cyl->set_int_param("lengthviarapidity",0);
     cyl->set_double_param("length",cage_length);
@@ -184,13 +181,13 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   radius = inner_readout_radius;
 
   // Active TPC gas layers  
-  double outer_radius = 80.; // should be 78 cm, right?
+  double outer_radius = 78;
   int npoints = Max_si_layer - n_ib_layer-n_intt_layer;
   double delta_radius =  ( outer_radius - inner_readout_radius )/( (double)npoints );
   
   for(int ilayer=n_ib_layer+n_intt_layer;ilayer<(n_ib_layer+n_intt_layer+npoints);++ilayer) {
     cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
-    cyl->Verbosity(2);
+    cyl->Verbosity(0);
     cyl->set_double_param("radius",radius);
     cyl->set_int_param("lengthviarapidity",0);
     cyl->set_double_param("length",cage_length);
@@ -211,7 +208,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 
   // outer field cage wall
   cyl = new PHG4CylinderSubsystem("SVTXSUPPORT", n_ib_layer+n_intt_layer+npoints);
-  cyl->Verbosity(2);
+  cyl->Verbosity(0);
   cyl->set_double_param("radius",radius);
   cyl->set_int_param("lengthviarapidity",0);
   cyl->set_double_param("length",cage_length);
@@ -293,10 +290,14 @@ void Svtx_Cells(int verbosity = 0)
     //  factors
   }
   PHG4CylinderCellTPCReco *svtx_cells = new PHG4CylinderCellTPCReco(n_ib_layer+n_intt_layer);
-  svtx_cells->setDistortion(tpc_distortion); // apply TPC distrotion if tpc_distortion is not NULL
-  svtx_cells->setDiffusion(diffusion);
-  svtx_cells->setElectronsPerKeV(electrons_per_kev);
   svtx_cells->Detector("SVTX");
+  svtx_cells->setDistortion(tpc_distortion);
+  svtx_cells->setDiffusionT(0.0120);
+  svtx_cells->setDiffusionL(0.0120);
+  svtx_cells->set_drift_velocity(6.0/1000.0l);
+  svtx_cells->setHalfLength( 211.0 );
+  svtx_cells->setElectronsPerKeV(28);
+  svtx_cells->Verbosity(0);
 
   for (int i=0;i<n_ib_layer;++i) {
     svtx_cells->cellsize(i, svxcellsizex[i], svxcellsizey[i]);
@@ -380,8 +381,13 @@ void Svtx_Reco(int verbosity = 0)
   clusterizer->set_threshold(0.25);  // should be same as cell threshold, since many hits are single cell
   se->registerSubsystem( clusterizer );
   
-  PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_ib_layer+n_intt_layer,Max_si_layer);
-  tpcclusterizer->setEnergyCut(20.0*45.0/n_gas_layer);
+  PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer();
+  tpcclusterizer->Verbosity(0);
+  tpcclusterizer->setEnergyCut(15/*adc*/);
+  tpcclusterizer->setRangeLayers(n_ib_layer+n_intt_layer,Max_si_layer);
+  tpcclusterizer->setFitWindowSigmas(0.0120,0.0120);
+  tpcclusterizer->setFitWindowMax(4/*rphibins*/,3/*zbins*/);
+  tpcclusterizer->setFitEnergyThreshold( 0.05 /*fraction*/ );
   se->registerSubsystem( tpcclusterizer );
   
   //---------------------
@@ -472,6 +478,8 @@ void G4_Svtx_Reco()
 
 void Svtx_Eval(std::string outputfile, int verbosity = 0)
 {
+  cout << "Called EVALUATOR" << endl;
+
   //---------------
   // Load libraries
   //---------------

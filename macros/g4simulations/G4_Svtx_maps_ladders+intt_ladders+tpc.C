@@ -191,7 +191,11 @@ void Svtx_Cells(int verbosity = 0)
   //-----------
 
   // MAPS cells
- PHG4MapsCellReco *maps_cells = new PHG4MapsCellReco("MAPS");
+  PHG4MapsCellReco *maps_cells = new PHG4MapsCellReco("MAPS");
+  for(int ilayer = 0;ilayer < n_maps_layer;ilayer++)
+    {
+      maps_cells->set_timing_window(ilayer,-2000,2000);
+    }
   maps_cells->Verbosity(0);
   se->registerSubsystem(maps_cells);
 
@@ -366,12 +370,15 @@ void Svtx_Reco(int verbosity = 0)
 
   se->registerSubsystem( clusterizer );
 
-  PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer("PHG4TPCClusterizer",3,4,n_maps_layer+n_intt_layer,Max_si_layer-1);
-  tpcclusterizer->setEnergyCut(20.0*45.0/n_gas_layer);
-  tpcclusterizer->Verbosity(verbosity);
+  PHG4TPCClusterizer* tpcclusterizer = new PHG4TPCClusterizer();
+  tpcclusterizer->Verbosity(0);
+  tpcclusterizer->setEnergyCut(15/*adc*/);
+  tpcclusterizer->setRangeLayers(n_maps_layer+n_intt_layer,Max_si_layer);
+  tpcclusterizer->setFitWindowSigmas(0.0120,0.0120);
+  tpcclusterizer->setFitWindowMax(4/*rphibins*/,3/*zbins*/);
+  tpcclusterizer->setFitEnergyThreshold( 0.05 /*fraction*/ );
   se->registerSubsystem( tpcclusterizer );
-
-
+  
   //---------------------
   // Track reconstruction
   //---------------------
@@ -428,7 +435,7 @@ void Svtx_Reco(int verbosity = 0)
   PHG4SvtxMomentumRecal* recal = new PHG4SvtxMomentumRecal("PHG4SvtxMomentumRecal",corr);
   se->registerSubsystem(recal);
   
-  
+  /*  
   PHG4TrackKalmanFitter *kalman = new PHG4TrackKalmanFitter();
   
   // MIE, MAPS_TPC, MAPS_IT_TPC, LADDER_MAPS_TPC, LADDER_MAPS_IT_TPC, LADDER_MAPS_LADDER_IT_TPC, MAPS_LADDER_IT_TPC
@@ -445,7 +452,8 @@ void Svtx_Reco(int verbosity = 0)
   //kalman->set_do_evt_display(true);
   
   se->registerSubsystem(kalman);
-  
+  */
+
   
   //------------------
   // Track Projections

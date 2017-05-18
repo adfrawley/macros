@@ -234,12 +234,14 @@ void Svtx_Cells(int verbosity = 0)
     //  tpc_distortion -> setPrecision(1); // option to over write default  factors
   }
 
+
   PHG4CylinderCellTPCReco *svtx_cells = new PHG4CylinderCellTPCReco(n_maps_layer+n_intt_layer);
   svtx_cells->setDistortion(tpc_distortion); // apply TPC distrotion if tpc_distortion is not NULL
   svtx_cells->setDiffusion(diffusion);
   svtx_cells->setElectronsPerKeV(electrons_per_kev);
   svtx_cells->Detector("SVTX");
 
+  //
   // cell sizes
   //=======
 
@@ -433,6 +435,7 @@ void Svtx_Reco(int verbosity = 0, bool use_truth_pat_rec = false, bool do_refit 
 		se->registerSubsystem(hough);
 	} else {
 
+	        cout << " Using truth pattern recogntion!" << endl;
 		//---------------------
 		// Truth Pattern Recognition
 		//---------------------
@@ -444,6 +447,7 @@ void Svtx_Reco(int verbosity = 0, bool use_truth_pat_rec = false, bool do_refit 
 	// GenFit2 based Kalman Filter
 	//---------------------
 	if (use_truth_pat_rec || do_refit) {
+	        cout << " Using GenFit2 for final track fit " << endl;
 		PHG4TrackKalmanFitter* kalman = new PHG4TrackKalmanFitter();
 		se->registerSubsystem(kalman);
 	}
