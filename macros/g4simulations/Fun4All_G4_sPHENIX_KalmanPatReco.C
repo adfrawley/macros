@@ -188,10 +188,9 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	  {
 	    cout << "Throw 100 pions" << endl;
 	    // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
-	    //for(int i=0; i<100; i++)
-	    for(int i=0; i<2; i++)
+	    for(int i=0; i<100; i++)
 	      {
-		double pt = (double) i * 15.0 + 1.0;
+		double pt = (double) i * 0.5 + 0.25;
 		
 		// toss low multiplicity dummy events
 		PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
@@ -212,7 +211,6 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 		pgen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
 		pgen->set_vertex_size_parameters(0.0,0.0);
 		pgen->set_eta_range(-1.0, 1.0);
-		//pgen->set_eta_range(-0.5, 0.5);
 		pgen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
 		pgen->set_pt_range(pt, pt);
 		

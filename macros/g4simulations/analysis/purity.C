@@ -186,8 +186,8 @@ void purity()
 #include "ntuple_variables.C"
 
       char name[500];
-      //sprintf(name,"../eval_output/g4svtx_eval_%i.root",i);
-      sprintf(name,"../pions_KalmanPatRec_may18_eval_output/g4svtx_eval_%i.root",i);
+      sprintf(name,"../eval_output/g4svtx_eval_%i.root",i);
+      //sprintf(name,"../pions_KalmanPatRec_may18_eval_output/g4svtx_eval_%i.root",i);
       cout << "Adding file number " << i << " with name " << name << endl;
       ntp_vertex->Add(name);
       ntp_track->Add(name);

@@ -100,7 +100,7 @@ double Svtx(PHG4Reco* g4Reco, double radius,
   radius = inner_cage_radius;
   
   double n_rad_length_cage = 1.0e-02;
-  double cage_length = 211.; // From TPC group, gives eta = 1.1 at 78 cm
+  double cage_length = 211.0; // From TPC group, gives eta = 1.1 at 78 cm
   double cage_thickness = 1.43 * n_rad_length_cage;
 
   // inner field cage  

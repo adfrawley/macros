@@ -228,7 +228,7 @@ void cluster_resolution()
 		      double eta = asinh(gpz/sqrt(gpx*gpx+gpy*gpy));
 
 		      //if(eta < 0.2)  // optional cut 
-		      if(clus_pT > 2)  // optional cut 
+		      //if(clus_pT > 2)  // optional cut 
 			{			
 			  if(layer < 3)
 			    {
