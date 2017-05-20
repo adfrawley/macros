@@ -10,7 +10,7 @@ Executable   = /sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations
 
 # The argument to pass to the executable.
 # process number, number of events
-Arguments       = $(Process)  50
+Arguments       = $(Process)  4
 
 # The requirement line specifies which machines we want to
 # run this job on.  Any arbitrary classad expression can

@@ -5,13 +5,13 @@
   //===================================
 
   int nevents = ntp_vertex->GetEntries();
-  cout << "Number of events " << nevents << endl;
+//cout << "Number of events " << nevents << endl;
 
 //int num_g4hits = ntp_g4hit->GetEntries();
 //cout << "Number of g4hits " << num_g4hits << endl;
 
 int num_clusters = ntp_cluster->GetEntries();
-cout << "Number of clusters " << num_clusters << endl;
+//cout << "Number of clusters " << num_clusters << endl;
 
   Float_t event;
   Float_t ntracks;
@@ -93,7 +93,7 @@ cout << "Number of clusters " << num_clusters << endl;
   // Access ntp_track (reco'd) variables
   //=====================================
 
-cout << "set up ntp_track access" << endl;
+//cout << "set up ntp_track access" << endl;
 
   Float_t rpx;
   Float_t rpy;
@@ -216,7 +216,7 @@ cout << "set up ntp_track access" << endl;
   // Access the g4track ntuple variables
   //================================
 
-cout << "set up ntp_gtrack access" << endl;
+//cout << "set up ntp_gtrack access" << endl;
 
   Float_t tpx;
   Float_t tpy;
@@ -293,7 +293,7 @@ cout << "set up ntp_gtrack access" << endl;
 
   // ntp_cluster access variables
 
-cout << "set up ntp_cluster access" << endl;
+//cout << "set up ntp_cluster access" << endl;
   
   float_t cevent;
   Float_t hitID;

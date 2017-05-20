@@ -31,8 +31,8 @@ void look_purity()
 
   // set to false only to generate pT resolution plots without fits
   // BEWARE: false means that the 4 sigma cuts are meaningless - thay are not done with fitted parameters
-  bool pt_resolution_fit = true;
-  //bool pt_resolution_fit = false;
+  //bool pt_resolution_fit = true;
+  bool pt_resolution_fit = false;
   
   TFile *fin = new TFile("root_files/purity_out.root");  
   //TFile *fin = new TFile("root_files/haiwang_cyl_truthpatreco_purity_out.root");  
@@ -72,7 +72,7 @@ void look_purity()
   double pT[NPT];
   double dca2d[NPT];
   for(int i = 0;i<NPT;i++)
-    //for(int i = 10;i<11;i++)
+    //for(int i = 1;i<2;i++)
     {
       double ptlo = (double) i * 0.5 + 0.25;
       double pthi = ptlo + 0.5;
@@ -87,7 +87,7 @@ void look_purity()
       h->GetXaxis()->SetTitle("p_{T} (GeV/c)");
       h->GetXaxis()->SetTitle("#Delta dca2d (cm)");
       h->GetXaxis()->SetTitleOffset(1.0);
-      if(i>30) h->Rebin(4);
+      if(i<8) h->Rebin(4);
       h->DrawCopy();
 
       TF1 *f = new TF1("f","gaus");
@@ -114,7 +114,7 @@ void look_purity()
 
   TH1D *hdummy = new TH1D("hdummy","#Delta dca2d vs p_{T}",100,0.0,ptmax);
   hdummy->SetMinimum(0);
-  hdummy->SetMaximum(0.0050);
+  hdummy->SetMaximum(0.010);
   hdummy->GetXaxis()->SetTitle("p_{T} (GeV/c)");
   hdummy->GetYaxis()->SetTitle("#Delta dca2d (cm)");
   hdummy->GetYaxis()->SetTitleOffset(1.75);
@@ -122,7 +122,7 @@ void look_purity()
   hdummy->Draw();
   grdca2d->Draw("p");
 
- TLegend *ldca = new TLegend(0.2, 0.65, 0.85, 0.80,"","NDC");
+ TLegend *ldca = new TLegend(0.3, 0.65, 0.85, 0.80,"","NDC");
   ldca->SetBorderSize(0);
   ldca->SetFillColor(0);
   ldca->SetFillStyle(0);
@@ -142,6 +142,7 @@ void look_purity()
   double dpT[NPT];
 
   for(int i = 0;i<NPT;i++)
+    //for(int i = 98;i<99;i++)
     {
       double ptlo = (double) i * 0.5 + 0.25;
       double pthi = ptlo + 0.5;
@@ -190,9 +191,9 @@ void look_purity()
 
   // Parameterize pT resolution
   
-  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 30.0);
-  fpt->SetParameter(0,0.004);
-  fpt->SetParameter(1,0.0005);
+  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 35.0);
+  fpt->SetParameter(0,0.00);
+  fpt->SetParameter(1,0.001);
   if(pt_resolution_fit)  
     grdpt->Fit(fpt,"R");
 

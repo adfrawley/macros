@@ -420,7 +420,7 @@ void Svtx_Reco(int verbosity = 0)
 
   Fun4AllServer *se = Fun4AllServer::instance();
 
-  const bool use_kalman_pat_rec = false;
+  const bool use_kalman_pat_rec = true;
 	if (use_kalman_pat_rec) {
 		//---------------------
 		// PHG4KalmanPatRec
@@ -434,7 +434,7 @@ void Svtx_Reco(int verbosity = 0)
 		kalman_pat_rec->set_seeding_layer(seeding_layer, seeding_nlayer);
 
 		kalman_pat_rec->set_mag_field(1.4);
-		kalman_pat_rec->Verbosity(10);
+		kalman_pat_rec->Verbosity(0);
 		// ALICE ITS upgrade values for total thickness in X_0
 		kalman_pat_rec->set_material(0, 0.003);
 		kalman_pat_rec->set_material(1, 0.003);
@@ -556,8 +556,8 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   SvtxEvaluator* eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str());
   eval->do_cluster_eval(true);
   eval->do_g4hit_eval(true);
-  eval->do_hit_eval(false);
-  eval->do_gpoint_eval(false);
+  eval->do_hit_eval(true);
+  eval->do_gpoint_eval(true);
   eval->scan_for_embedded(false); // take all tracks if false - take only embedded tracks if true (will not record decay particles!! - loses Upsilon electrons)
   eval->Verbosity(verbosity);
   se->registerSubsystem( eval );

@@ -76,6 +76,10 @@ void cluster_resolution()
   delta_rphi->GetYaxis()->SetTitle("Cluster Error (cm)");
   delta_rphi->GetXaxis()->SetTitle("Tracking Layer");
 
+  TH2D *delta_z = new TH2D("delta_z","cluster Z errors by layer",70.0, 0.0, 70.0, 20000, -1.0, 1.0); 
+  delta_z->GetYaxis()->SetTitle("Cluster Z Error (cm)");
+  delta_z->GetXaxis()->SetTitle("Tracking Layer");
+
   TH2D *cluster_size = new TH2D("cluster_size","cluster size by layer",70.0, 0.0, 70.0, 200, 0.0, 15.0); 
   cluster_size->GetYaxis()->SetTitle("Cluster Size (hits)");
   cluster_size->GetXaxis()->SetTitle("Tracking Layer");
@@ -86,7 +90,7 @@ void cluster_resolution()
   // The condor job output files
   for(int i=0;i <1000; i++)
     {
-      cout << "Enter file loop with i = " << i << endl;
+      //cout << "Enter file loop with i = " << i << endl;
 
       TChain* ntp_track = new TChain("ntp_track","reco tracks");
       TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
@@ -108,22 +112,21 @@ void cluster_resolution()
 
       // This include file contains the definitions of the ntuple variables
 #include "ntuple_variables.C"
-      
+
+      /*      
       int ntr =  ntp_track->GetEntries();
       int ngtr = ntp_gtrack->GetEntries();
       std:: cout << "File " << i  << " ntracks entries = " << ntr << " ngtracks entries = " << ngtr << endl;
-      
+      */
+
       int gtr_start = 0;
       int gtr_end = 0;
       int tr_start = 0;
       int tr_end = 0;
 
-      /*      
       // Loop over events
       int nevt = ntp_vertex->GetEntries();
-      cout << "Number of events in this file = " << nevt << endl;
-      */
-      int nevt = 1;
+      //cout << "Number of events in this file = " << nevt << endl;
 
       for(int iev=0;iev<nevt;iev++)
 	{
@@ -132,26 +135,18 @@ void cluster_resolution()
 	  ntracks = 0.0;
 	  ngtracks = 0.0;
 
-	  /*	  
+
 	  int evtget = ntp_vertex->GetEntry(iev);
 	  if(!evtget)
 	    cout << "Failed to get event " << iev << endl;
 
 	  int ntr_ev = (int) ntracks;
 	  int ngtr_ev = (int) ngtracks;
-	  */
+	  //cout << "    iev " << iev << " has ntracks " << ntracks << " ngtracks " << ngtracks << endl;
 
-	  int ntr_ev = 0;
-	  int ngtr_ev = 0;
-	  
-	  // expect 100 track events or less
-	  tr_end = tr_start + 150;
-	  gtr_end = gtr_start + 110;
-
-	  if(tr_end > ntp_track->GetEntries())
-	    tr_end = ntp_track->GetEntries();
-	  if(gtr_end > ntp_gtrack->GetEntries())
-	    gtr_end = ntp_gtrack->GetEntries();
+	  tr_end = tr_start + ntr_ev;
+	  gtr_end = gtr_start + ngtr_ev;
+	  //cout << "  tr_start = " << tr_start << " tr_end = " << tr_end << " gtr_start = " << gtr_start << " gtr_end = " << gtr_end << endl;
 
 	  // count g4 tracks with track ID 1 or 2
 	  for(int j=gtr_start; j < gtr_end; j++)
@@ -161,11 +156,6 @@ void cluster_resolution()
 	      if(tget == 0)
 		cout << "Did not find entry in ntp_gtrack " << j << endl;
 
-	      if(tevent != iev)
-		break;
-
-	      ngtr_ev++;
-	      
 	      if( tgtrackid == 1 || tgtrackid == 2 )
 		ng4_tracks++;
 	    }
@@ -181,22 +171,12 @@ void cluster_resolution()
 	      if(tget == 0)
 		cout << "Did not find entry in ntp_track " << j << endl;
 
-	      if(revent != iev)
-		break;
-
-	      ntr_ev++;
-
 	      gtrackID_map.insert(std::pair<int,int>(rgtrackid, j));  
 
 	      // count reco tracks with rtrackid 0 or 1 and rgtrackid 1 or 2 (i.e. matched reconstructed tracks
 	      if( (rtrackid == 0 && ( rgtrackid == 1 || rgtrackid == 2 ) )  || ( rtrackid == 1 && (rgtrackid == 1) || rgtrackid == 2) )
 		nreco_tracks++;
 	    }
-	  cout << "Found ntr_ev = " << ntr_ev << " ngtr_ev = " << ngtr_ev << " for iev = " << iev << endl;
-
-	  // set the endi track numbers to the correct values
-	  gtr_end = gtr_start + ngtr_ev;
-	  tr_end = tr_start + ntr_ev;
 
 	  // use loop to fill multimap of (gtrackID,layer number) for all clusters in this event
 	  for(int p=0;p < ntp_cluster->GetEntries(); p++)
@@ -241,24 +221,37 @@ void cluster_resolution()
 		      else
 			sign = -1.0;
 
-		      if(layer < 3)
-			{
-			  //if(size > 2)  // optional cut on hits/cluster for MAPS
-			  delta_rphi->Fill( (double) layer, sign * drphi); 
-			}
-		      else if(layer >=3 && layer < 7) 
-			{
-			  delta_rphi->Fill( (double) layer, sign * drphi); 
-			}
-		      else
-			delta_rphi->Fill( (double) layer, sign * drphi); 
-		      
-		      // Extract the number of hits per cluster
+		      // Extract the cluster Z reolution
+		      double dz = z - gz;
 
-		      cluster_size->Fill( (double) layer, size);
+		      double clus_pT = sqrt(gpx*gpx+gpy*gpy);
+		      double eta = asinh(gpz/sqrt(gpx*gpx+gpy*gpy));
 
-		      // histogram the number of clusters per reconstructed track vs layer number for these reco tracks
-		      clusters_per_layer_per_reco_track->Fill(layer);
+		      //if(eta < 0.2)  // optional cut 
+		      if(clus_pT > 2)  // optional cut 
+			{			
+			  if(layer < 3)
+			    {
+			      delta_rphi->Fill( (double) layer, sign * drphi); 
+			      delta_z->Fill( (double) layer, dz); 
+			    }
+			  else if(layer >=3 && layer < 7) 
+			    {
+			      delta_rphi->Fill( (double) layer, sign * drphi); 
+			      delta_z->Fill( (double) layer, dz); 
+			    }
+			  else
+			    {
+			      delta_rphi->Fill( (double) layer, sign * drphi); 
+			      delta_z->Fill( (double) layer, dz); 
+			    }
+
+			  // Extract the number of hits per cluster
+			  cluster_size->Fill( (double) layer, size);
+			  
+			  // histogram the number of clusters per reconstructed track vs layer number for these reco tracks
+			  clusters_per_layer_per_reco_track->Fill(layer);
+			}
 		    }
 		}
 	    }
@@ -330,7 +323,6 @@ void cluster_resolution()
   
   cout << "Total hits maps: " << a << ", Total hits IT: " << b << endl;
 
-
   TCanvas *C1 = new TCanvas("C1","C1",50,50,1000,700);
   C1->Divide(3,1);
   C1->cd(1);
@@ -364,17 +356,6 @@ void cluster_resolution()
   h3->GetYaxis()->SetLabelSize(0.055);
   h3->Draw();
 
-
-  /*  TCanvas *C5 = new TCanvas("C5","C5",50,50,600,600); 
-  rphi->Draw("p");
-  */
-  /*
-  TCanvas *C6 = new TCanvas("C6","C6",50,50,800,800); 
-  C6->SetLeftMargin(0.15);
-  delta_rphi->GetYaxis()->SetTitleOffset(1.7);
-  delta_rphi->Draw("p");
-  */
-
   TCanvas *c7 = new TCanvas("c7","c7",50,50,1200,800); 
   c7->Divide(3,1);
 
@@ -384,7 +365,7 @@ void cluster_resolution()
   TH1D *hpy1 = new TH1D("hpy1","MAPS clusters",500, -0.05, 0.05);
   delta_rphi->ProjectionY("hpy1",1,3);
   hpy1->GetXaxis()->SetRangeUser(-0.0016, 0.0016);
-  hpy1->GetXaxis()->SetTitle("cluster error (cm)");
+  hpy1->GetXaxis()->SetTitle("r-phi cluster error (cm)");
   hpy1->SetTitleOffset(0.1,"X");
   hpy1->GetXaxis()->SetTitleSize(0.05);
   hpy1->GetXaxis()->SetLabelSize(0.06);
@@ -405,7 +386,7 @@ void cluster_resolution()
   TH1D *hpy2 = new TH1D("hpy2","INTT clusters",500, -0.05, 0.05);
   delta_rphi->ProjectionY("hpy2",4,7); // for 2 layers
   hpy2->GetXaxis()->SetRangeUser(-0.011, 0.011);
-  hpy2->GetXaxis()->SetTitle("cluster error (cm)");
+  hpy2->GetXaxis()->SetTitle("r-phi cluster error (cm)");
   hpy2->GetXaxis()->SetTitleOffset(0.6);
   hpy2->GetXaxis()->SetTitleSize(0.05);
   hpy2->GetXaxis()->SetLabelSize(0.06);
@@ -426,7 +407,7 @@ void cluster_resolution()
   delta_rphi->ProjectionY("hpy3",8,68);
   hpy3->GetXaxis()->SetRangeUser(-0.10, 10);
   hpy3->GetXaxis()->SetNdivisions(506);
-  hpy3->GetXaxis()->SetTitle("cluster error (cm)");
+  hpy3->GetXaxis()->SetTitle("r-phi cluster error (cm)");
   hpy3->GetXaxis()->SetTitleOffset(1.1);
   hpy3->GetXaxis()->SetTitleSize(0.05);
   hpy3->GetXaxis()->SetLabelSize(0.06);
@@ -437,6 +418,69 @@ void cluster_resolution()
   TLatex *l3 = new TLatex(0.55,0.92,label);
   l3->SetNDC(1);
   l3->Draw();
+
+  TCanvas *c27 = new TCanvas("c27","c27",50,50,1200,800); 
+  c27->Divide(3,1);
+
+  c27->cd(1);
+  gPad->SetLeftMargin(0.12);
+  gPad->SetRightMargin(0.01);
+  TH1D *hpz1 = new TH1D("hpz1","MAPS clusters Z",500, -1.0, 1.0);
+  delta_z->ProjectionY("hpz1",1,3);
+  hpz1->GetXaxis()->SetTitle("Z cluster error (cm)");
+  hpz1->SetTitleOffset(0.1,"X");
+  hpz1->GetXaxis()->SetTitleSize(0.05);
+  hpz1->GetXaxis()->SetLabelSize(0.06);
+  hpz1->GetYaxis()->SetLabelSize(0.06);
+  hpz1->GetXaxis()->SetNdivisions(506);
+  hpz1->GetXaxis()->SetTitleOffset(1.1);
+  hpz1->GetXaxis()->SetRangeUser(-0.0016, 0.0016);
+  hpz1->Draw();
+  double zrms1 = 10000.0 * hpz1->GetRMS();
+  //char label[500];
+  sprintf(label,"RMS %.1f #mu m",zrms1);
+  TLatex *lz1 = new TLatex(0.55,0.92,label);
+  lz1->SetNDC(1);
+  lz1->Draw();
+
+  c27->cd(2);
+  gPad->SetLeftMargin(0.12);
+  gPad->SetRightMargin(0.01);
+  TH1D *hpz2 = new TH1D("hpz2","INTT clusters Z",500, -1.0, 1.0);
+  delta_z->ProjectionY("hpz2",4,7); // for 2 layers
+  //hpz2->GetXaxis()->SetRangeUser(-0.6, 0.6);
+  hpz2->GetXaxis()->SetTitle("Z cluster error (cm)");
+  hpz2->GetXaxis()->SetTitleOffset(0.6);
+  hpz2->GetXaxis()->SetTitleSize(0.05);
+  hpz2->GetXaxis()->SetLabelSize(0.06);
+  hpz2->GetYaxis()->SetLabelSize(0.06);
+  hpz2->GetXaxis()->SetNdivisions(506);
+  hpz2->GetXaxis()->SetTitleOffset(1.1);
+  hpz2->Draw();
+  double zrms2 = 10000 * hpz2->GetRMS();
+  sprintf(label,"RMS %.1f #mu m",zrms2);
+  TLatex *lz2 = new TLatex(0.55,0.92,label);
+  lz2->SetNDC(1);
+  lz2->Draw();
+
+  c27->cd(3);
+  gPad->SetLeftMargin(0.12);
+  gPad->SetRightMargin(0.01);
+  TH1D *hpz3 = new TH1D("hpz3","TPC clusters Z",500,-1.0, 1.0);
+  delta_z->ProjectionY("hpz3",8,68);
+  hpz3->GetXaxis()->SetNdivisions(506);
+  hpz3->GetXaxis()->SetTitle("Z cluster error (cm)");
+  hpz3->GetXaxis()->SetTitleOffset(1.1);
+  hpz3->GetXaxis()->SetTitleSize(0.05);
+  hpz3->GetXaxis()->SetLabelSize(0.06);
+  hpz3->GetYaxis()->SetLabelSize(0.06);
+  hpz3->GetXaxis()->SetRangeUser(-0.10, 0.10);
+  hpz3->Draw();
+  double zrms3 = 10000 * hpz3->GetRMS();
+  sprintf(label,"RMS %.1f #mu m",zrms3);
+  TLatex *lz3 = new TLatex(0.55,0.92,label);
+  lz3->SetNDC(1);
+  lz3->Draw();
 
   cout << "MAPS cluster number " << hpy1->Integral() << " RMS = " << 10000 * hpy1->GetRMS() << " microns" << endl;
   cout << "INTT cluster number " << hpy2->Integral() << " RMS = " << 10000 * hpy2->GetRMS() << " microns" << endl;

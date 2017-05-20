@@ -39,7 +39,7 @@ void purity()
 
   //===============================================================================
 
-  bool verbose = true;
+  bool verbose = false;
 
   // Setup parameters
   //=================
@@ -186,7 +186,8 @@ void purity()
 #include "ntuple_variables.C"
 
       char name[500];
-      sprintf(name,"../eval_output/g4svtx_eval_%i.root",i);
+      //sprintf(name,"../eval_output/g4svtx_eval_%i.root",i);
+      sprintf(name,"../pions_KalmanPatRec_may18_eval_output/g4svtx_eval_%i.root",i);
       cout << "Adding file number " << i << " with name " << name << endl;
       ntp_vertex->Add(name);
       ntp_track->Add(name);
@@ -202,13 +203,13 @@ void purity()
 	     << " ntp_track entries: " << ntp_track->GetEntries()
 	     << endl;
       
+      // These keep track of the starting position in ther track ntuple for each event
       int nr = 0;
       int ng = 0;
-      //for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
-      for(int iev=0;iev<1;iev++)
+      for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
 	{
 	  if(verbose) cout << " iev = " << iev << " ng " << ng << " nr " << nr << endl;  
-	  /*
+
 	    int recoget = ntp_vertex->GetEntry(iev);
 	    if(!recoget)
 	    {
@@ -218,19 +219,16 @@ void purity()
 	    
 	    if(iev%20 == 0)
 	    cout << "Get event " << iev << " with vertex x " << evx
-	    << " vertex y " << evy << " vertex z " << evz 
-	    << " ngtracks " << ngtracks << " ntracks " << ntracks 
-	    << " ng " << ng << " nr " << nr 
-	    << endl;
-	  */
-
-	  // expect 100 tracks or less per event
-	  ngtracks = 110;
-
-	  int naccept = 0;
-	 	  
-	  // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
-	  // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
+		 << " vertex y " << evy << " vertex z " << evz 
+		 << " ngtracks " << ngtracks << " ntracks " << ntracks 
+		 << " ng " << ng << " nr " << nr 
+		 << endl;
+	    
+	    
+	    int naccept = 0;
+	    
+	    // ngtracks is defined in ntuple_variables.C and is the number of g4 tracks
+	    // ntracks is defined in ntuple_variables.C and is the number of reco'd tracks
 	  
 	  int n_embed_gtrack = 0;            
 	  int n_embed_gtrack_1 = 0;            
@@ -245,15 +243,15 @@ void purity()
 		  //continue;
 		  break;
 		}
-	      
+
+	      /*	      
 	      if(tevent != iev)
 		{
 		  if(verbose) cout << " change of event, new tevent = " << tevent << endl;
 		  break;
 		}
-	      
-	      ng++;
-	      
+	      */
+
 	      // only embedded tracks
 	      if(!tembed == 1)
 		continue;
@@ -294,8 +292,7 @@ void purity()
 	  //cout << "n_embed_gtrack = " << n_embed_gtrack << " n_embed_gtrack_1 " << n_embed_gtrack_1 << endl;
 	  
 	  if(verbose > 0) cout << "Process reco tracks:" << endl;
-	  // overestimate number of tracks
-	  ntracks = 300;
+
 	  int n_embed_rtrack = 0;                  
 	  for(int ir=nr;ir<nr+ntracks;ir++)
 	    {
@@ -308,14 +305,14 @@ void purity()
 		  //continue;
 		  break;
 		}
-	      
+
+	      /*	      
 	      if(revent != iev)
 		{
 		  if(verbose) cout << " change of event, new revent = " << revent << endl;
 		  break;
 		}
-	      
-	      nr++;
+	      */
 	      
 	      // only embedded tracks
 	      if(rgembed != 1)
@@ -340,7 +337,7 @@ void purity()
 		rdca2d = 0.0;
 	      
 	      double corrected_rdca2d = rdca2d;
-	      bool calculate_dca2d = true;    // subtract event vertex position from dca values to get dca2d
+	      bool calculate_dca2d = false;    // subtract event vertex position from dca values to get dca2d
 	      if(calculate_dca2d)
 		{
 		  corrected_rdca2d = sqrt(pow(rpcax - evx, 2) + pow(rpcay-evy, 2));		  
@@ -349,18 +346,19 @@ void purity()
 		    corrected_rdca2d *= -1.0;
 		}
 	      
-	      /*
-		cout << "dca2d " << rdca2d  
-		<< " rpcax " << rpcax 
-		<< " rpcay " << rpcay
-		<< " rpcaz " << rpcaz
-		<< endl;
-		cout << " corrected rpcax " << rpcax - evx
-		<< " rpcay " << rpcay - evy
-		<< " rpcaz " << rpcaz - evz
-		<< " rdca2d " << corrected_rdca2d 
-		<< endl;
-	      */
+	      if(verbose)
+		{
+		  cout << "dca2d " << rdca2d  
+		       << " rpcax " << rpcax 
+		       << " rpcay " << rpcay
+		       << " rpcaz " << rpcaz
+		       << endl;
+		  cout << " corrected:     rpcax " << rpcax - evx
+		       << " rpcay " << rpcay - evy
+		       << " rpcaz " << rpcaz - evz
+		       << " corrected rdca2d " << corrected_rdca2d 
+		       << endl;
+		}
 	      
 	      // Does the track pass the dca2d cut? 
 	      // If so, add to hquality
@@ -432,7 +430,9 @@ void purity()
 		  if(verbose > 0) cout << "   accepted: rgembed = " << rgembed << " rgpT = " << rgpT << endl;
 		  naccept++;
 		  hpt_compare->Fill(rgpT,rpT/rgpT);
-		  hpt_dca2d->Fill(rgpT, corrected_rdca2d);
+		  double geta = asinh(rgpz/sqrt(rgpx*rgpx+rgpy*rgpy));
+		  //if(geta < 0.1)
+		    hpt_dca2d->Fill(rgpT, corrected_rdca2d);
 		  hnhits->Fill(rnhits);
 		}
 		//else
@@ -469,8 +469,8 @@ void purity()
 	  
 	  if(verbose > 0) cout << " Done with loop: n_embed_rtrack = " << n_embed_rtrack << endl; 
      
-	  //nr += ntracks;
-	  //ng += ngtracks;
+	  nr += ntracks;
+	  ng += ngtracks;
 	  cout << "  accepted tracks this event = " << naccept << endl;
       
 	}  // end loop over events

@@ -42,9 +42,9 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	//======================
 
 	bool output_tracks = false;
-	bool pion_momentum = false;
+	bool pion_momentum = true;
 	// Upsilons
-	bool upsilons = true;           // throw single Upsilons if true
+	bool upsilons = false;           // throw single Upsilons if true
 	int istate = 1;  // Upsilon state = 1,2,3
 	
 	bool do_bbc = true;
@@ -186,15 +186,17 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	  }
 	else if (pion_momentum)
 	  {
+	    cout << "Throw 100 pions" << endl;
 	    // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
-	    for(int i=0; i<100; i++)
-	    //for(int i=0; i<2; i++)
+	    //for(int i=0; i<100; i++)
+	    for(int i=0; i<2; i++)
 	      {
-		double pt = (double) i * 0.5 + 0.5;
+		double pt = (double) i * 15.0 + 1.0;
 		
 		// toss low multiplicity dummy events
 		PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
 		pgen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
+		//pgen->add_particles("pi-",1); // mu-,e-,anti_proton,pi-
 		
 		if (readhepmc) {
 		  pgen->set_reuse_existing_vertex(true);
@@ -210,6 +212,7 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 		pgen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
 		pgen->set_vertex_size_parameters(0.0,0.0);
 		pgen->set_eta_range(-1.0, 1.0);
+		//pgen->set_eta_range(-0.5, 0.5);
 		pgen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
 		pgen->set_pt_range(pt, pt);
 		
