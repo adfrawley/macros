@@ -412,7 +412,6 @@ void Svtx_Reco(int verbosity = 0)
     //---------------------
     
     PHG4KalmanPatRec* kalman_pat_rec = new PHG4KalmanPatRec("PHG4KalmanPatRec");
-    
     se->registerSubsystem(kalman_pat_rec);
     
   } else {
@@ -429,7 +428,6 @@ void Svtx_Reco(int verbosity = 0)
   //---------------------
   
   PHG4TrackKalmanFitter* kalman = new PHG4TrackKalmanFitter();
-  
   se->registerSubsystem(kalman);
   
     

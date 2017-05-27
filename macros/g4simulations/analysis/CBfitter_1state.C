@@ -109,61 +109,15 @@ void CBfitter_1state()
   //bool do_subtracted = true;
 
   file1S = new TFile("ups1s_qual3.00_dca2d0.10.root");
-  //file1S = new TFile("root_files/no_refit_pions_plus_ups1s_qual3.00_dca2d0.10.root");
-  //file1S = new TFile("root_files/maps_ladders_intt_tpc_ups1s_qual3.00_dca2d0.10.root");
 
   recomass1S = (TH1 *)file1S->Get("recomass");
 
-  /*
-  if(pp)
-    file1S = new TFile("./g4simulation/macros/ups1s_qual3.00_dca2d0.10_pp.root");
-  else if (pAu)
-    file1S = new TFile("./g4simulation/macros/ups1s_qual3.00_dca2d0.10_pAu.root");
-  else if(AuAu_20pc)
-    file1S = new TFile("./g4simulation/macros/ups1s_qual3.00_dca2d0.10_AuAu_20pc.root");
-  else if(AuAu_10pc)
-    file1S = new TFile("./g4simulation/macros/ups1s_qual3.00_dca2d0.10_AuAu_10pc.root");
-  else
-    file1S = new TFile("./g4simulation/macros/ups1s_qual3.00_dca2d0.10_allfiles.root");
-  recomass1S = (TH1 *)file1S->Get("recomass");
-  */
-
-  /*
-  if(pp)
-    file2S = new TFile("./g4simulation/macros/ups2s_qual3.00_dca2d0.10_pp.root");
-  else if (pAu)
-    file2S = new TFile("./g4simulation/macros/ups2s_qual3.00_dca2d0.10_pAu.root");
-  else if(AuAu_20pc)
-    file2S = new TFile("./g4simulation/macros/ups2s_qual3.00_dca2d0.10_AuAu_20pc.root");
-  else if(AuAu_10pc)
-    file2S = new TFile("./g4simulation/macros/ups2s_qual3.00_dca2d0.10_AuAu_10pc.root");
-  else
-    file2S = new TFile("./g4simulation/macros/ups2s_qual3.00_dca2d0.10_allfiles.root");
-  recomass2S = (TH1 *)file2S->Get("recomass");
-
-  if(pp)
-    file3S = new TFile("./g4simulation/macros/ups3s_qual3.00_dca2d0.10_pp.root");
-  else if (pAu)
-    file3S = new TFile("./g4simulation/macros/ups3s_qual3.00_dca2d0.10_pAu.root");
-  else if(AuAu_20pc)
-    file3S = new TFile("./g4simulation/macros/ups3s_qual3.00_dca2d0.10_AuAu_20pc.root");
-  else if(AuAu_10pc)
-    file3S = new TFile("./g4simulation/macros/ups3s_qual3.00_dca2d0.10_AuAu_10pc.root");
-  else
-    file3S = new TFile("./g4simulation/macros/ups3s_qual3.00_dca2d0.10_allfiles.root");
-  recomass3S = (TH1 *)file3S->Get("recomass");
-  */
-  
   TH1 *recomass = (TH1*)recomass1S->Clone("recomass");
   recomass->Sumw2();
-  /*
-  recomass->Add(recomass2S);
-  recomass->Add(recomass3S);
-  */
+
   int nrebin = 1;  // set to 2 to match background histo binning, but this worsens resolution slightly. Use 1 for signal fit
   recomass->Rebin(nrebin);
   
-  //TCanvas *cups = new TCanvas("cups","cups",5,5,800,600);
   TCanvas *cups = new TCanvas("cups","cups",5,5,800,800);
   recomass->SetTitle("Y(1S,2S,3S) #rightarrow e^{+}e^{-}");
   recomass->SetMarkerStyle(20);
@@ -173,31 +127,6 @@ void CBfitter_1state()
   //recomass->SetMaximum(810);
   recomass->DrawCopy("p");
 
-  /* 
-  TF1 *fitups = new TF1("fitups",Upscalc,7,11,11);
-  fitups->SetParameter(0,1.05);
-  fitups->SetParameter(1,1.5);
-  fitups->SetParameter(2,0.1);
-  fitups->SetParameter(3,9.28);
-  fitups->SetParameter(4,9.83);       
-  fitups->SetParameter(5,10.15);
-  fitups->SetParameter(6,900.0);
-  fitups->SetParameter(7,230.0);
-  fitups->SetParameter(8,120.0);
-  fitups->SetParameter(9,10.0);
-  fitups->SetParameter(10,0.0);
-  fitups->SetLineColor(kBlack);  
-  fitups->SetParNames("alpha1S","n1S","sigma1S","m1S","m2S","m3S","N1S","N2S","N3S","Nexp","expSlope");
-
-  recomass->Fit(fitups);
-  //fitups->Draw("same");
-  */
-  /*
-  double sigma1s = 1000.0 * fitups->GetParameter(2);
-  double sigma1s_err = 1000.0 * fitups->GetParError(2);
-  cout << " sigma1s " << sigma1s << " par2 " << fitups->GetParameter(2) << endl; 
-  // Now draw the individual states
-  */
 
   TF1 *f1S = new TF1("f1S",CBcalc,7,11,5);
   f1S->SetParameter(0, 1.0);     // alpha
@@ -215,54 +144,11 @@ void CBfitter_1state()
   recomass->Fit(f1S);
   //f1S->Draw("same");
 
-  /*
-  TF1 *f2S = new TF1("f2S",CBcalc,7,11,5);
-  f2S->SetParameter(0,fitups->GetParameter(0));
-  f2S->SetParameter(1,fitups->GetParameter(1));
-  f2S->SetParameter(2,fitups->GetParameter(4));
-  f2S->SetParameter(3,fitups->GetParameter(2));
-  f2S->SetParameter(4,fitups->GetParameter(7));
-  f2S->SetParNames("alpha1S","n1S","m2S","sigma1S","N2S");
-  f2S->SetLineColor(kRed);
-  f2S->SetLineWidth(3);
-  f2S->SetLineStyle(kDashed);
-
-  f2S->Draw("same");
-
-  TF1 *f3S = new TF1("f3S",CBcalc,7,11,5);
-  f3S->SetParameter(0,fitups->GetParameter(0));
-  f3S->SetParameter(1,fitups->GetParameter(1));
-  f3S->SetParameter(2,fitups->GetParameter(5));
-  f3S->SetParameter(3,fitups->GetParameter(2));
-  f3S->SetParameter(4,fitups->GetParameter(8));
-  f3S->SetParNames("alpha1S","n1S","m3S","sigma1S","N3S");
-  f3S->SetLineColor(kMagenta);
-  f3S->SetLineWidth(3);
-  f3S->SetLineStyle(kDashed);
-
-  f3S->Draw("same");
-  */
-
-  /*
-  TF1 *fexp = new TF1("fexp","[0]*exp([1]*x)",7,11);
-  fexp->SetParameter(0,fitups->GetParameter(9));
-  fexp->SetParameter(1,fitups->GetParameter(10));
-
-  fexp->SetLineColor(kGreen);
-  fexp->SetLineWidth(3);
-  fexp->SetLineStyle(kDashed);
-  //fexp->Draw("same");
-  */
-
   double binw = recomass->GetBinWidth(1);
   double renorm = 1.0/binw;   // (1 / (bin_width of data in GeV) )
-  //double renorm = 25.0;   // (1 / (bin_width of data in GeV) )
   cout << "renorm = " << renorm << endl;
 
   cout << "Area of f1S is " << renorm * f1S->Integral(7,11) << endl;
-  //cout << "Area of f2S is " << renorm * f2S->Integral(7,11) << endl;
-  //cout << "Area of f3S is " << renorm * f3S->Integral(7,11) << endl;
-  //cout << "Area of fexp is " << renorm * fexp->Integral(7,11) << endl;
 
   /*
   TLatex *lab;

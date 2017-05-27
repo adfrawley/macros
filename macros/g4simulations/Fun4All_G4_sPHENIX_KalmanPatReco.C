@@ -2,12 +2,31 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 				const int nproc = 5000,
 				const int nEvents = 1,
 				const int which_tracking = 15,
-				const char * inputFile = NULL,
+				//const char * inputFile = NULL,
 				const char * outputFile = "SvtxTracks.root",
 				const char * embed_input_file = "Hijing_G4Hits.root",
 				const bool do_embedding = false
 				)
 {
+  char inputFile[500];
+  
+  //======================
+  // What to run
+  //======================
+
+	bool output_tracks = false;
+
+	// pions for momentum, dca performance
+	bool pion_momentum = false;
+	bool embed_pions = false;  // throw single pions in a Hijing event if true
+	// Upsilons
+	bool upsilons = true;           // throw single Upsilons if true
+	int istate = 1;  // Upsilon state = 1,2,3
+	bool embed_upsilons = false;           // if true, throw single Upsilons inside a Hijing event
+	// Hijing events only
+	bool hijing_events = false;  // if true, throw hijing events only, or with embedded pions or upsilons
+
+
 	//===============
 	// Input options
 	//===============
@@ -21,8 +40,12 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	// E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
 	const bool readhits = false;
 	// Or:
+
 	// read files in HepMC format (typically output from event generators like hijing or pythia)
-	const bool readhepmc = false; // read HepMC files
+	bool readhepmc = false; // read HepMC files
+	if(hijing_events || embed_upsilons || embed_pions)
+	  readhepmc = true;
+
 	// Or:
 	// Use pythia
 	const bool runpythia8 = false;
@@ -37,15 +60,13 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	// E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
 	//const bool do_embedding = true;
 
-	//======================
-	// What to run
-	//======================
-
-	bool output_tracks = false;
-	bool pion_momentum = true;
-	// Upsilons
-	bool upsilons = false;           // throw single Upsilons if true
-	int istate = 1;  // Upsilon state = 1,2,3
+	if(hijing_events || embed_upsilons || embed_pions)
+	  {
+	    // get the Hijing input file name
+	    sprintf(inputFile,"/phenix/hhj/frawley/tracking/stage1_jobs/in/hijing_%.5i.txt.bz2",nproc);
+	    
+	    cout << "Reading Hijing events from file: " << endl << inputFile << endl; 
+	  }
 	
 	bool do_bbc = true;
 
@@ -184,7 +205,9 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	    HepMCNodeReader *hr = new HepMCNodeReader();
 	    se->registerSubsystem(hr);
 	  }
-	else if (pion_momentum)
+
+	// run pions for momentum, dca performance, alone or embedded in Hijing
+	if (pion_momentum || embed_pions)
 	  {
 	    cout << "Throw 100 pions" << endl;
 	    // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
@@ -220,7 +243,9 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	      }    
 	    
 	  }
-	else if(upsilons)
+
+	// run upsilons for momentum, dca performance, alone or embedded in Hijing
+	if(upsilons || embed_upsilons)
 	  {
 	    PHG4ParticleGeneratorVectorMeson *vgen = new PHG4ParticleGeneratorVectorMeson();
 	    vgen->set_decay_types("e+","e-");    // dielectron decay
@@ -255,7 +280,8 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 	    cout << "Upsilon generator for istate = " << istate << " created and registered "  << endl;	  
 	    
 	  }
-	else
+
+	/*
 	  {
 	    // toss low multiplicity dummy events
 	    PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
@@ -316,7 +342,8 @@ int Fun4All_G4_sPHENIX_KalmanPatReco (
 		se->registerSubsystem(pgen);
 	      }
 	  }
-	
+	*/
+
 	if (!readhits)
 	{
 		//---------------------

@@ -36,7 +36,8 @@ void cluster_resolution()
   gStyle->SetStatH(0.3);
 
   bool verbose = true;
-  
+  bool two_tracks = true;
+   
   // Setup parameters
   //=================
   
@@ -89,8 +90,10 @@ void cluster_resolution()
   
   // The condor job output files
   for(int i=0;i <1000; i++)
+    //for(int i=0;i <2; i++)
     {
-      //cout << "Enter file loop with i = " << i << endl;
+      cout << "Enter file loop with i = " << i << endl;
+
 
       TChain* ntp_track = new TChain("ntp_track","reco tracks");
       TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
@@ -99,16 +102,18 @@ void cluster_resolution()
       
       char name[500];
       // latest files 
-      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svtx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/eval_output/g4svtx_eval_%i.root",i);
 
-      // ladders and new TPC
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/upsilons_kalman_pat_rec_may15_spcdistx20_eval_output/g4svtx_eval_%i.root",i);
-      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/upsilons_kalman_pat_rec_may15_spcdist_eval_output/g4svtx_eval_%i.root",i);
+      //sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/bugfix_hijing_embedded_100pion_eval_output/g4svtx_eval_%i.root",i);
+      sprintf(name,"/sphenix/user/frawley/QTG_simulations/macros/macros/g4simulations/bugfix_100pion_eval_output/g4svtx_eval_%i.root",i);
 
       ntp_vertex->Add(name);
       ntp_track->Add(name);
       ntp_gtrack->Add(name);
       ntp_cluster->Add(name);
+      
+      if( ntp_vertex->GetEntries() < 1)
+	continue;
 
       // This include file contains the definitions of the ntuple variables
 #include "ntuple_variables.C"
@@ -142,7 +147,7 @@ void cluster_resolution()
 
 	  int ntr_ev = (int) ntracks;
 	  int ngtr_ev = (int) ngtracks;
-	  //cout << "    iev " << iev << " has ntracks " << ntracks << " ngtracks " << ngtracks << endl;
+	  cout << "    iev " << iev << " has ntracks " << ntracks << " ngtracks " << ngtracks << endl;
 
 	  tr_end = tr_start + ntr_ev;
 	  gtr_end = gtr_start + ngtr_ev;
@@ -154,10 +159,17 @@ void cluster_resolution()
 	      //cout << "    Enter gtr loop with j = " << j << endl;
 	      int tget = ntp_gtrack->GetEntry(j);
 	      if(tget == 0)
-		cout << "Did not find entry in ntp_gtrack " << j << endl;
-
-	      if( tgtrackid == 1 || tgtrackid == 2 )
-		ng4_tracks++;
+		{
+		  cout << "Did not find entry in ntp_gtrack " << j << endl;
+		  break;
+		}
+	      if(two_tracks) 
+		{
+		  if( tgtrackid == 1 || tgtrackid == 2 )
+		    ng4_tracks++;
+		}
+		else
+		  ng4_tracks++;
 	    }
 	  
 	  std::multimap<int,int> gtrackID_map;  // map of gtrackID to trackID
@@ -169,13 +181,20 @@ void cluster_resolution()
 	      //cout << "    Enter tr loop with j = " << j << endl;
 	      int tget = ntp_track->GetEntry(j);
 	      if(tget == 0)
-		cout << "Did not find entry in ntp_track " << j << endl;
-
+		{
+		  cout << "Did not find entry in ntp_track " << j << endl;
+		  break;
+		}
 	      gtrackID_map.insert(std::pair<int,int>(rgtrackid, j));  
 
 	      // count reco tracks with rtrackid 0 or 1 and rgtrackid 1 or 2 (i.e. matched reconstructed tracks
-	      if( (rtrackid == 0 && ( rgtrackid == 1 || rgtrackid == 2 ) )  || ( rtrackid == 1 && (rgtrackid == 1) || rgtrackid == 2) )
-		nreco_tracks++;
+	      if(two_tracks)
+		{
+		  if( (rtrackid == 0 && ( rgtrackid == 1 || rgtrackid == 2 ) )  || ( rtrackid == 1 && (rgtrackid == 1) || rgtrackid == 2) )
+		    nreco_tracks++;
+		}
+		else
+		  nreco_tracks++;
 	    }
 
 	  // use loop to fill multimap of (gtrackID,layer number) for all clusters in this event
@@ -183,8 +202,10 @@ void cluster_resolution()
 	    {
 	      int tget = ntp_cluster->GetEntry(p);
 	      if(tget == 0)
-		cout << "Did not find entry in ntp_cluster " << p << endl;
-
+		{
+		  cout << "Did not find entry in ntp_cluster " << p << endl;
+		  //break;
+		}
 	      //cout << " cevent " << cevent << " iev " << iev << endl;
 	      
 	      if(cevent == iev)
@@ -195,83 +216,87 @@ void cluster_resolution()
 		  rphi->Fill(x, y);
 
 		  // Histogram number of clusters per layer per g4 track 
-		  // look only at the first 2 tracks
-		  if(gtrackID == 1 || gtrackID == 2)
+		  if(two_tracks)
+		    {
+		      // look only at the first 2 tracks
+		      if(gtrackID == 1 || gtrackID == 2)
+			clusters_per_layer_per_g4_track->Fill(layer);
+		    }
+		  else
 		    clusters_per_layer_per_g4_track->Fill(layer);
 
 		  // Check that this cluster is matched to one of the electron tracks
 		  //      This is written to be run on ntuples containing dielectron decays of single Upsilon events - i.e. two tracks - so we can hard-code trackID values
 		  //      The following track selections will need to be modified for running on files obtained from events with more than 2 tracks
 		  //========================================================================================
-		  if( (trackID == 0 && ( gtrackID == 1 || gtrackID == 2 ) )  || ( trackID == 1 && (gtrackID == 1) || gtrackID == 2) )
-		    {
+		  if(two_tracks)
+		    if(! ( (trackID == 0 && ( gtrackID == 1 || gtrackID == 2 ) )  || ( trackID == 1 && (gtrackID == 1) || gtrackID == 2) ) )
+		      continue;
 
-		      // extract the cluster r-phi resolution - these are world coordinates, so we must consider both x and y
-		      double dx = x - gx;
-		      double dy = y - gy;
-		      double drphi = sqrt(dx*dx + dy*dy);
-		      // Get the sign of the difference in r-phi space
-		      double dphi = atan(dy/dx);
-		      double phi = atan(gy/gx);
-		      
-		      // is the measured hit CW or CCW from the truth? Give it a sign
-		      double sign = 0.0;
-		      if(atan(y/x) > atan(gy/gx)) 
-			sign = +1.0;
-		      else
-			sign = -1.0;
+		  double r_rec = sqrt(x*x + y*y);
+		  double  phi_rec = atan(y/x);
+		  
+		  double r_g = sqrt(gx*gx + gy*gy);
+		  double phi_g = atan(gy/gx);
+		  
+		  double drphi = r_rec * phi_rec - r_g * phi_g;
 
-		      // Extract the cluster Z reolution
-		      double dz = z - gz;
-
-		      double clus_pT = sqrt(gpx*gpx+gpy*gpy);
-		      double eta = asinh(gpz/sqrt(gpx*gpx+gpy*gpy));
-
-		      //if(eta < 0.2)  // optional cut 
-		      //if(clus_pT > 2)  // optional cut 
-			{			
-			  if(layer < 3)
-			    {
-			      delta_rphi->Fill( (double) layer, sign * drphi); 
-			      delta_z->Fill( (double) layer, dz); 
-			    }
-			  else if(layer >=3 && layer < 7) 
-			    {
-			      delta_rphi->Fill( (double) layer, sign * drphi); 
-			      delta_z->Fill( (double) layer, dz); 
-			    }
-			  else
-			    {
-			      delta_rphi->Fill( (double) layer, sign * drphi); 
-			      delta_z->Fill( (double) layer, dz); 
-			    }
-
-			  // Extract the number of hits per cluster
-			  cluster_size->Fill( (double) layer, size);
-			  
-			  // histogram the number of clusters per reconstructed track vs layer number for these reco tracks
-			  clusters_per_layer_per_reco_track->Fill(layer);
-			}
-		    }
+		  // Extract the cluster Z resolution
+		  double dz = z - gz;
+		  
+		  double clus_pT = sqrt(gpx*gpx+gpy*gpy);
+		  double eta = asinh(gpz/sqrt(gpx*gpx+gpy*gpy));
+		  
+		  //if(eta < 0.1 && eta > -0.1)  // optional cut 
+		      //if(clus_pT > 1)  // optional cut 
+		      {			
+			if(layer < 3)
+			  {
+			    //delta_rphi->Fill( (double) layer, sign * drphi); 
+			    delta_rphi->Fill( (double) layer, drphi); 
+			    delta_z->Fill( (double) layer, dz); 
+			  }
+			else if(layer >=3 && layer < 7) 
+			  {
+			    delta_rphi->Fill( (double) layer, drphi); 
+			    delta_z->Fill( (double) layer, dz); 
+			  }
+			else
+			  //else if(layer > 6 && layer < 16)
+			  {
+			    delta_rphi->Fill( (double) layer, drphi); 
+			    delta_z->Fill( (double) layer, dz); 
+			  }
+			
+			// Extract the number of hits per cluster
+			cluster_size->Fill( (double) layer, size);
+			
+			// histogram the number of clusters per reconstructed track vs layer number for these reco tracks
+			clusters_per_layer_per_reco_track->Fill(layer);
+		      }
 		}
 	    }
 	  
+	  
 	  // Capture the number of hit layers per track for each sysbsystem
 	  //=============================================
-
+	  
  	  std::vector<int> vtrack;
 	  std::vector<pair<int,double> > ptrack;
 	  
 	  // loop over truth tracks in ntp_gtrack
 	  for(int k = gtr_start; k < gtr_end;k++) 
 	    {
-	      if( !(gtrackID == 1 || gtrackID == 2) )
-		continue;
+	      if(two_tracks)
+		if( !(gtrackID == 1 || gtrackID == 2) )
+		  continue;
 	      
 	      int tget = ntp_gtrack->GetEntry(k);  
 	      if(tget == 0)
-		cout << "Did not find entry in ntp_gtrack " << k << endl;
-	      
+		{
+		  cout << "Did not find entry in ntp_gtrack " << k << endl;
+		  break;
+		}
 	      double gpt = sqrt(pow(tpx,2) + pow(tpy,2));
 	      
 	      // declare pair of multimap iterators named "range"

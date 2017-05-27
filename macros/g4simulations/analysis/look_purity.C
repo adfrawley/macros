@@ -31,11 +31,10 @@ void look_purity()
 
   // set to false only to generate pT resolution plots without fits
   // BEWARE: false means that the 4 sigma cuts are meaningless - thay are not done with fitted parameters
-  //bool pt_resolution_fit = true;
-  bool pt_resolution_fit = false;
+  bool pt_resolution_fit = true;
+  //bool pt_resolution_fit = false;
   
   TFile *fin = new TFile("root_files/purity_out.root");  
-  //TFile *fin = new TFile("root_files/haiwang_cyl_truthpatreco_purity_out.root");  
 
   if(!fin)
     {
@@ -72,17 +71,16 @@ void look_purity()
   double pT[NPT];
   double dca2d[NPT];
   for(int i = 0;i<NPT;i++)
-    //for(int i = 1;i<2;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.25;
-      double pthi = ptlo + 0.5;
+      double ptlo = (double) i * 0.5 + 0.15;
+      double pthi = (double) i * 0.5 + 0.35;
 
       int binlo = hpt_dca2d->GetXaxis()->FindBin(ptlo);
       int binhi = hpt_dca2d->GetXaxis()->FindBin(pthi);
 
-      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << " binhi " << binhi << std::endl;
+      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << pthi << " binhi " << binhi << std::endl;
 
-      TH1D *h = new TH1D("h","dca2d resolution",2000, 0.0, 2.0);
+      TH1D *h = new TH1D("h","dca2d resolution",1000, -0.1, 0.1);
       hpt_dca2d->ProjectionY("h",binlo,binhi);
       h->GetXaxis()->SetTitle("p_{T} (GeV/c)");
       h->GetXaxis()->SetTitle("#Delta dca2d (cm)");
@@ -90,15 +88,29 @@ void look_purity()
       if(i<8) h->Rebin(4);
       h->DrawCopy();
 
-      TF1 *f = new TF1("f","gaus");
-      f->SetParameter(1,h->GetMean());
-      f->SetParameter(2,h->GetRMS());
-      h->Fit(f);
+      double mean = h->GetMean();
+      double sigma = h->GetRMS();
+      double yield = h->Integral();
+  
+     pT[i] = (ptlo + pthi) / 2.0;
+    
+      double low = -0.01, high=0.01;
+      if(pT[i] < 6.0)
+	{
+	  low = 3.0*low;
+	  high = 3.0*high;
+	}
 
-      pT[i] = (ptlo + pthi) / 2.0;
+      TF1 *f = new TF1("f","gaus",low, high);
+      f->SetParameter(1, yield/100.0);
+      f->SetParameter(2, 0.0);
+      f->SetParameter(3,0.002);
+      h->Fit(f,"R");
+
+ 
 
       dca2d[i] = f->GetParameter(2);
-      cout << " pT " << pT[i] << " dca2d " << dca2d[i] << " counts " << h->Integral() << endl;
+      cout << " pT " << pT[i] << " dca2d " << dca2d[i] << " counts " << h->Integral() << " hist mean " << h->GetMean() << " hist RMS " << h->GetRMS() << endl;
     }
 
   //============================================
@@ -141,17 +153,17 @@ void look_purity()
 
   double dpT[NPT];
 
-  for(int i = 0;i<NPT;i++)
-    //for(int i = 98;i<99;i++)
+  dpT[0] = 1.0; // throw it away, stats are too poor
+  for(int i = 1;i<NPT;i++)
+  // for(int i = 0;i<1;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.25;
-      double pthi = ptlo + 0.5;
+      double ptlo = (double) i * 0.5 + 0.15;
+      double pthi = (double) i * 0.5 + 0.35;
 
       int binlo = hpt_compare->GetXaxis()->FindBin(ptlo);
       int binhi = hpt_compare->GetXaxis()->FindBin(pthi);
 
-      //TH1D *hpt = new TH1D("hpt","pT resolution ",500, -0.1, 0.1);    
-      TH1D *hpt = new TH1D("hpt","pT resolution ",200, -0.1, 0.1);    
+      TH1D *hpt = new TH1D("hpt","pT resolution ",200, 0, 2.0);    
       hpt_compare->ProjectionY("hpt",binlo,binhi);
       hpt->GetXaxis()->SetTitle("#Delta p_{T}/p_{T}");
       hpt->GetXaxis()->SetTitleOffset(1.0);
@@ -192,8 +204,8 @@ void look_purity()
   // Parameterize pT resolution
   
   TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 35.0);
-  fpt->SetParameter(0,0.00);
-  fpt->SetParameter(1,0.001);
+  fpt->FixParameter(0,0.007);
+  fpt->SetParameter(1,0.0015);
   if(pt_resolution_fit)  
     grdpt->Fit(fpt,"R");
 
@@ -225,8 +237,8 @@ void look_purity()
 
   for(int i = 0;i<NPT;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.25;
-      double pthi = ptlo + 0.5;
+      double ptlo = (double) i * 0.5 + 0.15;
+      double pthi = (double) i * 0.5 + 0.35;
       double ptval = (ptlo+pthi)/2.0;
 
       int binlo = hpt_dca2d->GetXaxis()->FindBin(ptlo);
@@ -248,6 +260,9 @@ void look_purity()
       int thi = hpt_truth->FindBin(ptval+0.1);
       double truth_yield = hpt_truth->Integral(tlo, thi);;
       eff_pt[i] = hpt1->Integral(momlo, momhi) / truth_yield;
+      cout << " pT " << ptval << " ptres " << ptres << " ptreslo " << ptreslo << " ptreshi " << ptreshi << " momlo " << momlo << " momhi " << momhi << endl;
+      cout << "      truth_yield " << truth_yield << " yield " << hpt1->Integral(momlo,momhi) << " eff_pt " << eff_pt[i] << endl;
+
       //eff_pt[i] = hpt1->Integral() / truth_yield;
 
       /*
@@ -293,7 +308,7 @@ void look_purity()
 
   TH1F *hd = new TH1F("hd","hd",100, 0.0, ptmax);
   hd->SetMinimum(0.0);
-  hd->SetMaximum(1.0);
+  hd->SetMaximum(1.1);
   hd->GetXaxis()->SetTitle("p_{T} (GeV/c)");
   hd->GetYaxis()->SetTitle("Single track efficiency");
   hd->Draw();
@@ -557,6 +572,26 @@ void look_purity()
   hreta->Draw("same");
 
   ceta->Update();
+
+  TCanvas *cfake = new TCanvas("cfake","cfake",4,4,800,600);
+  TH2D *hpt_nfake = 0;
+  fin->GetObject("hpt_nfake",hpt_nfake);
+  if(!hpt_nfake)
+    {
+      cout << "Did not get hpt_nfake" << endl;
+      exit(1);
+    }
+  TH1D *hfake = new TH1D("hfake","Fakes",200, 0.0, 68.0);    
+  hpt_nfake->ProjectionY("hfake",1,199);
+  gPad->SetLogy(1);
+  hfake->GetXaxis()->SetTitle("noise hits (nhits - nfromtruth)");
+  hfake->GetYaxis()->SetTitleOffset(1.2);
+  hfake->GetYaxis()->SetTitle("fraction of tracks");
+  hfake->GetXaxis()->SetTitleOffset(1.15);
+  double ntr = hfake->Integral();
+  hfake->Scale(1.0/ntr);
+  hfake->Draw();
+
 
   /*
   TCanvas *cvtx = new TCanvas("cvtx","cvtx",4,4,800,600);

@@ -72,7 +72,7 @@ void quarkonia_reconstruction_embedded()
   TChain* ntp_vertex = new TChain("ntp_vertex","events");
   TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
 
-  // The condor jobs make 500 files
+  // The condor jobs make 1000 files
   for(int i=0;i<1000;i++)
     {
       char name[500];
