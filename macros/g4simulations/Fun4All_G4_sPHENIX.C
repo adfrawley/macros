@@ -19,7 +19,7 @@ int Fun4All_G4_sPHENIX(
   const bool readhits = false;
   // Or:
   // read files in HepMC format (typically output from event generators like hijing or pythia)
-  const bool readhepmc = true; // read HepMC files
+  const bool readhepmc = false; // read HepMC files
   // Or:
   // Use pythia
   const bool runpythia8 = false;
@@ -30,8 +30,6 @@ int Fun4All_G4_sPHENIX(
   // In case embedding into a production output, please double check your G4Setup_sPHENIX.C and G4_*.C consistent with those in the production macro folder
   // E.g. /sphenix/sim//sim01/production/2016-07-21/single_particle/spacal2d/
   const bool do_embedding = false;
-  // Use particle generator (default simple generator)
-  const bool particles = false;
   // or gun/ very simple generator
   const bool usegun = false;
   // Throw single Upsilons, may be embedded in Hijing by setting readhepmc flag also  (note, careful to set Z vertex equal to Hijing events)
@@ -41,7 +39,7 @@ int Fun4All_G4_sPHENIX(
   //
   // Set a default in the case where all flags above are set to false - this will run the particle gun
   bool do_default = true;
-  if(readhits || readhepmc || runpythia8 || runpythia6 || particles || usegun || upsilons || pion_momentum)
+  if(readhits || readhepmc || runpythia8 || runpythia6 || usegun || upsilons || pion_momentum)
     do_default = false;
 
   //======================
@@ -185,8 +183,8 @@ int Fun4All_G4_sPHENIX(
       
       PHG4ParticleGeneratorVectorMeson *vgen = new PHG4ParticleGeneratorVectorMeson();
       vgen->set_decay_types("e+","e-");    // dielectron decay
-      vgen->set_vtx_zrange(-10.0, +10.0);
-      //vgen->set_vtx_zrange(0.0, 0.0); // use if Hijing events are at Z = 0
+      //vgen->set_vtx_zrange(-10.0, +10.0);
+      vgen->set_vtx_zrange(0.0, 0.0); // use if Hijing events are at Z = 0
       // Note: this rapidity range completely fills the acceptance of eta = +/- 1 unit
       vgen->set_rapidity_range(-1.0, +1.0);
       vgen->set_pt_range(0.0, 10.0);
@@ -219,7 +217,8 @@ int Fun4All_G4_sPHENIX(
       cout << "Upsilon generator for istate = " << istate << " created and registered "  << endl;	  
     }      
 
-  // run pions for momentum, dca performane, if readhepmc is set, they will be embedded in Hijing events
+
+  /*
   if (pion_momentum)
     {
       cout << "Throw 100 pions" << endl;
@@ -258,13 +257,13 @@ int Fun4All_G4_sPHENIX(
 	  se->registerSubsystem(pgen);	  
 	}          
     }
+  */
   
-  if(particles || usegun || do_default)
+  if(pion_momentum || usegun || do_default)
     {      
-      // toss low multiplicity dummy events
+      // run pions for momentum, dca performane, if readhepmc is set, they will be embedded in Hijing events
       PHG4SimpleEventGenerator *gen = new PHG4SimpleEventGenerator();
-      gen->add_particles("e-",1); // mu+,e+,proton,pi+,Upsilon
-      // gen->add_particles("e+",5); // mu-,e-,anti_proton,pi-
+      gen->add_particles("pi+",100); // mu-,e-,anti_proton,pi-
       if (readhepmc || do_embedding)
 	{
 	  gen->set_reuse_existing_vertex(true);
@@ -280,9 +279,9 @@ int Fun4All_G4_sPHENIX(
 	}
       gen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
       gen->set_vertex_size_parameters(0.0, 0.0);
-      gen->set_eta_range(-0.5, 0.5);
+      gen->set_eta_range(-1.0, 1.0);
       gen->set_phi_range(-1.0 * TMath::Pi(), 1.0 * TMath::Pi());
-      gen->set_pt_range(0.1, 10.0);
+      gen->set_pt_range(0.1, 50.0);
       gen->Embed(1);
       gen->Verbosity(0);
       if (! usegun)
