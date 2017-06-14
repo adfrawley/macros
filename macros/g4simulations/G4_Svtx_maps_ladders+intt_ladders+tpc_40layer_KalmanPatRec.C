@@ -1,5 +1,7 @@
 #include <vector>
 
+bool use_primary_vertex = false;        // use event vertex in the track fit if true
+
 const int n_maps_layer = 3;  // must be 0-3, setting it to zero removes MVTX completely, n < 3 gives the first n layers
 const int n_intt_layer = 4;   // must be 0-4, setting this to zero will remove the INTT completely, n < 4 gives you the first n layers
 const int n_gas_layer = 40;
@@ -417,6 +419,8 @@ void Svtx_Reco(int verbosity = 0)
   
   PHG4TrackKalmanFitter* kalman = new PHG4TrackKalmanFitter();
   kalman->Verbosity(0);  
+  if(use_primary_vertex)
+    kalman->set_fit_primary_tracks(true); // include primary vertex in track fit if true
   se->registerSubsystem(kalman);
   
     
@@ -470,7 +474,11 @@ void Svtx_Eval(std::string outputfile, int verbosity = 0)
   // SVTX evaluation
   //----------------
 
-  SvtxEvaluator* eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str());
+  SvtxEvaluator* eval;
+  if(use_primary_vertex)
+    eval = new SvtxEvaluator("SVTXEVALUATOR", outputfile.c_str(), "PrimaryTrackMap");
+  else
+    eval = new SvtxEvaluator("SVTXEVALUATOR",  outputfile.c_str());
   eval->do_cluster_eval(true);
   eval->do_g4hit_eval(false);
   eval->do_hit_eval(false);

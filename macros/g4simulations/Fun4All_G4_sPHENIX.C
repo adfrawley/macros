@@ -80,10 +80,15 @@ int Fun4All_G4_sPHENIX(
   bool do_global = true;
   bool do_global_fastsim = true;
   
-  bool do_calotrigger = false;
+  bool do_calotrigger = true && do_cemc_twr;
 
   bool do_jet_reco = false;
   bool do_jet_eval = false;
+
+  // HI Jet Reco for jet simulations in Au+Au (default is false for
+  // single particle / p+p simulations, or for Au+Au simulations which
+  // don't care about jets)
+  bool do_HIjetreco = false && do_jet_reco && do_cemc_twr && do_hcalin_twr && do_hcalout_twr;
 
   bool do_dst_compress = false;
 
@@ -218,47 +223,6 @@ int Fun4All_G4_sPHENIX(
     }      
 
 
-  /*
-  if (pion_momentum)
-    {
-      cout << "Throw 100 pions" << endl;
-      // throw embedded pions to 50 GeV/c in 0.5 GeV/c intervals      
-      
-      for(int i=0; i<100; i++)
-	{
-	  double pt = (double) i * 0.5 + 0.25;
-	  
-	  // toss low multiplicity dummy events
-	  PHG4SimpleEventGenerator *pgen = new PHG4SimpleEventGenerator();
-	  pgen->add_particles("pi+",1); // mu-,e-,anti_proton,pi-
-	  //pgen->add_particles("pi-",1); // mu-,e-,anti_proton,pi-
-	  
-	  // All tracks have to have the same vertex! If running many pions in a loop, use the vertex of the first one for all of the rest.
-	  if (readhepmc || i > 0) {
-	    pgen->set_reuse_existing_vertex(true);
-	    pgen->set_existing_vertex_offset_vector(0.0,0.0,0.0);
-	  } else {
-	    pgen->set_vertex_distribution_function(PHG4SimpleEventGenerator::Uniform,
-						   PHG4SimpleEventGenerator::Uniform,
-						   PHG4SimpleEventGenerator::Uniform);
-	    //pgen->set_vertex_distribution_mean(0.0,0.0,0.0);
-	    pgen->set_vertex_distribution_mean(0.0, 0.0, 0.0);
-	    pgen->set_vertex_distribution_width(0.0, 0.0, 5.0);
-	    //pgen->set_vertex_distribution_width(0.0, 0.0, 0.0);
-	  }
-	  pgen->set_vertex_size_function(PHG4SimpleEventGenerator::Uniform);
-	  pgen->set_vertex_size_parameters(0.0,0.0);
-	  pgen->set_eta_range(-1.0, 1.0);
-	  pgen->set_phi_range(-1.0*TMath::Pi(), 1.0*TMath::Pi());
-	  pgen->set_pt_range(pt, pt);
-	  
-	  pgen->Embed(1);
-	  pgen->Verbosity(0);
-	  se->registerSubsystem(pgen);	  
-	}          
-    }
-  */
-  
   if(pion_momentum || usegun || do_default)
     {      
       // run pions for momentum, dca performane, if readhepmc is set, they will be embedded in Hijing events
@@ -356,7 +320,7 @@ int Fun4All_G4_sPHENIX(
 
   if (do_cemc_twr) CEMC_Towers();
   if (do_cemc_cluster) CEMC_Clusters();
-
+  
   //-----------------------------
   // HCAL towering and clustering
   //-----------------------------
@@ -410,6 +374,12 @@ int Fun4All_G4_sPHENIX(
       gROOT->LoadMacro("G4_Jets.C");
       Jet_Reco();
     }
+
+  if (do_HIjetreco) {
+      gROOT->LoadMacro("G4_HIJetReco.C");
+      HIJetReco();
+  }
+
   //----------------------
   // Simulation evaluation
   //----------------------
