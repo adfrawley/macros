@@ -8,7 +8,8 @@ void G4Init(bool do_svtx = true,
 	    bool do_hcalin = true,
 	    bool do_magnet = true,
 	    bool do_hcalout = true,
-	    bool do_pipe = true)
+	    bool do_pipe = true,
+	    int n_TPC_layers = 40)
   {
 
   // load detector/material macros and execute Init() function
@@ -22,7 +23,7 @@ void G4Init(bool do_svtx = true,
     {
       //gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc_KalmanPatRec.C"); 
       gROOT->LoadMacro("G4_Svtx_maps_ladders+intt_ladders+tpc_40layer_KalmanPatRec.C"); 
-      SvtxInit();
+      SvtxInit(n_TPC_layers);
     }
 
   if (do_preshower) 
