@@ -1,5 +1,5 @@
 int Fun4All_G4_sPHENIX(
-		       const int nEvents = -1,
+		       const int nEvents = 1,
 		       const char * inputFile = "/sphenix/data/data02/review_2017-08-02/single_particle/spacal2d/fieldmap/G4Hits_sPHENIX_e-_eta0_8GeV-0002.root",
 		       const char * outputFile = "G4sPHENIX.root",
            const char * embed_input_file = "/sphenix/data/data02/review_2017-08-02/sHijing/fm_0-4.list"
@@ -7,7 +7,7 @@ int Fun4All_G4_sPHENIX(
 {
   // Set the number of TPC layer
   const int n_TPC_layers = 40;  // use 60 for backward compatibility only
-
+  
   //===============
   // Input options
   //===============
@@ -57,12 +57,14 @@ int Fun4All_G4_sPHENIX(
 
   bool do_preshower = false;
   
+
   //bool do_cemc = true;
   bool do_cemc = false;
   bool do_cemc_cell = do_cemc && true;
   bool do_cemc_twr = do_cemc_cell && true;
   bool do_cemc_cluster = do_cemc_twr && true;
   bool do_cemc_eval = do_cemc_cluster && true;
+
 
   //bool do_hcalin = true;
   bool do_hcalin = false;

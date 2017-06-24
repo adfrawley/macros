@@ -14,7 +14,6 @@ void SvtxInit(int n_TPC_layers = 40, int verbosity = 0)
 {
   n_gas_layer = n_TPC_layers;
   Max_si_layer = n_maps_layer + n_intt_layer + n_gas_layer;
-  //double inner_cage_radius = 20.; // options of 20.0 or 30.0 cm
 }
 
 double Svtx(PHG4Reco* g4Reco, double radius, 
@@ -55,10 +54,11 @@ double Svtx(PHG4Reco* g4Reco, double radius,
 		 << " pixel size 30 x 30 microns " << " active pixel thickness 0.0018 microns" << endl;
 	  
 	  PHG4MapsSubsystem  *lyr = new PHG4MapsSubsystem("MAPS", ilayer, stave_type[ilayer]);
-	  lyr->Verbosity(0);
+	  lyr->Verbosity(verbosity);
 	  
 	  lyr->set_double_param("layer_nominal_radius",maps_layer_radius[ilayer]);// thickness in cm
 	  lyr->set_int_param("N_staves", staves_in_layer[ilayer]);	  // uses fixed number of staves regardless of radius, if set. Otherwise, calculates optimum number of staves
+
 	  // The cell size is used only during pixilization of sensor hits, but it is convemient to set it now because the geometry object needs it
 	  lyr->set_double_param("pixel_x",0.0030);// pitch in cm
 	  lyr->set_double_param("pixel_z",0.0030);// length in cm
@@ -236,7 +236,6 @@ void Svtx_Cells(int verbosity = 0)
     }
 
   // TPC cells
-
   double tpc_cell_x = 0.12*0.5;
   double tpc_cell_y = 0.17*0.5;
 
@@ -245,7 +244,6 @@ void Svtx_Cells(int verbosity = 0)
       tpc_cell_x = 0.12;
       tpc_cell_y = 0.17;
     }
-
 
   // Main switch for TPC distortion
   const bool do_tpc_distortion = true;
