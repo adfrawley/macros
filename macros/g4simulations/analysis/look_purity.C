@@ -18,33 +18,20 @@ void look_purity()
   gStyle->SetOptFit(0);
   gStyle->SetOptTitle(0);
 
-  double ptmax = 40.0;
+  int n_maps_layer = 3;
+  int n_intt_layer = 4;
+  int n_tpc_layer = 40;
 
-  // set to true for maps3+intt4+tpc, false for maps3+tpc
-  // this determines the max possible single track efficiency due to silicon dead area of 1% per layer
-  bool intt = true;
-  double max_eff = 0.97;
-  if(intt)
-    {
-      max_eff = 0.93;
-    }
+  double ptmax = 40.0;
+  double hptmax = 40.0;
+  double ptstep = 0.2;
 
   // set to false only to generate pT resolution plots without fits
   // BEWARE: false means that the 4 sigma cuts are meaningless - thay are not done with fitted parameters
   bool pt_resolution_fit = true;
   //bool pt_resolution_fit = false;
   
-  /*
-  TFile *fin;
-  if(intt)
-    fin = new TFile("root_files/maps3+intt4+tpc60_purity_out.root");
-  else
-    fin = new TFile("root_files/maps3+tpc60_purity_out.root");
-  */
-
   TFile *fin = new TFile("root_files/purity_out.root");  
-  //TFile *fin = new TFile("root_files/no_refit_pions_purity_out.root");  
-  //TFile *fin = new TFile("root_files/refit_eta_purity_out.root");  
 
   if(!fin)
     {
@@ -52,8 +39,8 @@ void look_purity()
       exit(1);
     }
 
-  TCanvas *c1 = new TCanvas("c1","c1",5,5,800,600);
-  c1->Divide(2,1);
+  TCanvas *c1 = new TCanvas("c1","c1",5,5,900,500);
+  c1->Divide(3,1);
 
   //==========================
   // 2D histo for embedded pions
@@ -64,9 +51,17 @@ void look_purity()
   hpt_dca2d->GetYaxis()->SetTitleOffset(1.5);
   hpt_dca2d->Draw();
 
+  // 2D histo for embedded pions
+  TH2D *hpt_dcaZ = 0;
+  fin->GetObject("hpt_dcaZ",hpt_dcaZ);
+  c1->cd(2);
+  gPad->SetLeftMargin(0.12);
+  hpt_dcaZ->GetYaxis()->SetTitleOffset(1.5);
+  hpt_dcaZ->Draw();
+
   TH2D *hpt_compare = 0;
   fin->GetObject("hpt_compare",hpt_compare);
-  c1->cd(2);
+  c1->cd(3);
   gPad->SetLeftMargin(0.12);
   hpt_compare->GetYaxis()->SetTitleOffset(1.5);
   hpt_compare->Draw();
@@ -77,37 +72,53 @@ void look_purity()
 
   TCanvas *c2 = new TCanvas("c2","c2",20,20,800,600);
 
-  static const int NPT = 69;
-  double pT[NPT];
-  double dca2d[NPT];
+  int NPT = (int) (hptmax/ptstep);
+
+  double pT[200];
+  double dca2d[200];
   for(int i = 0;i<NPT;i++)
-    //for(int i = 10;i<11;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.25;
-      double pthi = ptlo + 0.5;
+      // divide pT range into bins of width ptstep GeV/c at 0.25, 0.75, 1.25, .....
+      // bins will be (e.g.)from 0-0.5, 0.5-1.0, 1.0-1.5, .....
+      double ptlo = (double) i * ptstep + 0.0;
+      double pthi = (double) i * ptstep + ptstep;
 
       int binlo = hpt_dca2d->GetXaxis()->FindBin(ptlo);
       int binhi = hpt_dca2d->GetXaxis()->FindBin(pthi);
 
-      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << " binhi " << binhi << std::endl;
+      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << pthi << " binhi " << binhi << std::endl;
 
-      TH1D *h = new TH1D("h","dca2d resolution",2000, 0.0, 2.0);
+      TH1D *h = new TH1D("h","dca2d resolution",2000, -0.1, 0.1);
       hpt_dca2d->ProjectionY("h",binlo,binhi);
       h->GetXaxis()->SetTitle("p_{T} (GeV/c)");
       h->GetXaxis()->SetTitle("#Delta dca2d (cm)");
       h->GetXaxis()->SetTitleOffset(1.0);
-      if(i>30) h->Rebin(4);
+      //if(i<8) h->Rebin(4);
       h->DrawCopy();
 
-      TF1 *f = new TF1("f","gaus");
-      f->SetParameter(1,h->GetMean());
-      f->SetParameter(2,h->GetRMS());
-      h->Fit(f);
+      double mean = h->GetMean();
+      double sigma = h->GetRMS();
+      double yield = h->Integral();
+  
+     pT[i] = (ptlo + pthi) / 2.0;
+    
+      double low = -0.01, high=0.01;
+      if(pT[i] < 6.0)
+	{
+	  low = 3.0*low;
+	  high = 3.0*high;
+	}
 
-      pT[i] = (ptlo + pthi) / 2.0;
+      TF1 *f = new TF1("f","gaus",low, high);
+      f->SetParameter(1, yield/100.0);
+      f->SetParameter(2, 0.0);
+      f->SetParameter(3,0.002);
+      h->Fit(f,"R");
+
+ 
 
       dca2d[i] = f->GetParameter(2);
-      cout << " pT " << pT[i] << " dca2d " << dca2d[i] << " counts " << h->Integral() << endl;
+      cout << " pT " << pT[i] << " dca2d " << dca2d[i] << " counts " << h->Integral() << " hist mean " << h->GetMean() << " hist RMS " << h->GetRMS() << endl;
     }
 
   //============================================
@@ -121,9 +132,12 @@ void look_purity()
   grdca2d->SetName("dca2d_resolution");
   grdca2d->SetTitle("dca2d resolution");
 
-  TH1D *hdummy = new TH1D("hdummy","#Delta dca2d vs p_{T}",100,0.0,ptmax);
+  TH1D *hdummy = new TH1D("hdummy","#Delta dca2d vs p_{T}",100,0.0,hptmax);
   hdummy->SetMinimum(0);
-  hdummy->SetMaximum(0.0050);
+  if(n_maps_layer == 0)
+    hdummy->SetMaximum(0.01);
+  else
+    hdummy->SetMaximum(0.0051);
   hdummy->GetXaxis()->SetTitle("p_{T} (GeV/c)");
   hdummy->GetYaxis()->SetTitle("#Delta dca2d (cm)");
   hdummy->GetYaxis()->SetTitleOffset(1.75);
@@ -131,49 +145,137 @@ void look_purity()
   hdummy->Draw();
   grdca2d->Draw("p");
 
- TLegend *ldca = new TLegend(0.2, 0.65, 0.85, 0.80,"","NDC");
+ TLegend *ldca = new TLegend(0.35, 0.80, 0.85, 0.85,"","NDC");
   ldca->SetBorderSize(0);
   ldca->SetFillColor(0);
   ldca->SetFillStyle(0);
   char lstr1[500];
-  if(intt)
-    sprintf(lstr1,"MAPS (3 layers)+INTT (4 layers)+TPC");
-  else
-    sprintf(lstr1,"MAPS(3)+TPC(60)");
+  sprintf(lstr1,"MAPS(%i)+INTT(%i)+TPC(%i)",n_maps_layer,n_intt_layer,n_tpc_layer);
   ldca->AddEntry(grdca2d, lstr1, "p");
   ldca->Draw();
 
   //===================================
+
+  //========================================
+  // extract DCA Z resolution vs pT from 2D histo hpt_dcaZ
+  // by fitting NPT pT slices
+
+  TCanvas *c2a = new TCanvas("c2a","c2a",20,20,800,600);
+
+  //static const int NPT = 69;
+  //double pT[NPT];
+  double dcaZ[200];
+  for(int i = 0;i<NPT;i++)
+    {
+      // divide pT range into bins of width 0.5 GeV/c at 0.25, 0.75, 1.25, .....
+      // bins will be from 0-0.5, 0.5-1.0, 1.0-1.5, .....
+      double ptlo = (double) i * ptstep + 0.0;
+      double pthi = (double) i * ptstep + ptstep;
+
+      int binlo = hpt_dcaZ->GetXaxis()->FindBin(ptlo);
+      int binhi = hpt_dcaZ->GetXaxis()->FindBin(pthi);
+
+      std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << pthi << " binhi " << binhi << std::endl;
+
+      TH1D *h = new TH1D("h","dcaZ resolution",2000, -0.1, 0.1);
+      hpt_dcaZ->ProjectionY("h",binlo,binhi);
+      h->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+      h->GetXaxis()->SetTitle("#Delta dcaZ (cm)");
+      h->GetXaxis()->SetTitleOffset(1.0);
+      //if(i<8) h->Rebin(4);
+      h->DrawCopy();
+
+      double mean = h->GetMean();
+      double sigma = h->GetRMS();
+      double yield = h->Integral();
+  
+     pT[i] = (ptlo + pthi) / 2.0;
+    
+      double low = -0.01, high=0.01;
+      if(pT[i] < 6.0)
+	{
+	  low = 3.0*low;
+	  high = 3.0*high;
+	}
+
+      TF1 *f = new TF1("f","gaus",low, high);
+      f->SetParameter(1, yield/100.0);
+      f->SetParameter(2, 0.0);
+      f->SetParameter(3,0.002);
+      h->Fit(f,"R");
+
+ 
+
+      dcaZ[i] = f->GetParameter(2);
+      cout << " pT " << pT[i] << " dcaZ " << dcaZ[i] << " counts " << h->Integral() << " hist mean " << h->GetMean() << " hist RMS " << h->GetRMS() << endl;
+    }
+
+  //============================================
+  // plot the dcaZ resolution extracted above for embedded pions
+
+  TCanvas *c3a = new TCanvas("c3a","c3a",100,100,800,600);
+  TGraph *grdcaZ = new TGraph(NPT,pT,dcaZ);
+  grdcaZ->SetMarkerStyle(20);
+  grdcaZ->SetMarkerSize(1.2);
+  grdcaZ->SetMarkerColor(kRed);
+  grdcaZ->SetName("dcaZ_resolution");
+  grdcaZ->SetTitle("dcaZ resolution");
+
+  TH1D *hdummya = new TH1D("hdummya","#Delta dcaZ vs p_{T}",100,0.0,hptmax);
+  hdummya->SetMinimum(0);
+
+  if(n_maps_layer == 0)  
+    hdummya->SetMaximum(0.043);
+  else
+    hdummya->SetMaximum(0.0051);
+  hdummya->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+  hdummya->GetYaxis()->SetTitle("#Delta dcaZ (cm)");
+  hdummya->GetYaxis()->SetTitleOffset(1.75);
+  gPad->SetLeftMargin(0.15);
+  hdummya->Draw();
+  grdcaZ->Draw("p");
+
+ TLegend *ldcaZ = new TLegend(0.35, 0.80, 0.85, 0.85,"","NDC");
+  ldcaZ->SetBorderSize(0);
+  ldcaZ->SetFillColor(0);
+  ldcaZ->SetFillStyle(0);
+  //char lstr1[500];
+  sprintf(lstr1,"MAPS(%i)+INTT(%i)+TPC(%i)",n_maps_layer,n_intt_layer,n_tpc_layer);
+  ldcaZ->AddEntry(grdcaZ, lstr1, "p");
+  ldcaZ->Draw();
+
+  //===================================
+
+
   // extract pT resolution vs pT from hpt_compare
 
   TCanvas *c4 = new TCanvas("c4","c4",60,60,800,600);
 
-  double dpT[NPT];
+  double dpT[200];
 
-  for(int i = 0;i<NPT;i++)
+  dpT[0] = 1.0; // throw it away, stats are too poor
+  for(int i = 1;i<NPT;i++)
+    //for(int i = 0;i<1;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.25;
-      double pthi = ptlo + 0.5;
+      // divide pT range into bins of width 0.5 GeV/c at 0.25, 0.75, 1.25, .....
+      // bins will be from 0-0.5, 0.5-1.0, 1.0-1.5, .....
+      double ptlo = (double) i * ptstep + 0.0;
+      double pthi = (double) i * ptstep + ptstep;
 
       int binlo = hpt_compare->GetXaxis()->FindBin(ptlo);
       int binhi = hpt_compare->GetXaxis()->FindBin(pthi);
 
-      //TH1D *hpt = new TH1D("hpt","pT resolution ",500, -0.1, 0.1);    
-      TH1D *hpt = new TH1D("hpt","pT resolution ",200, -0.1, 0.1);    
+      TH1D *hpt = new TH1D("hpt","pT resolution ",200, 0, 2.0);    
       hpt_compare->ProjectionY("hpt",binlo,binhi);
       hpt->GetXaxis()->SetTitle("#Delta p_{T}/p_{T}");
       hpt->GetXaxis()->SetTitleOffset(1.0);
-      if(i>30) hpt->Rebin(4);
+      //if(i>30) hpt->Rebin(4);
       hpt->DrawCopy();
 
       std::cout << "ptlo " << ptlo << " binlo " << binlo << " pthi " << pthi << " binhi " << binhi << " integral " << hpt->Integral() << std::endl;
 
-      TF1 *f = new TF1("f","gaus");
-      //f->SetParameter(1,hpt->GetMean());
-      //f->SetParameter(2,hpt->GetRMS() );
-      f->SetParameter(1,0.008);
-      f->SetParameter(2,0.002 );
-      hpt->Fit(f);
+      TF1 *f = new TF1("f","gaus",0.8,1.2);
+      hpt->Fit(f,"R");
 
       pT[i] = (ptlo + pthi) / 2.0;
 
@@ -185,39 +287,43 @@ void look_purity()
   // Plot pT resolution extracted above for embedded pions
 
   TCanvas *c5 = new TCanvas("c5","c5",100,100,800,600);
+  c5->SetLeftMargin(0.14);
   TGraph *grdpt = new TGraph(NPT,pT,dpT);
   grdpt->SetMarkerStyle(20);
   grdpt->SetMarkerSize(1.1);
   grdpt->SetName("pt_resolution");
   grdpt->SetTitle("pT resolution");
 
-  TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,ptmax);
+  TH1D *hdummy2 = new TH1D("hdummy2","#Delta p_{T} vs p_{T}",100,0.0,hptmax);
   hdummy2->SetMinimum(0);
-  hdummy2->SetMaximum(0.08);
+  hdummy2->SetMaximum(0.05);
+  //hdummy2->SetMaximum(0.2);
   hdummy2->GetXaxis()->SetTitle("p_{T}");
   hdummy2->GetYaxis()->SetTitle("#Delta p_{T}/p_{T}");
-  hdummy2->GetYaxis()->SetTitleOffset(1.2);
+  hdummy2->GetYaxis()->SetTitleOffset(1.55);
   hdummy2->Draw();
   grdpt->Draw("p");
 
   // Parameterize pT resolution
   
-  TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 25.0);
-  fpt->SetParameter(0,0.0069);
-  fpt->SetParameter(1,0.001758);
+  //TF1 *fpt = new TF1("fpt","sqrt([0]*[0] + [1]*[1]*x*x)", 0, 35.0);
+  TF1 *fpt = new TF1("fpt","[0] + [1]*x", 2.0, hptmax);
+ fpt->SetParameter(0,0.005);
+  fpt->SetParameter(1,0.0015);
   if(pt_resolution_fit)  
     grdpt->Fit(fpt,"R");
 
   char lab[1000];
-  sprintf(lab,"#frac{#Deltap_{T}}{p_{T}} = #sqrt{%.4f^{2} + (%.6f #times p_{T})^{2}}", fpt->GetParameter(0), fpt->GetParameter(1));
-  TLatex *mres = new TLatex(0.2,0.65,lab);
+  //sprintf(lab,"#frac{#Deltap_{T}}{p_{T}} = #sqrt{%.4f^{2} + (%.6f #times p_{T})^{2}}", fpt->GetParameter(0), fpt->GetParameter(1))
+  sprintf(lab,"#frac{#Deltap_{T}}{p_{T}} = %.4f + %.6f #times p_{T}", fpt->GetParameter(0), fpt->GetParameter(1));
+  TLatex *mres = new TLatex(0.35,0.20,lab);
   //mres->SetTextSize(0.1);
   mres->SetNDC();
   if(pt_resolution_fit)  
     mres->Draw();
 
   // For making a cut on the momentum difference between rgpT and rpT 
-  double pT_sigmas = 4.0;
+  double pT_sigmas = 6.0;
   double const_term =  fpt->GetParameter(0);
   double linear_term = fpt->GetParameter(1);
 
@@ -229,15 +335,17 @@ void look_purity()
       exit(1);
     }
   
-  TCanvas *ctruth = new TCanvas("ctruth","ctruth", 5,5,800,600);
+  //TCanvas *ctruth = new TCanvas("ctruth","ctruth", 5,5,800,600);
 
-  TH1D *hpt_matched = new TH1D("hpt_matched","hpt_matched", 500, 0.0, ptmax);
-  double eff_pt[NPT];
+  TH1D *hpt_matched = new TH1D("hpt_matched","hpt_matched", 500, 0.0, hptmax);
+  double eff_pt[200];
 
   for(int i = 0;i<NPT;i++)
     {
-      double ptlo = (double) i * 0.5 + 0.25;
-      double pthi = ptlo + 0.5;
+      // divide pT range into bins of width 0.5 GeV/c at 0.25, 0.75, 1.25, .....
+      // bins will be from 0-0.5, 0.5-1.0, 1.0-1.5, .....
+      double ptlo = (double) i * ptstep + 0.0;
+      double pthi = (double) i * ptstep + ptstep;
       double ptval = (ptlo+pthi)/2.0;
 
       int binlo = hpt_dca2d->GetXaxis()->FindBin(ptlo);
@@ -255,11 +363,12 @@ void look_purity()
 
       hpt_matched->Fill(ptval, hpt1->Integral(momlo, momhi));
 
-      int tlo = hpt_truth->FindBin(ptval-0.1);
-      int thi = hpt_truth->FindBin(ptval+0.1);
+      int tlo = hpt_truth->FindBin(ptlo);
+      int thi = hpt_truth->FindBin(pthi);
       double truth_yield = hpt_truth->Integral(tlo, thi);;
       eff_pt[i] = hpt1->Integral(momlo, momhi) / truth_yield;
-      //eff_pt[i] = hpt1->Integral() / truth_yield;
+      cout << " pT " << ptval << " ptres " << ptres << " ptreslo " << ptreslo << " ptreshi " << ptreshi << " momlo " << momlo << " momhi " << momhi << endl;
+      cout << "      truth_yield " << truth_yield << " yield " << hpt1->Integral(momlo,momhi) << " eff_pt " << eff_pt[i] << endl;
 
       /*
       if(i == 20)
@@ -302,9 +411,9 @@ void look_purity()
   cout << " create canvas c7" << endl;
   TCanvas *c7 = new TCanvas("c7","c7",60,60,1000,600);
 
-  TH1F *hd = new TH1F("hd","hd",100, 0.0, ptmax);
+  TH1F *hd = new TH1F("hd","hd",100, 0.0, hptmax);
   hd->SetMinimum(0.0);
-  hd->SetMaximum(1.2);
+  hd->SetMaximum(1.1);
   hd->GetXaxis()->SetTitle("p_{T} (GeV/c)");
   hd->GetYaxis()->SetTitle("Single track efficiency");
   hd->Draw();
@@ -317,22 +426,27 @@ void look_purity()
 
   gr_eff->Draw("p");
 
+  /*
   // indicate the maximum possible single track eff due to silicon dead area of 1%/layer
   TLine *lmax = new TLine(0.0, max_eff, ptmax, max_eff);
   lmax->SetLineColor(kRed);
   lmax->SetLineStyle(2);
   lmax->SetLineWidth(3.0);
   //lmax->Draw();
+  */
 
  TLegend *leff = new TLegend(0.4, 0.25, 0.85, 0.40,"","NDC");
   leff->SetBorderSize(0);
   leff->SetFillColor(0);
   leff->SetFillStyle(0);
   char lstr[500];
+  sprintf(lstr,"MAPS(%i)+INTT(%i)+TPC(%i)",n_maps_layer,n_intt_layer,n_tpc_layer);
+  /*
   if(intt)
-    sprintf(lstr,"MAPS(3)+INTT(4)+TPC(60)");
+    sprintf(lstr,"MAPS(3)+INTT(4)+TPC(40)");
   else
     sprintf(lstr,"MAPS(3)+TPC(60)");
+  */
   leff->AddEntry(gr_eff, lstr, "p");
   //leff->AddEntry(lmax, "max possible efficiency", "l");
   leff->Draw();
@@ -392,6 +506,7 @@ void look_purity()
       delete hpt1;
     }
 
+
   cout << " create canvas c7" << endl;
   TCanvas *cpur = new TCanvas("cpur","cpur",60,60,1000,600);
 
@@ -413,7 +528,7 @@ void look_purity()
       pEff->GetPaintedGraph()->GetXaxis()->SetTitleOffset(1.1);
     }
 
-  /*
+    /*
   hd->SetMinimum(0.0);
   hd->SetMaximum(1.0);
   hd->GetXaxis()->SetTitle("p_{T} (GeV/c)");
@@ -427,8 +542,10 @@ void look_purity()
   gr_pur->SetMarkerColor(kRed);
 
   gr_pur->Draw("p");
-  */
 
+    */
+
+    /*
   //============================================
   // plot purity for Hijing tracks
 
@@ -478,6 +595,7 @@ void look_purity()
   leg->AddEntry(hpurity_dca[3], "3 noise hits", "l");
   c6->cd(2);
   leg->Draw();
+    */
 
   //=========================
   // plot quality for Hijing tracks
@@ -564,22 +682,44 @@ void look_purity()
   TH1D *hreta = 0;
   fin->GetObject("hreta",hreta);
 
+  hgeta->GetXaxis()->SetTitle("#eta");
   hgeta->Draw();
   hreta->Draw("same");
 
   ceta->Update();
 
-  /*
-  TCanvas *cvtx = new TCanvas("cvtx","cvtx",4,4,800,600);
-  TH1D *h_evt_dca2d = 0;
-  fin->GetObject("h_evt_dca2d",h_evt_dca2d);
-  if(!h_evt_dca2d)
+  TCanvas *cfake = new TCanvas("cfake","cfake",4,4,800,600);
+  TH2D *hpt_nfake = 0;
+  fin->GetObject("hpt_nfake",hpt_nfake);
+  if(!hpt_nfake)
     {
-      cout << "Did not get h_evt_dca2d" << endl;
+      cout << "Did not get hpt_nfake" << endl;
       exit(1);
     }
-  h_evt_dca2d->Draw();
-  */
+  TH1D *hfake = new TH1D("hfake","Fakes",200, 0.0, 68.0);    
+  hpt_nfake->ProjectionY("hfake",1,199);
+  gPad->SetLogy(1);
+  hfake->GetXaxis()->SetTitle("noise hits (nhits - nfromtruth)");
+  hfake->GetYaxis()->SetTitleOffset(1.2);
+  hfake->GetYaxis()->SetTitle("fraction of tracks");
+  hfake->GetXaxis()->SetTitleOffset(1.15);
+  double ntr = hfake->Integral();
+  hfake->Scale(1.0/ntr);
+  hfake->Draw();
+
+
+
+  TCanvas *cvtx = new TCanvas("cvtx","cvtx",4,4,800,600);
+  TH1D *hzevt = 0;
+  fin->GetObject("hzevt",hzevt);
+  if(!hzevt)
+    {
+      cout << "Did not get hzevt" << endl;
+      exit(1);
+    }
+  hzevt->Draw();
+
+
   // Output some graphs for comparison plots
 
  TFile *fout = new TFile("root_files/look_purity_out.root","recreate");

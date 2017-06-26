@@ -4,14 +4,14 @@
   // access the event ntuple variables
   //===================================
 
-  int nevents = ntp_vertex->GetEntries();
-  cout << "Number of events " << nevents << endl;
+//  int nevents = ntp_vertex->GetEntries();
+//cout << "Number of events " << nevents << endl;
 
 //int num_g4hits = ntp_g4hit->GetEntries();
 //cout << "Number of g4hits " << num_g4hits << endl;
 
-int num_clusters = ntp_cluster->GetEntries();
-cout << "Number of clusters " << num_clusters << endl;
+//int num_clusters = ntp_cluster->GetEntries();
+//cout << "Number of clusters " << num_clusters << endl;
 
   Float_t event;
   Float_t ntracks;
@@ -93,7 +93,7 @@ cout << "Number of clusters " << num_clusters << endl;
   // Access ntp_track (reco'd) variables
   //=====================================
 
-cout << "set up ntp_track access" << endl;
+//cout << "set up ntp_track access" << endl;
 
   Float_t rpx;
   Float_t rpy;
@@ -113,7 +113,7 @@ cout << "set up ntp_track access" << endl;
   Float_t rgtrackid;
   Float_t rgflavor;
   Float_t rprimary;
-  Float_t rpurity;
+  Float_t rnfromtruth;
   Float_t rvz;
   Float_t rpcax;
   Float_t rpcay;
@@ -123,6 +123,11 @@ cout << "set up ntp_track access" << endl;
   Float_t rnhits;
   Float_t rgnhits;
   Float_t rgembed;
+  // Calorimeter matching variables
+Float_t cemc_e;
+Float_t cemc3x3_e;
+Float_t cemc_dphi;
+Float_t cemc_deta;
   
   TBranch* b_px;
   TBranch* b_py;
@@ -142,7 +147,7 @@ cout << "set up ntp_track access" << endl;
   TBranch* b_gtrackid;
   TBranch* b_gflavor;
   TBranch* b_primary;
-  TBranch* b_purity;
+  TBranch* b_nfromtruth;
   TBranch* b_gvz;
   TBranch* b_pcax;
   TBranch* b_pcay;
@@ -152,7 +157,12 @@ cout << "set up ntp_track access" << endl;
   TBranch* b_rnhits;
   TBranch* b_rgnhits;
   TBranch* b_rgembed;
-  
+// calorimeter
+    TBranch* b_cem_e;
+    TBranch* b_cem3x3_e;
+    TBranch* b_cem_dphi;
+    TBranch* b_cem_deta;
+
   //set branches
   ntp_track->SetBranchAddress("px", &rpx);
   ntp_track->SetBranchAddress("py", &rpy);
@@ -172,7 +182,7 @@ cout << "set up ntp_track access" << endl;
   ntp_track->SetBranchAddress("gtrackID", &rgtrackid);
   ntp_track->SetBranchAddress("gflavor", &rgflavor);
   ntp_track->SetBranchAddress("gprimary", &rprimary);
-  ntp_track->SetBranchAddress("nfromtruth", &rpurity);
+  ntp_track->SetBranchAddress("nfromtruth", &rnfromtruth);
   ntp_track->SetBranchAddress("gvz", &rvz);
   ntp_track->SetBranchAddress("pcax", &rpcax);
   ntp_track->SetBranchAddress("pcay", &rpcay);
@@ -182,6 +192,11 @@ cout << "set up ntp_track access" << endl;
   ntp_track->SetBranchAddress("nhits", &rnhits);
   ntp_track->SetBranchAddress("gnhits", &rgnhits);
   ntp_track->SetBranchAddress("gembed", &rgembed);
+// calorimeter
+  ntp_track->SetBranchAddress("cemce", &cemc_e);
+  ntp_track->SetBranchAddress("cemce3x3", &cemc3x3_e);
+  ntp_track->SetBranchAddress("cemcdphi", &cemc_dphi);
+  ntp_track->SetBranchAddress("cemcdeta", &cemc_deta);
   
   //get Branches
   b_px = ntp_track->GetBranch("px");
@@ -201,7 +216,7 @@ cout << "set up ntp_track access" << endl;
   b_gtrackid = ntp_track->GetBranch("gtrackID");
   b_gflavor = ntp_track->GetBranch("gflavor");
   b_primary = ntp_track->GetBranch("gprimary");
-  b_purity = ntp_track->GetBranch("nfromtruth");
+  b_nfromtruth = ntp_track->GetBranch("nfromtruth");
   b_gvz = ntp_track->GetBranch("gvz");
   b_pcax = ntp_track->GetBranch("pcax");
   b_pcay = ntp_track->GetBranch("pcay");
@@ -211,12 +226,17 @@ cout << "set up ntp_track access" << endl;
   b_rnhits = ntp_track->GetBranch("nhits");
   b_rnhits = ntp_track->GetBranch("gnhits");
   b_rgembed = ntp_track->GetBranch("gembed");
+// calorimeter
+  b_rgembed = ntp_track->GetBranch("cemce");  
+  b_rgembed = ntp_track->GetBranch("cemce3x3");
+  b_rgembed = ntp_track->GetBranch("cemcdphi");
+  b_rgembed = ntp_track->GetBranch("cemcdeta");
   
   //================================
   // Access the g4track ntuple variables
   //================================
 
-cout << "set up ntp_gtrack access" << endl;
+//cout << "set up ntp_gtrack access" << endl;
 
   Float_t tpx;
   Float_t tpy;
@@ -226,11 +246,14 @@ cout << "set up ntp_gtrack access" << endl;
   Float_t tfpz;
   Float_t tevent;
   Float_t tgtrackid;
+  Float_t ttrackid;
   Float_t tflavor;
   Float_t tvx;
   Float_t tvy;
   Float_t tvz;
+  Float_t tgnhits;
   Float_t tnhits;
+  Float_t tnfromtruth;
   Float_t tchisq;
   Float_t tprimary;
   Float_t tbestpurity;
@@ -244,11 +267,14 @@ cout << "set up ntp_gtrack access" << endl;
   TBranch* b_tfpz;
   TBranch* b_tevent;
   TBranch* b_tgtrackid;
+  TBranch* b_ttrackid;
   TBranch* b_tflavor;
   TBranch* b_tvx;
   TBranch* b_tvy;
   TBranch* b_tvz;
+  TBranch* b_tgnhits;
   TBranch* b_tnhits;
+  TBranch* b_tnfromtruth;
   TBranch* b_tchisq;
   TBranch* b_tprimary;
   TBranch* b_tbestpurity;
@@ -263,11 +289,14 @@ cout << "set up ntp_gtrack access" << endl;
   ntp_gtrack->SetBranchAddress("gfpz", &tfpz);
   ntp_gtrack->SetBranchAddress("event", &tevent);
   ntp_gtrack->SetBranchAddress("gtrackID", &tgtrackid);
+  ntp_gtrack->SetBranchAddress("trackID", &ttrackid);
   ntp_gtrack->SetBranchAddress("gflavor", &tflavor);
   ntp_gtrack->SetBranchAddress("gvx", &tvx);
   ntp_gtrack->SetBranchAddress("gvy", &tvy);
   ntp_gtrack->SetBranchAddress("gvz", &tvz);
-  ntp_gtrack->SetBranchAddress("gnhits", &tnhits);
+  ntp_gtrack->SetBranchAddress("gnhits", &tgnhits);
+  ntp_gtrack->SetBranchAddress("nhits", &tnhits);
+  ntp_gtrack->SetBranchAddress("nfromtruth", &tnfromtruth);
   ntp_gtrack->SetBranchAddress("chisq", &tchisq);
   ntp_gtrack->SetBranchAddress("gprimary", &tprimary);
 //ntp_gtrack->SetBranchAddress("bestpurity", &tbestpurity);
@@ -293,7 +322,7 @@ cout << "set up ntp_gtrack access" << endl;
 
   // ntp_cluster access variables
 
-cout << "set up ntp_cluster access" << endl;
+//cout << "set up ntp_cluster access" << endl;
   
   float_t cevent;
   Float_t hitID;

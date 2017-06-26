@@ -27,8 +27,10 @@ void quarkonia_reconstruction_embedded()
   gStyle->SetOptStat(1);
   gStyle->SetOptTitle(1);
 
-  bool verbose = false;
-  
+  int verbose = 0;
+  int embed_flag = 2;  // embedding flag used during Upsilon generation
+
+  // track cuts  
   double quality_cut = 3.0;
   double dca_cut = 0.1;
 
@@ -37,60 +39,7 @@ void quarkonia_reconstruction_embedded()
   
   double decaymass=0.000511;
   cout << "Assuming decay particle mass is " << decaymass << endl;
-  
-  // Open the g4 evaluator output file
 
-  /*  
-#ifdef TEST
-  bool ups1s = true;
-  bool ups2s = false;
-  bool ups3s = false;
-
-  cout << "Reading test ntuple " << endl;
-  TChain* ntp_track = new TChain("ntp_track","reco tracks");
-  ntp_track->Add("../g4svtx_eval.root");
-
-  ntp_track->Print();
-  TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
-  ntp_gtrack->Add("../g4svtx_eval.root");
-  ntp_gtrack->Print();
-
-  TChain* ntp_vertex = new TChain("ntp_vertex","events");
-  ntp_vertex->Add("../g4svtx_eval.root");
-  ntp_gtrack->Print();
-
-  TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
-#endif
-
-#ifndef TEST
-  */
-  cout << "Reading electron ntuples " << endl; 
-
-  
-  TChain* ntp_track = new TChain("ntp_track","reco tracks");
-  TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
-  TChain* ntp_vertex = new TChain("ntp_vertex","events");
-  TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
-
-  // The condor jobs make 500 files
-  for(int i=0;i<500;i++)
-    {
-      char name[500];
-      sprintf(name,"../eval_output/g4svx_eval_%i.root",i);
-      //sprintf(name,"../pions_plus_ups1s_intt4_massfix_no_refit_eval_output/g4svx_eval_%i.root",i);
-
-      //sprintf(name,"../refit_pions_plus_ups1s_intt2_eval_output_2nd/g4svx_eval_%i.root",i);
-
-      ntp_vertex->Add(name);
-      ntp_track->Add(name);
-      ntp_gtrack->Add(name);
-    }
-
-
-  // Ntuple access variables
-  // This include file contains the definitions of the ntuple variables                                                                        
-#include "ntuple_variables.C"
-  
   // Define some histograms
   
   int nbpt = 20;
@@ -101,9 +50,9 @@ void quarkonia_reconstruction_embedded()
   TH1F* hrpt = new TH1F("hrpt"," pT", nbpt, 0.0, ptmax);
   TH1F* hgpt = new TH1F("hgpt","g4 pT", nbpt, 0.0, ptmax);
 
-  TH1D *g4mass = new TH1D("g4mass","G4 input invariant mass",100,7.0,11.0);
+  TH1D *g4mass = new TH1D("g4mass","G4 input invariant mass",200,7.0,11.0);
   g4mass->GetXaxis()->SetTitle("invariant mass (GeV/c^{2})");
-  TH1D *g4mass_primary = new TH1D("g4mass_primary","G4 input invariant mass",100,7.0,11.0);
+  TH1D *g4mass_primary = new TH1D("g4mass_primary","G4 input invariant mass",200,7.0,11.0);
   g4mass_primary->GetXaxis()->SetTitle("invariant mass (GeV/c^{2})");
 
   TH1D *recomass = new TH1D("recomass","Reconstructed invariant mass",200,7.0,11.0);
@@ -111,312 +60,373 @@ void quarkonia_reconstruction_embedded()
   TH1D *recomass_primary = new TH1D("recomass_primary","Reconstructed invariant mass",200,7.0,11.0);
   recomass_primary->GetXaxis()->SetTitle("invariant mass (GeV/c^{2})");
 
-  int ups_state = 1;
-  int nups_requested = 0;
-  // These are for 1 year of pp running
-  if(ups_state == 1)
-    nups_requested = 8769;
-  else if(ups_state == 2)
-    nups_requested = 2205;
-  else if(ups_state == 3)
-    nups_requested = 1156;
-  else
-    nups_requested = 20000;
+  int ups_state = 1;   // used in naming of output files
 
-  // override
+  // Number of upsilons to process - quit after this number is reached
+  int nups_requested = 0;
+  /*
+  // These values are for 1 year of pp running
+  if(ups_state == 1)  nups_requested = 8769;
+  if(ups_state == 2)  nups_requested = 2205;
+  if(ups_state == 3)  nups_requested = 1156;
+  */
   nups_requested = 100000;
 
   cout << "Upsilons requested = " << nups_requested << endl;
-  
-  //=======================
-  // Loop over events
-  //=======================
 
-  int nr = 0;
-  int ng = 0;
   int nrecog4mass = 0;
   int nrecormass = 0;
-
-  for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
+  
+  // Open the g4 evaluator output file
+  cout << "Reading electron ntuples " << endl; 
+  
+  // The condor job output files -  we open them one at a time and process them
+  for(int i=0;i<1000;i++)
     {
-      // drop out when the requested number of reco'd Upsilons has been reached
-      if(nrecormass > nups_requested)
-	break;
+      char name[500];
+      sprintf(name,"/sphenix/user/frawley/latest/macros/macros/g4simulations/eval_output/g4svtx_eval_%i.root_g4svtx_eval.root",i);
+     
+      //sprintf(name,"/sphenix/user/frawley/latest/macros/macros/g4simulations/MVTX_24.9_33.0_40.8_0.304_0.304_0.304_eval_output/g4svtx_eval_%i.root_g4svtx_eval.root",i);
+      //sprintf(name,"/sphenix/user/frawley/latest/macros/macros/g4simulations/MVTX_23.4_31.5_39.3_0.304_0.304_0.304_eval_output/g4svtx_eval_%i.root_g4svtx_eval.root",i);
 
-      int recoget = ntp_vertex->GetEntry(iev);
+      cout << "Adding file " << name << endl;
 
-
-      if(verbose)
-	cout << "iev " << iev
-	     << " event " << event
-	     << " ntracks  (reco) " << ntracks
-	     << " ngtracks (g4) " << ngtracks
-	     << " gvz " << egvz
-	     << " vz " << evz
-	     << endl;
+      TChain* ntp_track = new TChain("ntp_track","reco tracks");
+      TChain* ntp_gtrack = new TChain("ntp_gtrack","g4 tracks");
+      TChain* ntp_vertex = new TChain("ntp_vertex","events");
+      TChain *ntp_cluster = new TChain("ntp_cluster","clusters");
       
-      //============================
-      // process G4 tracks
-      // for this event
-      //============================
+      ntp_vertex->Add(name);
+      ntp_track->Add(name);
+      ntp_gtrack->Add(name);
 
-      int ng4trevt_elec = -1;
-      int ng4trevt_pos = -1;
-      int g4trnum_elec[1000];
-      int g4trnum_pos[1000];
+      cout << "The ntuples contain " << ntp_vertex->GetEntries() << " events " << endl;
 
-      //cout << "Number of ntp_gtrack entries = " << recoget1 << endl;
+      // Ntuple access variables
+      // This include file contains the definitions of the ntuple variables                                                                        
+#include "ntuple_variables.C"
+    
+      //=======================
+      // Loop over events
+      //=======================
 
-      for(int ig=ng;ig<ng+ngtracks;ig++)
-        {
-          int recoget1 = ntp_gtrack->GetEntry(ig);
+      int nr = 0;
+      int ng = 0;
 
-	  if( tgtrackid != 1 && tgtrackid != 2)      
-	    //if( tgtrackid > 10)
-	    continue;
-
-	  // we want only electrons or positrons
-	  if(tflavor != 11 && tflavor != -11)
-	    continue;
-
-	  if(tflavor == 11)
-	    {
-	      // electron
-	      ng4trevt_elec++;
-	      if(ng4trevt_elec > 999)
-		continue;
-
-	      if(verbose)
-		cout << " Found electron:" << endl
-		     << "  ig " << ig
-		     << " ng4trevt_elec " << ng4trevt_elec
-		     << " gtrackID " << tgtrackid
-		     << " gflavor " << tflavor
-		     << " tpx " << tpx
-		     << " tpy " << tpy
-		     << " tpz " << tpz
-		     << endl;
-	      
-	      g4trnum_elec[ng4trevt_elec] = ig;
-	    }
-	  else
-	    {
-	      // positron
-	      ng4trevt_pos++;
-	      if(ng4trevt_pos > 999)
-		continue;
-
-	      if(verbose)
-		cout << " Found positron:" << endl
-		     << "  ig " << ig
-		     << " ng4trevt_pos " << ng4trevt_pos
-		     << " gtrackID " << tgtrackid
-		     << " gflavor " << tflavor
-		     << " tpx " << tpx
-		     << " tpy " << tpy
-		     << " tpz " << tpz
-		     << endl;
-	      
-	      g4trnum_pos[ng4trevt_pos] = ig;
-	    }
-	}	  
-      ng4trevt_elec++;
-      ng4trevt_pos++;
-
-      if(verbose)
-	cout << "For this event found " << ng4trevt_elec << " g4 electrons and " << ng4trevt_pos << " g4 positrons"  << endl;
- 
-      // make all pairs of g4 electrons and positrons
-      for(int ielec=0;ielec<ng4trevt_elec;ielec++)
+      for(int iev=0;iev<ntp_vertex->GetEntries();iev++)
 	{
-	  int recoelec = ntp_gtrack->GetEntry(g4trnum_elec[ielec]);
-	  
-	  double elec_pT = sqrt(tpx*tpx+tpy*tpy);
-	  double elec_eta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
+	  // drop out when the requested number of reco'd Upsilons has been reached
+	  if(nrecormass > nups_requested)
+	    break;
 
-	  int gtrid1 = tgtrackid;
- 
-	  TLorentzVector t1;
-	  double E1 = sqrt( pow(tpx,2) + pow(tpy,2) + pow(tpz,2) + pow(decaymass,2));	  
-	  t1.SetPxPyPzE(tpx,tpy,tpz,E1);	  
-	  
-	  // print out track details
+	  int recoget = ntp_vertex->GetEntry(iev);
+
+
 	  if(verbose)
-	    cout << "  Pair electron:  iev " << iev << " ielec " << ielec
-		 << " g4trnum_elec " << g4trnum_elec[ielec]
-		 << " tgtrackid " << tgtrackid
-		 << " tflavor " << tflavor
-		 << " tpx " << tpx
-		 << " tpy " << tpy
-		 << " tpz " << tpz
-		 << " elec_eta " << elec_eta
-		 << " elec_gpT " << elec_pT
+	    cout << "iev " << iev
+		 << " event " << event
+		 << " ntracks  (reco) " << ntracks
+		 << " ngtracks (g4) " << ngtracks
+		 << " gvz " << egvz
+		 << " vz " << evz
 		 << endl;
-	  
-	  for(int ipos =0;ipos<ng4trevt_pos;ipos++)
+      
+	  //============================
+	  // process G4 tracks
+	  // for this event
+	  //============================
+
+	  int ng4trevt_elec = -1;
+	  int ng4trevt_pos = -1;
+	  int g4trnum_elec[1000];
+	  int g4trnum_pos[1000];
+
+	  for(int ig=ng;ig<ng+ngtracks;ig++)
 	    {
-	      int recopos = ntp_gtrack->GetEntry(g4trnum_pos[ipos]);
+	      int recoget1 = ntp_gtrack->GetEntry(ig);
+	      if(!recoget1)
+		{
+		  if(verbose > 0) cout << "Did not get entry for ig = " << ig << endl;
+		  break;
+		}
 
-	      int gtrid2 = tgtrackid;
+	      // This bookkeeping is needed because the evaluator records for each event the total track count in ntp_vertex, even 
+	      // when it writes out only embedded tracks
+	      if(tevent != iev)
+		{
+		  if(verbose > 0) cout << " reached new event for ig = " << ig << " tevent = " << tevent << endl; 
+		  ng = ig;
+		  break;
+		}
+	      if(ig == ng+ngtracks - 1)
+		{
+		  if(verbose > 0) cout << " last time through loop for ig = " << ig << " revent = " << tevent << endl; 
+		  ng = ig+1;
+		}
 
-	      double pos_pT = sqrt(tpx*tpx+tpy*tpy);
-	      double pos_eta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
+	      if(tembed != embed_flag)
+		//if( tgtrackid != 1 && tgtrackid != 2)      
+		continue;
+
+	      // we want only electrons or positrons
+	      if(tflavor != 11 && tflavor != -11)
+		continue;
+
+	      if(tflavor == 11)
+		{
+		  // electron
+		  ng4trevt_elec++;
+		  if(ng4trevt_elec > 999)
+		    continue;
+
+		  if(verbose)
+		    cout << " Found electron:" << endl
+			 << "  ig " << ig
+			 << " ng4trevt_elec " << ng4trevt_elec
+			 << " gtrackID " << tgtrackid
+			 << " gflavor " << tflavor
+			 << " tpx " << tpx
+			 << " tpy " << tpy
+			 << " tpz " << tpz
+			 << endl;
 	      
+		  g4trnum_elec[ng4trevt_elec] = ig;
+		}
+	      else
+		{
+		  // positron
+		  ng4trevt_pos++;
+		  if(ng4trevt_pos > 999)
+		    continue;
+
+		  if(verbose)
+		    cout << " Found positron:" << endl
+			 << "  ig " << ig
+			 << " ng4trevt_pos " << ng4trevt_pos
+			 << " gtrackID " << tgtrackid
+			 << " gflavor " << tflavor
+			 << " tpx " << tpx
+			 << " tpy " << tpy
+			 << " tpz " << tpz
+			 << endl;
+	      
+		  g4trnum_pos[ng4trevt_pos] = ig;
+		}
+	    }	  
+	  ng4trevt_elec++;
+	  ng4trevt_pos++;
+
+	  if(verbose)
+	    cout << "For this event found " << ng4trevt_elec << " g4 electrons and " << ng4trevt_pos << " g4 positrons"  << endl;
+ 
+	  // make all pairs of g4 (truth) electrons and positrons
+	  for(int ielec=0;ielec<ng4trevt_elec;ielec++)
+	    {
+	      int recoelec = ntp_gtrack->GetEntry(g4trnum_elec[ielec]);
+
+	      if(tembed != embed_flag)
+		continue;
+	  
+	      double elec_pT = sqrt(tpx*tpx+tpy*tpy);
+	      double elec_eta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
+
+	      int gtrid1 = tgtrackid;
+ 
+	      TLorentzVector t1;
+	      double E1 = sqrt( pow(tpx,2) + pow(tpy,2) + pow(tpz,2) + pow(decaymass,2));	  
+	      t1.SetPxPyPzE(tpx,tpy,tpz,E1);	  
+	  
 	      // print out track details
-	      if(verbose)
-		cout << "  Pair positron: iev " << iev << " ipos " << ipos
-		     << " g4trnum_pos " << g4trnum_pos[ipos]
+	      if(verbose > 1)
+		cout << "  Pair electron:  iev " << iev << " ielec " << ielec
+		     << " g4trnum_elec " << g4trnum_elec[ielec]
 		     << " tgtrackid " << tgtrackid
 		     << " tflavor " << tflavor
 		     << " tpx " << tpx
 		     << " tpy " << tpy
 		     << " tpz " << tpz
-		     << " pos_eta " << pos_eta
-		     << " pos_gpT " << pos_pT
+		     << " elec_eta " << elec_eta
+		     << " elec_gpT " << elec_pT
 		     << endl;
+	  
+	      for(int ipos =0;ipos<ng4trevt_pos;ipos++)
+		{
+		  int recopos = ntp_gtrack->GetEntry(g4trnum_pos[ipos]);
+
+		  int gtrid2 = tgtrackid;
+
+		  double pos_pT = sqrt(tpx*tpx+tpy*tpy);
+		  double pos_eta = asinh(tpz/sqrt(tpx*tpx+tpy*tpy));
+	      
+		  // print out track details
+		  if(verbose > 1)
+		    cout << "  Pair positron: iev " << iev << " ipos " << ipos
+			 << " g4trnum_pos " << g4trnum_pos[ipos]
+			 << " tgtrackid " << tgtrackid
+			 << " tflavor " << tflavor
+			 << " tpx " << tpx
+			 << " tpy " << tpy
+			 << " tpz " << tpz
+			 << " pos_eta " << pos_eta
+			 << " pos_gpT " << pos_pT
+			 << endl;
 	      	      
-	      // Make G4 invariant mass 
+		  // Make G4 invariant mass 
 	      
-	      TLorentzVector t2;
-	      double E2 = sqrt( pow(tpx,2) + pow(tpy,2) + pow(tpz,2) + pow(decaymass,2));
-	      t2.SetPxPyPzE(tpx,tpy,tpz,E2);	  
+		  TLorentzVector t2;
+		  double E2 = sqrt( pow(tpx,2) + pow(tpy,2) + pow(tpz,2) + pow(decaymass,2));
+		  t2.SetPxPyPzE(tpx,tpy,tpz,E2);	  
 	      
-	      TLorentzVector t = t1+t2;
+		  TLorentzVector t = t1+t2;
 	      
-	      if(verbose)
-		cout << "                       reco'd g4 mass = " << t.M() << endl << endl;	    
+		  if(verbose)
+		    cout << "                       reco'd g4 mass = " << t.M() << endl << endl;	    
 	      
-	      if(t.M() > 7.0 && t.M() < 11.0)
-		{
-		  nrecog4mass++;
-		  g4mass->Fill(t.M());	
-		  hgpt->Fill(t.Pt());
+		  if(t.M() > 7.0 && t.M() < 11.0)
+		    {
+		      nrecog4mass++;
+		      g4mass->Fill(t.M());	
+		      hgpt->Fill(t.Pt());
 
-		  // Capture the mass spectrum where both tracks are the primary Upsilon decay electrons
-		  if( (gtrid1 == 1 || gtrid1 == 2) && (gtrid2 == 1 || gtrid2 == 2) ) 
-		    g4mass_primary->Fill(t.M());	  
+		      // Capture the mass spectrum where both tracks are the primary Upsilon decay electrons
+		      g4mass_primary->Fill(t.M());	  
 
-		}
-	    }  // end of ipos loop
-	} // end of ielec loop
+		    }
+		}  // end of ipos loop
+	    } // end of ielec loop
       
       
-      if(verbose)
-	{
-	  cout << " # of g4 electron tracks = " << ng4trevt_elec 
-	       << " # of g4 positron tracks = " << ng4trevt_pos << endl;
-	}
-	  
-	  
-      //=============================
-      // process reconstructed tracks
-      // for this event
-      //=============================
-      
-      int nrtrevt = 0;
-      int nr_elec = -1;
-      int nr_pos = -1;
-      int rectrnum_elec[1000];
-      int rectrnum_pos[1000];
-
-      //cout << "Number of ntp_track entries = " << recoget << endl;
-
-      for(int ir=nr;ir<nr+ntracks;ir++)
-        {
-          int recoget = ntp_track->GetEntry(ir);
-
-	  
-	  hrquality->Fill(rquality);
-	  hrdca2d->Fill(rdca2d);
-
-	  // track quality cuts	
-	  if(rquality > 3 || fabs(rdca2d) > 0.1)
-	    continue;
-
-
-	  // need to select electrons and positrons - for now we cheat
-	  if(rgflavor != 11 && rgflavor != -11)
-	    continue;
-
-	  // make a list of electrons and positrons
-	  //if(rgflavor == 11)
-	  if(rcharge == -1)
-	    {
-	      nr_elec++;
-	      rectrnum_elec[nr_elec] = ir;	      
-	    }
-
-	  //if(rgflavor == -11)
-	  if(rcharge == 1)
-	    {
-	      nr_pos++;
-	      rectrnum_pos[nr_pos] = ir;	      
-	    }
-
-
-	  double rpT = sqrt(rpx*rpx+rpy*rpy);
-	  double reta = asinh(rpz/sqrt(rpx*rpx+rpy*rpy));
-	  
-	  // print out track details
 	  if(verbose)
-	    cout << "     revent " << revent << " ir " << ir
-		 << " rgtrackid " << rgtrackid
-		 << " rgflavor " << rgflavor
-		 << " rvz " << rvz
-		 << " reta " << reta
-		 << " rpT " << rpT
-		 << endl;
-	}
-
-      nr_elec++;
-      nr_pos++;  
-
-      for(int ielec = 0;ielec<nr_elec;ielec++)
-	{
-
-	  TLorentzVector t1;
-	  
-	  int recoget1 = ntp_track->GetEntry(rectrnum_elec[ielec]);
-
-	  int trid1 = rgtrackid;	  
-
-	  double E1 = sqrt( pow(rpx,2) + pow(rpy,2) + pow(rpz,2) + pow(decaymass,2));
-	  t1.SetPxPyPzE(rpx,rpy,rpz,E1);	  
-	  
-	  for(int ipos = 0;ipos<nr_pos;ipos++)
 	    {
-	      int recoget2 = ntp_track->GetEntry(rectrnum_pos[ipos]);
+	      cout << " # of g4 electron tracks = " << ng4trevt_elec 
+		   << " # of g4 positron tracks = " << ng4trevt_pos << endl;
+	    }
+	  
+	  
+	  //=============================
+	  // process reconstructed tracks
+	  // for this event
+	  //=============================
+      
+	  int nrtrevt = 0;
+	  int nr_elec = -1;
+	  int nr_pos = -1;
+	  int rectrnum_elec[1000];
+	  int rectrnum_pos[1000];
 
-	      int trid2 = rgtrackid;	  
-	  
-	      TLorentzVector t2;
-	      double E2 = sqrt( pow(rpx,2) + pow(rpy,2) + pow(rpz,2) + pow(decaymass,2));
-	  
-	      t2.SetPxPyPzE(rpx,rpy,rpz,E2);	  
-	  
-	      TLorentzVector t = t1+t2;
-	      
-	      if(verbose)
-		cout << " reco'd track mass = " << t.M() << endl;	    
-	      
-	      if(t.M() > 7.0 && t.M() < 11.0)
+	  //cout << "Number of ntp_track entries = " << recoget << endl;
+
+	  for(int ir=nr;ir<nr+ntracks;ir++)
+	    {
+	      int recoget = ntp_track->GetEntry(ir);
+	      if(!recoget)
 		{
-		  nrecormass++;
-		  recomass->Fill(t.M());	  
-		  hrpt->Fill(t.Pt());
+		  if(verbose > 0) cout << "Did not get entry for ir = " << ir << endl;
+		  break;
+		}
 
-		  // Capture the mass spectrum where both tracks are the primary Upsilon decay electrons
-		  if( (trid1 == 1 || trid1 == 2) && (trid2 == 1 || trid2 == 2) ) 
-		    recomass_primary->Fill(t.M());	  
+	      // This bookkeeping is needed because the evaluator records for each event the total track count in ntp_vertex, even 
+	      // when it writes out only embedded tracks
+	      if(revent != iev)
+		{
+		  if(verbose > 1) cout << " reached new event for ir = " << ir << " revent = " << revent << endl; 
+		  nr = ir;
+		  break;
+		}
+	      if(ir == nr+ntracks - 1)
+		{
+		  if(verbose > 0)  cout << " last time through loop for ir = " << ir << " revent = " << revent << endl; 
+		  nr = ir+1;
+		}
+
+	      if(rgembed != embed_flag)
+		continue;
+	  
+	      hrquality->Fill(rquality);
+	      hrdca2d->Fill(rdca2d);
+
+	      // track quality cuts	
+	      if(rquality > quality_cut || fabs(rdca2d) > dca_cut)
+		continue;
+
+	      // make a list of electrons and positrons
+	      if(rcharge == -1)
+		{
+		  nr_elec++;
+		  rectrnum_elec[nr_elec] = ir;	      
+		}
+
+	      if(rcharge == 1)
+		{
+		  nr_pos++;
+		  rectrnum_pos[nr_pos] = ir;	      
+		}
+
+
+	      double rpT = sqrt(rpx*rpx+rpy*rpy);
+	      double reta = asinh(rpz/sqrt(rpx*rpx+rpy*rpy));
+	  
+	      // print out track details
+	      if(verbose)
+		cout << "     revent " << revent << " ir " << ir
+		     << " rgtrackid " << rgtrackid
+		     << " rgflavor " << rgflavor
+		     << " rvz " << rvz
+		     << " reta " << reta
+		     << " rpT " << rpT
+		     << endl;
+	    }
+
+	  nr_elec++;
+	  nr_pos++;  
+
+	  for(int ielec = 0;ielec<nr_elec;ielec++)
+	    {
+
+	      TLorentzVector t1;
+	  
+	      int recoget1 = ntp_track->GetEntry(rectrnum_elec[ielec]);
+
+	      int trid1 = rgtrackid;	  
+
+	      double E1 = sqrt( pow(rpx,2) + pow(rpy,2) + pow(rpz,2) + pow(decaymass,2));
+	      t1.SetPxPyPzE(rpx,rpy,rpz,E1);	  
+	  
+	      for(int ipos = 0;ipos<nr_pos;ipos++)
+		{
+		  int recoget2 = ntp_track->GetEntry(rectrnum_pos[ipos]);
+
+		  int trid2 = rgtrackid;	  
+	  
+		  TLorentzVector t2;
+		  double E2 = sqrt( pow(rpx,2) + pow(rpy,2) + pow(rpz,2) + pow(decaymass,2));
+	  
+		  t2.SetPxPyPzE(rpx,rpy,rpz,E2);	  
+	  
+		  TLorentzVector t = t1+t2;
+	      
+		  if(verbose)
+		    cout << " reco'd track mass = " << t.M() << endl;	    
+	      
+		  if(t.M() > 7.0 && t.M() < 11.0)
+		    {
+		      nrecormass++;
+		      recomass->Fill(t.M());	  
+		      hrpt->Fill(t.Pt());
+
+		      // Capture the mass spectrum where both tracks are the primary Upsilon decay electrons
+		      if( (trid1 == 1 || trid1 == 2) && (trid2 == 1 || trid2 == 2) ) 
+			recomass_primary->Fill(t.M());	  
+		    }
 		}
 	    }
-	}
-      
-      // Increment the track entry numbers so we go to the 1st track in the next event
-      nr += ntracks;
-      ng += ngtracks;
-    }
+      	}
 
+      delete ntp_gtrack;
+      delete ntp_track;
+      delete ntp_cluster;
+      delete ntp_vertex;
+    }
   cout << "nrecog4mass = " << nrecog4mass << endl;
 
   cout << "nrecormass = " << nrecormass << endl;
@@ -437,7 +447,6 @@ void quarkonia_reconstruction_embedded()
   
   TCanvas *cmass = new TCanvas("cmass","cmass",10,10,800,600);
 
-  //cmass->cd(2);
   recomass_primary->SetLineColor(kRed);
   recomass->SetLineColor(kBlack);
   recomass->DrawCopy();  
@@ -466,9 +475,7 @@ void quarkonia_reconstruction_embedded()
 
   cout << "Reconstruction efficiency is " << yreco_primary/yg4_primary << endl;
 
-
-  // Output mass histos for individual Upsilon states
-
+  // Output histos for reconstructed Upsilons
 
   char fname[500];
 
