@@ -31,6 +31,7 @@
 #include <tpc/TpcClusterizer.h>
 
 #include <trackreco/PHGenFitTrkFitter.h>
+#include <trackreco/PHActsTrkFitter.h>
 #include <trackreco/PHGenFitTrkProp.h>
 #include <trackreco/PHHoughSeeding.h>
 #include <trackreco/PHInitZVertexing.h>
@@ -553,17 +554,22 @@ void Tracking_Reco(int verbosity = 0)
   // Fitting of tracks using Kalman Filter
   //------------------------------------------------
 
+  PHActsTrkFitter *actsfit = new PHActsTrkFitter();
+  actsfit->Verbosity(2);
+  se->registerSubsystem(actsfit);
+
 
   PHGenFitTrkFitter* kalman = new PHGenFitTrkFitter();
   kalman->Verbosity(0);
 
   if (use_primary_vertex)
-    kalman->set_fit_primary_tracks(true);  // include primary vertex in track fit if true
+    kalman->set_fit_primary_tracks(false);  // include primary vertex in track fit if true
 
   kalman->set_vertexing_method(vmethod);
   kalman->set_use_truth_vertex(false);
 
   se->registerSubsystem(kalman);
+
 
   //------------------
   // Track Projections
