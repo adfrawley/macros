@@ -27,6 +27,7 @@
 #include <trackreco/PHMicromegasTpcTrackMatching.h>
 
 #if __cplusplus >= 201703L
+#include <trackreco/MakeActsGeometry.h>
 #include <trackreco/PHActsSourceLinks.h>
 #include <trackreco/PHActsTracks.h>
 #include <trackreco/PHActsTrkProp.h>
@@ -76,7 +77,6 @@ namespace G4TRACKING
   bool use_truth_track_seeding = false;          // false for normal track seeding, use true to run with truth track seeding instead  ***** WORKS FOR GENFIT ONLY
   bool use_Genfit = false;                              // if false, acts KF is run on proto tracks assembled above, if true, use Genfit track propagation and fitting
   bool use_init_vertexing = false;                   // false for using smeared truth vertex, set to true to get initial vertex from MVTX hits using PHInitZVertexing
-  bool useActsProp = false;                            // if true, runs Acts CKF with only a seeder  ***** NOT FULLY FUNCTIONAL YET
   bool g4eval_use_initial_vertex = false;        // if true, g4eval uses initial vertices in SvtxVertexMap, not final vertices in SvtxVertexMapRefit
   bool use_primary_vertex = false;                 // refit Genfit tracks (only) with primary vertex included - adds second node to node tree, adds second evaluator, outputs separate ntuples
 
@@ -102,6 +102,9 @@ void TrackingInit()
   {
     G4MICROMEGAS::n_micromegas_layer = 0;
   }
+
+  // SC_CALIBMODE makes no sense if distortions are not present
+  G4TRACKING::SC_CALIBMODE = G4TPC::ENABLE_DISTORTIONS && G4TRACKING::SC_CALIBMODE;
 }
 
 void Tracking_Reco()
@@ -277,17 +280,18 @@ void Tracking_Reco()
 	  if(G4TRACKING::SC_CALIBMODE)
 	    {
 	      silicon_match->set_collision_rate(G4TRACKING::SC_COLLISIONRATE);
-	      // search windows for initial matching with distortions  default tuned values are 0.01 and 0.004
-	      silicon_match->set_phi_search_window(0.02);  
-	      silicon_match->set_eta_search_window(0.004); 
+	      // search windows for initial matching with distortions
+	      // tuned values are 0.05 and 0.006 in high occupancy events
+	      silicon_match->set_phi_search_window(0.05);  
+	      silicon_match->set_eta_search_window(0.006); 
 	    }
 	  else
 	    {
-	      // after distortion corrections, default tuned values are 0.01 and 0.004
-	      silicon_match->set_phi_search_window(0.01);  
+	      // after distortion corrections an rerunning clustering, default tuned values are 0.01 and 0.004 in low occupancy events
+	      silicon_match->set_phi_search_window(0.02);  
 	      silicon_match->set_eta_search_window(0.004); 
 	    }
-	  silicon_match->set_test_windows_printout(true);
+	  silicon_match->set_test_windows_printout(false);
 	  se->registerSubsystem(silicon_match);
 	}
      
@@ -330,10 +334,19 @@ void Tracking_Reco()
     {
       std::cout << "   Using Acts track fitting " << std::endl;
 
+
+
+
 #if __cplusplus >= 201703L
 
-      /// Always run PHActsSourceLinks and PHActsTracks first, to convert TrkRClusters and SvtxTracks to the Acts equivalent
+      /// Geometry must be built before any Acts modules
+      MakeActsGeometry *geom = new MakeActsGeometry();
+      geom->Verbosity(0);
+      geom->setMagField(G4MAGNET::magfield);
+      geom->setMagFieldRescale(G4MAGNET::magfield_rescale);
+      se->registerSubsystem(geom);
 
+      /// Always run PHActsSourceLinks and PHActsTracks first, to convert TrkRClusters and SvtxTracks to the Acts equivalent
       PHActsSourceLinks *sl = new PHActsSourceLinks();
       sl->Verbosity(0);
       sl->setMagField(G4MAGNET::magfield);
@@ -347,30 +360,12 @@ void Tracking_Reco()
       /// Use either PHActsTrkFitter to run the ACTS
       /// KF track fitter, or PHActsTrkProp to run the ACTS Combinatorial 
       /// Kalman Filter which runs track finding and track fitting
-      if(G4TRACKING::useActsProp)
-	{
-	  // Not fully functional yet
-	  PHActsTrkProp *actsProp = new PHActsTrkProp();
-	  actsProp->Verbosity(0);
-	  actsProp->doTimeAnalysis(true);
-	  actsProp->resetCovariance(true);
-	  actsProp->setVolumeMaxChi2(7,60); /// MVTX 
-	  actsProp->setVolumeMaxChi2(9,60); /// INTT
-	  actsProp->setVolumeMaxChi2(11,60); /// TPC
-	  actsProp->setVolumeLayerMaxChi2(9, 2, 100); /// INTT first few layers
-	  actsProp->setVolumeLayerMaxChi2(9, 4, 100);
-	  actsProp->setVolumeLayerMaxChi2(11,2, 200); /// TPC first few layers 
-	  actsProp->setVolumeLayerMaxChi2(11,4, 200);
-	  
-	  se->registerSubsystem(actsProp);
-	}
-      else
-	{
-	  PHActsTrkFitter *actsFit = new PHActsTrkFitter();
-	  actsFit->Verbosity(0);
-	  actsFit->doTimeAnalysis(true);
-	  se->registerSubsystem(actsFit);
-	}
+
+      PHActsTrkFitter *actsFit = new PHActsTrkFitter();
+      actsFit->Verbosity(0);
+      actsFit->doTimeAnalysis(true);
+      se->registerSubsystem(actsFit);
+    
 #endif   
     }
   
