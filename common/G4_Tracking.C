@@ -55,7 +55,7 @@ namespace Enable
 namespace G4TRACKING
 {
   // Space Charge calibration flag
-  bool SC_CALIBMODE = true;
+  bool SC_CALIBMODE = true;  // this is anded with G4TPC::ENABLE_DISTORTIONS in TrackingInit()
   double SC_COLLISIONRATE = 50e3;
 
   // Tracking reconstruction setup parameters and flags
@@ -281,14 +281,14 @@ void Tracking_Reco()
 	    {
 	      silicon_match->set_collision_rate(G4TRACKING::SC_COLLISIONRATE);
 	      // search windows for initial matching with distortions
-	      // tuned values are 0.05 and 0.006 in high occupancy events
-	      silicon_match->set_phi_search_window(0.01);  
-	      silicon_match->set_eta_search_window(0.004); 
+	      // tuned values are 0.04 and 0.008 in distorted events
+	      silicon_match->set_phi_search_window(0.04);  
+	      silicon_match->set_eta_search_window(0.008); 
 	    }
 	  else
 	    {
-	      // after distortion corrections an rerunning clustering, default tuned values are 0.01 and 0.004 in low occupancy events
-	      silicon_match->set_phi_search_window(0.01);  
+	      // after distortion corrections an rerunning clustering, default tuned values are 0.02 and 0.004 in low occupancy events
+	      silicon_match->set_phi_search_window(0.02);  
 	      silicon_match->set_eta_search_window(0.004); 
 	    }
 	  silicon_match->set_test_windows_printout(true);
@@ -397,7 +397,7 @@ void Tracking_Eval(const std::string& outputfile)
   eval->do_gpoint_eval(false);
   eval->do_eval_light(true);
   eval->set_use_initial_vertex(G4TRACKING::g4eval_use_initial_vertex);
-  eval->scan_for_embedded(false);  // take all tracks if false - take only embedded tracks if true
+  eval->scan_for_embedded(true);  // take all tracks if false - take only embedded tracks if true
   eval->Verbosity(verbosity);
   se->registerSubsystem(eval);
 
