@@ -56,7 +56,7 @@ namespace G4TRACKING
 {
   // Space Charge calibration flag
   bool SC_CALIBMODE = true;  // this is anded with G4TPC::ENABLE_DISTORTIONS in TrackingInit()
-  double SC_COLLISIONRATE = 50e3;
+  double SC_COLLISIONRATE = 50e3;  // leave at 50 KHz for now, scaling of distortion map not implemented yet
 
   // Tracking reconstruction setup parameters and flags
   //=====================================
@@ -287,11 +287,11 @@ void Tracking_Reco()
 	    }
 	  else
 	    {
-	      // after distortion corrections an rerunning clustering, default tuned values are 0.02 and 0.004 in low occupancy events
+	      // after distortion corrections and rerunning clustering, default tuned values are 0.02 and 0.004 in low occupancy events
 	      silicon_match->set_phi_search_window(0.02);  
 	      silicon_match->set_eta_search_window(0.004); 
 	    }
-	  silicon_match->set_test_windows_printout(true);
+	  silicon_match->set_test_windows_printout(false);  // used for tuning search windows only
 	  se->registerSubsystem(silicon_match);
 	}
      
@@ -309,7 +309,7 @@ void Tracking_Reco()
 	     // calibration pass with distorted tracks
 	     mm_match->set_collision_rate(G4TRACKING::SC_COLLISIONRATE);
 	     // configuration is potentially with different search windows
-	     mm_match-> set_rphi_search_window_lyr1(0.15);
+	     mm_match-> set_rphi_search_window_lyr1(0.2);
 	     mm_match-> set_rphi_search_window_lyr2(13.0);
 	     mm_match-> set_z_search_window_lyr1(26.0);
 	     mm_match-> set_z_search_window_lyr2(0.2);
@@ -317,13 +317,13 @@ void Tracking_Reco()
 	 else
 	   {
 	     // baseline configuration is (0.2, 13.0, 26, 0.2) and is the default
-	     mm_match-> set_rphi_search_window_lyr1(0.15);
+	     mm_match-> set_rphi_search_window_lyr1(0.2);
 	     mm_match-> set_rphi_search_window_lyr2(13.0);
 	     mm_match-> set_z_search_window_lyr1(26.0);
 	     mm_match-> set_z_search_window_lyr2(0.2);
 	   }
 	 mm_match->set_min_tpc_layer(38);   // layer in TPC to start projection fit
-	 mm_match->set_test_windows_printout(true);   // normally false
+	 mm_match->set_test_windows_printout(false);   // used for tuning search windows only
 	 se->registerSubsystem(mm_match);
        }
     }
@@ -333,9 +333,6 @@ void Tracking_Reco()
   if(!G4TRACKING::use_Genfit && !G4TRACKING::SC_CALIBMODE)
     {
       std::cout << "   Using Acts track fitting " << std::endl;
-
-
-
 
 #if __cplusplus >= 201703L
 
